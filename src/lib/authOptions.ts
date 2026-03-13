@@ -1,4 +1,5 @@
-import type { NextAuthOptions, JWT } from "next-auth";
+import type { NextAuthOptions } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { supabaseAdmin } from "@/lib/supabase";
