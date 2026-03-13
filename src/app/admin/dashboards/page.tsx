@@ -132,14 +132,14 @@ export default function AdminDashboardsPage() {
         });
         await addDashboard({
           nome: form.nome,
-          descricao: form.descricao || undefined,
+          descricao: form.descricao ?? "",
           workspaceId: form.workspaceId,
           reportId: form.reportId,
-          datasetId: form.datasetId || undefined,
+          datasetId: form.datasetId ?? "",
           ativo: form.ativo,
           rls: form.rls,
           status: form.status,
-          setor: form.setor || undefined,
+          setor: form.setor ?? "",
         });
         setFeedback({ type: "success", msg: "Dashboard criado com sucesso!" });
       }
