@@ -36,7 +36,7 @@ function DashboardCard({ dash, viewMode }: { dash: Dashboard; viewMode: "grid" |
           style={{ width: 64, height: 64, background: "#EEF1FB" }}
         >
           {dash.urlCapa ? (
-            <img src={dash.urlCapa} alt={dash.nome} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src={`/api/sp-image?url=${encodeURIComponent(dash.urlCapa)}`} alt={dash.nome} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
             <BarChart2 size={22} style={{ color: "#4B5FBF" }} />
           )}
@@ -89,7 +89,7 @@ function DashboardCard({ dash, viewMode }: { dash: Dashboard; viewMode: "grid" |
         style={{ height: 120, background: "#EEF1FB" }}
       >
         {dash.urlCapa ? (
-          <img src={dash.urlCapa} alt={dash.nome} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img src={`/api/sp-image?url=${encodeURIComponent(dash.urlCapa)}`} alt={dash.nome} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         ) : (
           <BarChart2 size={36} style={{ color: "#4B5FBF" }} />
         )}
