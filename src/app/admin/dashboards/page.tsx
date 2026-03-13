@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import {
   LayoutGrid, Plus, Pencil, Trash2, Loader2, X, Save,
-  CheckCircle2, AlertCircle, MoreVertical,
+  CheckCircle2, AlertCircle, MoreVertical, ImagePlus,
 } from "lucide-react";
 import { useDataStoreContext, Dashboard } from "@/contexts/DataStoreContext";
 
@@ -22,6 +22,7 @@ export default function AdminDashboardsPage() {
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [uploadingImg, setUploadingImg] = useState(false);
 
   // Menu dropdown
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
@@ -32,7 +33,7 @@ export default function AdminDashboardsPage() {
 
   // Formulário
   const [form, setForm] = useState<Omit<Dashboard, "id"> & { id: string }>({
-    id: "", nome: "", descricao: "", workspaceId: "", reportId: "", datasetId: "", ativo: true, rls: false, status: "Ativo", setor: "",
+    id: "", nome: "", descricao: "", workspaceId: "", reportId: "", datasetId: "", ativo: true, rls: false, status: "Ativo", setor: "", urlCapa: "",
   });
 
   useEffect(() => {
@@ -45,8 +46,27 @@ export default function AdminDashboardsPage() {
     return matchNome;
   });
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImg(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload-image", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Erro ao fazer upload");
+      setForm((prev) => ({ ...prev, urlCapa: json.url }));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erro ao fazer upload";
+      setFeedback({ type: "error", msg });
+    } finally {
+      setUploadingImg(false);
+    }
+  };
+
   const openCreate = () => {
-    setForm({ id: "", nome: "", descricao: "", workspaceId: "", reportId: "", datasetId: "", ativo: true, rls: false, status: "Ativo", setor: "" });
+    setForm({ id: "", nome: "", descricao: "", workspaceId: "", reportId: "", datasetId: "", ativo: true, rls: false, status: "Ativo", setor: "", urlCapa: "" });
     setIsEdit(false);
     setModalOpen(true);
   };
@@ -71,6 +91,7 @@ export default function AdminDashboardsPage() {
       setor: d.setor ?? "",
       prioridade: d.prioridade ?? "media",
       rlsRole: d.rlsRole ?? "",
+      urlCapa: d.urlCapa ?? "",
     };
 
     console.log("[EDIT] Form preenchido:", novoForm);
@@ -116,6 +137,7 @@ export default function AdminDashboardsPage() {
           rls: form.rls,
           status: form.status,
           setor: form.setor || undefined,
+          urlCapa: form.urlCapa || undefined,
         });
         setFeedback({ type: "success", msg: "Dashboard atualizado com sucesso!" });
       } else {
@@ -140,6 +162,7 @@ export default function AdminDashboardsPage() {
           rls: form.rls,
           status: form.status,
           setor: form.setor ?? "",
+          urlCapa: form.urlCapa ?? "",
         });
         setFeedback({ type: "success", msg: "Dashboard criado com sucesso!" });
       }
@@ -430,6 +453,61 @@ export default function AdminDashboardsPage() {
                       className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] font-mono focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
                       placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Upload de Capa */}
+              <div className="border-t border-[#e2e8f0] pt-4">
+                <p className="text-xs font-semibold text-[#6C757D] mb-3">Capa do Dashboard</p>
+                <div className="flex items-center gap-4">
+                  {/* Preview */}
+                  <div
+                    className="flex-shrink-0 rounded-xl overflow-hidden flex items-center justify-center"
+                    style={{ width: 72, height: 72, background: "#EEF1FB", border: "1px solid #e2e8f0" }}
+                  >
+                    {form.urlCapa ? (
+                      <img src={form.urlCapa} alt="Capa" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <ImagePlus size={24} style={{ color: "#C4C6CC" }} />
+                    )}
+                  </div>
+                  {/* Botão upload */}
+                  <div className="flex-1">
+                    <label
+                      htmlFor="upload-capa"
+                      className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold cursor-pointer transition-colors"
+                      style={{
+                        background: uploadingImg ? "#e2e8f0" : "#F0F4F8",
+                        color: "#4B5FBF",
+                        border: "1px dashed #4B5FBF",
+                        display: "inline-flex",
+                      }}
+                    >
+                      {uploadingImg ? (
+                        <><Loader2 size={14} className="animate-spin" /> Enviando...</>
+                      ) : (
+                        <><ImagePlus size={14} /> {form.urlCapa ? "Trocar imagem" : "Fazer upload"}</>
+                      )}
+                    </label>
+                    <input
+                      id="upload-capa"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      style={{ display: "none" }}
+                      onChange={handleImageUpload}
+                      disabled={uploadingImg}
+                    />
+                    {form.urlCapa && (
+                      <button
+                        type="button"
+                        onClick={() => setForm((prev) => ({ ...prev, urlCapa: "" }))}
+                        className="ml-2 text-xs text-red-500 hover:text-red-700"
+                      >
+                        Remover
+                      </button>
+                    )}
+                    <p className="text-xs text-[#94a3b8] mt-1">PNG, JPG ou WebP. Será exibida no card do dashboard.</p>
                   </div>
                 </div>
               </div>

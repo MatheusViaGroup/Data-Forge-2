@@ -18,6 +18,7 @@ function mapRow(row: any) {
     rls: row.rls ?? false,
     rlsRole: row.rls_role ?? "",
     status: row.status ?? "Ativo",
+    urlCapa: row["url-dash"] ?? "",
   };
 }
 
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
       rls: body.rls ?? false,
       rls_role: body.rlsRole ?? "",
       status: body.status ?? "Ativo",
+      "url-dash": body.urlCapa ?? "",
     })
     .select()
     .single();
@@ -123,6 +125,7 @@ export async function PUT(request: NextRequest) {
       rls: body.rls,
       rls_role: body.rlsRole ?? "",
       status: body.status,
+      "url-dash": body.urlCapa ?? "",
     })
     .eq("id", body.id)
     .select()

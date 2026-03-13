@@ -15,6 +15,7 @@ export interface Dashboard {
   rls?: boolean;
   rlsRole?: string;
   status?: "Ativo" | "Inativo";
+  urlCapa?: string;
 }
 
 export interface Usuario {

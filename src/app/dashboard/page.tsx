@@ -30,12 +30,16 @@ function DashboardCard({ dash, viewMode }: { dash: Dashboard; viewMode: "grid" |
         onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 4px 12px rgba(75,95,191,0.10)")}
         onMouseLeave={e => (e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)")}
       >
-        {/* Ícone */}
+        {/* Ícone / Capa */}
         <div
-          className="flex items-center justify-center rounded-xl flex-shrink-0"
+          className="flex items-center justify-center rounded-xl flex-shrink-0 overflow-hidden"
           style={{ width: 52, height: 52, background: "#EEF1FB" }}
         >
-          <BarChart2 size={22} style={{ color: "#4B5FBF" }} />
+          {dash.urlCapa ? (
+            <img src={dash.urlCapa} alt={dash.nome} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <BarChart2 size={22} style={{ color: "#4B5FBF" }} />
+          )}
         </div>
 
         {/* Info */}
@@ -79,12 +83,16 @@ function DashboardCard({ dash, viewMode }: { dash: Dashboard; viewMode: "grid" |
         (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
       }}
     >
-      {/* Ícone central */}
+      {/* Ícone / Capa central */}
       <div
-        className="flex items-center justify-center rounded-2xl mb-4"
+        className="flex items-center justify-center rounded-2xl mb-4 overflow-hidden"
         style={{ width: 64, height: 64, background: "#EEF1FB" }}
       >
-        <BarChart2 size={28} style={{ color: "#4B5FBF" }} />
+        {dash.urlCapa ? (
+          <img src={dash.urlCapa} alt={dash.nome} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <BarChart2 size={28} style={{ color: "#4B5FBF" }} />
+        )}
       </div>
 
       {/* Nome */}
