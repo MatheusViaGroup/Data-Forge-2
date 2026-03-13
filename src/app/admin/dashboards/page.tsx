@@ -457,7 +457,7 @@ export default function AdminDashboardsPage() {
                       placeholder="Nome do Parametro"
                     />
                     <p className="text-xs text-[#94a3b8] mt-1 pl-2">
-                      O nome do parametro acima deve estar exatamente igual ao do B'i, a formalua que deve ser inserida no parametro é: <code className="bg-[#f1f5f9] px-1 rounded">CONTAINSSTRING(CUSTOMDATA(), [NOME_EXIBICAO])()</code>
+                      O nome do parametro acima deve estar igual ao do B'i, a formalua que deve ser inserida no parametro é: <code className="bg-[#f1f5f9] px-1 rounded">CONTAINSSTRING(CUSTOMDATA(), [NOME_EXIBICAO])()</code>
                     </p>
                   </div>
                 )}
