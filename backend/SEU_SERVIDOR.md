@@ -335,4 +335,4 @@ python testar_conexao.py
 
 ---
 
-**Kore Data - Conectamos dados para Gerar Resultados**
+**Via Labs**

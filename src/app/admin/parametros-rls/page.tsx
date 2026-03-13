@@ -279,7 +279,7 @@ export default function ParametrosRLSPage() {
         </div>
 
         <p className="text-center text-[#6C757D] text-xs mt-8">
-          Kore Data - Conectamos dados para Gerar Resultados
+          Via Labs
         </p>
       </div>
 

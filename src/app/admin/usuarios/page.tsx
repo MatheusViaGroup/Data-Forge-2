@@ -465,7 +465,7 @@ export default function UsuariosPage() {
           )}
         </div>
 
-        <p className="text-center text-[#6C757D] text-xs mt-8">Kore Data - Conectamos dados para Gerar Resultados</p>
+        <p className="text-center text-[#6C757D] text-xs mt-8">Via Labs</p>
       </div>
 
       {/* Modal Criar/Editar */}

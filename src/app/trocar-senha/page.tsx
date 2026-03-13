@@ -182,7 +182,7 @@ export default function TrocarSenhaPage() {
         </div>
 
         <p className="text-center text-white/70 text-xs mt-6">
-          Kore Data - Conectamos dados para Gerar Resultados
+          Via Labs
         </p>
       </div>
     </div>

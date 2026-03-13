@@ -304,4 +304,4 @@ Com as respostas, fica mais fácil te ajudar!
 
 ---
 
-**Kore Data - Conectamos dados para Gerar Resultados**
+**Via Labs**

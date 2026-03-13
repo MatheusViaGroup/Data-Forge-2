@@ -56,4 +56,4 @@ Uso interno - Via Group
 
 ---
 
-**Kore Data - Conectamos dados para Gerar Resultados**
+**Via Labs**

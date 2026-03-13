@@ -21,7 +21,7 @@ function Shell({ title, subtitle, children, fullHeight, topBar }: AppShellProps)
       {/* Conteúdo principal — empurra pela largura da sidebar */}
       <div
         className="flex flex-col flex-1 min-w-0 transition-all duration-300"
-        style={{ marginLeft: collapsed ? "0px" : "230px" }}
+        style={{ marginLeft: collapsed ? "68px" : "230px" }}
       >
         {/* Topbar opcional (filtros, ações) */}
         {topBar && (
