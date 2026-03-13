@@ -700,7 +700,7 @@ export default function UsuariosPage() {
               )}
 
               {/* Dashboards (apenas para não-admins) */}
-              {form.acesso !== "Administrador do Locatário" && form.acesso !== "Matriz" && (
+              {form.acesso !== "Administrador do Locatário" && (
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-xs font-semibold text-[#6C757D]">Dashboards</label>
