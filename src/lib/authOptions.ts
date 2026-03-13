@@ -1,4 +1,4 @@
-import type { NextAuthOptions } from "next-auth";
+import type { NextAuthOptions, JWT } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -73,7 +73,7 @@ export const authOptions: NextAuthOptions = {
           .eq("status", "Ativo")
           .single();
 
-        if (!data) return null; // Invalida o token → redireciona para login
+        if (!data) return null as unknown as JWT; // Invalida o token → redireciona para login
       }
 
       return token;
