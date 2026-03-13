@@ -25,11 +25,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Parâmetro url obrigatório" }, { status: 400 });
   }
 
-  // Buscar credencial ativa
+  // Buscar credencial ativa (status pode ser "Ativo" ou "ativo")
   const { data: cred, error: credError } = await supabaseAdmin
     .from("credenciais")
-    .select("tenant_id, client_id, client_secret, master_user, master_password")
-    .eq("status", "ativo")
+    .select("tenant_id, client_id, client_secret")
+    .ilike("status", "ativo")
     .limit(1)
     .single();
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Obter token via MSAL (ROPC) com scope Graph
+  // Obter token via client_credentials (app-only) — usa permissões Application (Sites.Read.All)
   let accessToken: string;
   try {
     const cca = new msal.ConfidentialClientApplication({
@@ -51,10 +51,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const authResult = await cca.acquireTokenByUsernamePassword({
+    const authResult = await cca.acquireTokenByClientCredential({
       scopes: ["https://graph.microsoft.com/.default"],
-      username: cred.master_user,
-      password: cred.master_password,
     });
 
     if (!authResult?.accessToken) {
@@ -66,7 +64,7 @@ export async function GET(request: NextRequest) {
     const err = e as Error & { errorCode?: string; errorMessage?: string };
     return NextResponse.json(
       {
-        error: "Falha ao obter token Graph via ROPC",
+        error: "Falha ao obter token Graph via client_credentials",
         errorCode: err.errorCode,
         detail: err.errorMessage ?? err.message,
       },
