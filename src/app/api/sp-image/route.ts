@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { supabaseAdmin } from "@/lib/supabase";
+import * as msal from "@azure/msal-node";
 
 function encodeSharingUrl(url: string): string {
   const base64 = Buffer.from(url)
@@ -12,43 +13,8 @@ function encodeSharingUrl(url: string): string {
   return "u!" + base64;
 }
 
-// Client credentials flow (app-only)
-async function getAppToken(tenantId: string, clientId: string, clientSecret: string, scope: string): Promise<string> {
-  const res = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "client_credentials",
-      client_id: clientId,
-      client_secret: clientSecret,
-      scope,
-    }).toString(),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(`AppToken error: ${data.error} - ${data.error_description}`);
-  return data.access_token as string;
-}
-
-// ROPC flow (user token via master_user + master_password)
-async function getUserToken(tenantId: string, clientId: string, clientSecret: string, username: string, password: string, scope: string): Promise<string> {
-  const res = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "password",
-      client_id: clientId,
-      client_secret: clientSecret,
-      username,
-      password,
-      scope,
-    }).toString(),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(`UserToken error: ${data.error} - ${data.error_description}`);
-  return data.access_token as string;
-}
-
 export async function GET(request: NextRequest) {
+  // Verificar sessão
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -59,7 +25,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Parâmetro url obrigatório" }, { status: 400 });
   }
 
-  // Busca credencial ativa
+  // Buscar credencial ativa
   const { data: cred, error: credError } = await supabaseAdmin
     .from("credenciais")
     .select("tenant_id, client_id, client_secret, master_user, master_password")
@@ -68,93 +34,91 @@ export async function GET(request: NextRequest) {
     .single();
 
   if (credError || !cred) {
-    return NextResponse.json({ error: "Credencial ativa não encontrada", detail: credError?.message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Credencial ativa não encontrada", detail: credError?.message },
+      { status: 500 }
+    );
   }
 
-  const errors: string[] = [];
-  const fetchHeaders = { "User-Agent": "Mozilla/5.0 (compatible; ViaCore/1.0)", Accept: "image/*, */*" };
+  // Obter token via MSAL (ROPC) com scope Graph
+  let accessToken: string;
+  try {
+    const cca = new msal.ConfidentialClientApplication({
+      auth: {
+        clientId: cred.client_id,
+        authority: `https://login.microsoftonline.com/${cred.tenant_id}`,
+        clientSecret: cred.client_secret,
+      },
+    });
+
+    const authResult = await cca.acquireTokenByUsernamePassword({
+      scopes: ["https://graph.microsoft.com/.default"],
+      username: cred.master_user,
+      password: cred.master_password,
+    });
+
+    if (!authResult?.accessToken) {
+      return NextResponse.json({ error: "Token Graph não obtido (authResult vazio)" }, { status: 500 });
+    }
+
+    accessToken = authResult.accessToken;
+  } catch (e: unknown) {
+    const err = e as Error & { errorCode?: string; errorMessage?: string };
+    return NextResponse.json(
+      {
+        error: "Falha ao obter token Graph via ROPC",
+        errorCode: err.errorCode,
+        detail: err.errorMessage ?? err.message,
+      },
+      { status: 500 }
+    );
+  }
+
+  // Buscar imagem via Graph API /shares/{encoded}/driveItem/content
   const encodedUrl = encodeSharingUrl(url);
+  const graphUrl = `https://graph.microsoft.com/v1.0/shares/${encodedUrl}/driveItem/content`;
 
-  // ── T1: ROPC (master user) + Graph /shares/{encoded}/driveItem/content ────
-  try {
-    const userToken = await getUserToken(
-      cred.tenant_id, cred.client_id, cred.client_secret,
-      cred.master_user, cred.master_password,
-      "https://graph.microsoft.com/Files.Read.All Sites.Read.All offline_access"
-    );
-    const graphUrl = `https://graph.microsoft.com/v1.0/shares/${encodedUrl}/driveItem/content`;
-    console.log("[sp-image] T1 ROPC+Graph:", graphUrl);
+  console.log("[sp-image] Buscando:", graphUrl);
 
-    const res = await fetch(graphUrl, {
-      headers: { Authorization: `Bearer ${userToken}`, ...fetchHeaders },
-      redirect: "follow",
-    });
-    const ct = res.headers.get("content-type") ?? "";
-    if (res.ok && ct.startsWith("image/")) {
-      const buf = await res.arrayBuffer();
-      return new NextResponse(buf, {
-        headers: { "Content-Type": ct, "Cache-Control": "public, max-age=3600" },
-      });
-    }
+  const res = await fetch(graphUrl, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "image/*, */*",
+    },
+    redirect: "follow",
+  });
+
+  const contentType = res.headers.get("content-type") ?? "";
+
+  if (!res.ok) {
     const body = await res.text().catch(() => "");
-    errors.push(`T1-ROPC+Graph: ${res.status} / ${ct} / ${body.slice(0, 300)}`);
-  } catch (e) {
-    errors.push(`T1-ROPC+Graph exception: ${e instanceof Error ? e.message : String(e)}`);
+    return NextResponse.json(
+      {
+        error: "Graph API retornou erro",
+        status: res.status,
+        contentType,
+        body: body.slice(0, 500),
+        dica: res.status === 403
+          ? "O app Azure não tem permissão Sites.Read.All ou Files.Read.All no Microsoft Graph. Adicione em Azure AD → App registrations → API permissions → Microsoft Graph → Application permissions → Sites.Read.All → Grant admin consent."
+          : undefined,
+      },
+      { status: 502 }
+    );
   }
 
-  // ── T2: ROPC (master user) + SharePoint REST API ──────────────────────────
-  try {
-    const spHost = "https://vialacteoscombr.sharepoint.com";
-    const userSpToken = await getUserToken(
-      cred.tenant_id, cred.client_id, cred.client_secret,
-      cred.master_user, cred.master_password,
-      `${spHost}/AllSites.Read`
-    );
-    console.log("[sp-image] T2 ROPC+SP direto:", url);
-
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${userSpToken}`, ...fetchHeaders },
-      redirect: "follow",
-    });
-    const ct = res.headers.get("content-type") ?? "";
-    if (res.ok && ct.startsWith("image/")) {
-      const buf = await res.arrayBuffer();
-      return new NextResponse(buf, {
-        headers: { "Content-Type": ct, "Cache-Control": "public, max-age=3600" },
-      });
-    }
+  if (!contentType.startsWith("image/")) {
     const body = await res.text().catch(() => "");
-    errors.push(`T2-ROPC+SP: ${res.status} / ${ct} / ${body.slice(0, 300)}`);
-  } catch (e) {
-    errors.push(`T2-ROPC+SP exception: ${e instanceof Error ? e.message : String(e)}`);
+    return NextResponse.json(
+      { error: "Resposta não é imagem", contentType, body: body.slice(0, 300) },
+      { status: 502 }
+    );
   }
 
-  // ── T3: App-only token + Graph /shares/{encoded}/driveItem/content ─────────
-  try {
-    const appToken = await getAppToken(
-      cred.tenant_id, cred.client_id, cred.client_secret,
-      "https://graph.microsoft.com/.default"
-    );
-    const graphUrl = `https://graph.microsoft.com/v1.0/shares/${encodedUrl}/driveItem/content`;
-    console.log("[sp-image] T3 AppOnly+Graph:", graphUrl);
-
-    const res = await fetch(graphUrl, {
-      headers: { Authorization: `Bearer ${appToken}`, ...fetchHeaders },
-      redirect: "follow",
-    });
-    const ct = res.headers.get("content-type") ?? "";
-    if (res.ok && ct.startsWith("image/")) {
-      const buf = await res.arrayBuffer();
-      return new NextResponse(buf, {
-        headers: { "Content-Type": ct, "Cache-Control": "public, max-age=3600" },
-      });
-    }
-    const body = await res.text().catch(() => "");
-    errors.push(`T3-AppOnly+Graph: ${res.status} / ${ct} / ${body.slice(0, 300)}`);
-  } catch (e) {
-    errors.push(`T3-AppOnly+Graph exception: ${e instanceof Error ? e.message : String(e)}`);
-  }
-
-  console.error("[sp-image] Todas tentativas falharam:", errors);
-  return NextResponse.json({ error: "Falha ao buscar imagem", attempts: errors }, { status: 502 });
+  const buffer = await res.arrayBuffer();
+  return new NextResponse(buffer, {
+    headers: {
+      "Content-Type": contentType,
+      "Cache-Control": "public, max-age=3600",
+    },
+  });
 }
