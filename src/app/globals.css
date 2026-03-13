@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --font-inter: "Inter", system-ui, sans-serif;
+  --font-dm-mono: "DM Mono", monospace;
+  /* Altura da barra de notificação gratuita da Microsoft no Power BI */
+  --pbi-notif-height: 40px;
+  
+  /* Cores da Identidade Visual */
+  --via-blue: #4B5FBF;
+  --via-medium: #5A6FD6;
+  --via-cyan: #00AEEF;
+  --via-dark: #4040B0;
+  --via-green: #28A745;
+  --via-gray: #6C757D;
+  --via-text: #333333;
+  --via-input: #F0F4F8;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: var(--font-inter);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ─── Power BI: esconde barra de notificação "upgrade" da Microsoft ────────────
+   O iframe é cross-origin — não dá pra injetar CSS dentro dele.
+   Solução: container com overflow:hidden + shifter sobe o iframe
+   pelo tamanho exato da barra, que fica "acima" da área visível.
+   O conteúdo do relatório NÃO é cortado — só a barra de aviso.
+   ─────────────────────────────────────────────────────────────────────────── */
+.powerbi-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+}
+
+.powerbi-shifter {
+  position: absolute;
+  /* Sobe exatamente o tamanho da barra */
+  top: calc(-1 * var(--pbi-notif-height));
+  left: 0;
+  right: 0;
+  /* Compensa a altura para o relatório não ser cortado embaixo */
+  bottom: calc(-1 * var(--pbi-notif-height));
+}
+
+/* O componente PowerBIEmbed e seu iframe precisam preencher tudo */
+.powerbi-shifter > div,
+.powerbi-shifter iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+}
+
+/* ─── Thumbnails dos cards ─────────────────────────────────────────────────── */
+.powerbi-thumb-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+.powerbi-thumb-shifter {
+  position: absolute;
+  top: calc(-1 * var(--pbi-notif-height));
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * var(--pbi-notif-height));
+}
+
+.powerbi-thumb-shifter iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  pointer-events: none;
+}
+
+/* ─── Custom scrollbar ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
