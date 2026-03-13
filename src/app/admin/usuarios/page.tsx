@@ -618,7 +618,7 @@ export default function UsuariosPage() {
               )}
 
               {/* Filiais (apenas para não-admins) */}
-              {form.acesso !== "Administrador do Locatário" && (
+              {form.acesso !== "Administrador do Locatário" && form.acesso !== "Matriz" && (
                 <div>
                   {/* Acesso Especial */}
                   <div className="mb-4">
@@ -700,7 +700,7 @@ export default function UsuariosPage() {
               )}
 
               {/* Dashboards (apenas para não-admins) */}
-              {form.acesso !== "Administrador do Locatário" && (
+              {form.acesso !== "Administrador do Locatário" && form.acesso !== "Matriz" && (
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-xs font-semibold text-[#6C757D]">Dashboards</label>
