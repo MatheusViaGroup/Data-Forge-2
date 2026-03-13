@@ -157,8 +157,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-
-
           {/* Botão Entrar */}
           <button
             type="submit"
