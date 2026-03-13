@@ -551,8 +551,15 @@ export default function UsuariosPage() {
                   <select value={form.acesso} onChange={(e) => setForm({ ...form, acesso: e.target.value as Usuario["acesso"] })}
                     className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all appearance-none">
                     <option value="Usuário">Usuário</option>
+                    <option value="Matriz">Matriz</option>
                     <option value="Administrador do Locatário">Administrador do Locatário</option>
                   </select>
+                  {form.acesso === "Matriz" && (
+                    <p className="text-xs text-[#4B5FBF] mt-1.5 ml-1 flex items-center gap-1">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                      Acesso a todas as filiais automaticamente. Selecione os B&apos;Is liberados abaixo.
+                    </p>
+                  )}
                 </div>
                 {isEdit && (
                   <div>

@@ -176,7 +176,8 @@ export async function POST(request: NextRequest) {
       .eq("email", session.user.email)
       .single();
 
-    isAdmin = userData?.acesso === "Administrador do Locatário";
+    // Matriz tem todas as filiais liberadas (sem filtro RLS por filial)
+    isAdmin = userData?.acesso === "Administrador do Locatário" || userData?.acesso === "Matriz";
     console.log("Usuário é ADMIN:", isAdmin);
 
     if (rls && !isAdmin) {

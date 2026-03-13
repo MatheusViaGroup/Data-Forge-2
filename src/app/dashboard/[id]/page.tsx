@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { models, Report, Page } from "powerbi-client";
+import { models } from "powerbi-client";
 import AppShell from "@/components/AppShell";
 import { Loader2, RefreshCw, ArrowLeft, Maximize2, Minimize2 } from "lucide-react";
 import Link from "next/link";
@@ -31,10 +31,6 @@ export default function DashboardViewPage() {
   const [isFocus,   setIsFocus]   = useState(false);
   const embedContainerRef = useRef<HTMLDivElement>(null);
 
-  // Navegação de abas
-  const reportRef    = useRef<Report | null>(null);
-  const [pages,      setPages]      = useState<Page[]>([]);
-  const [activePage, setActivePage] = useState<string>("");
 
   const toggleFocus = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -54,7 +50,6 @@ export default function DashboardViewPage() {
     if (!isLoaded) return;
 
     setStatus("loading"); setApiError(null);
-    setPages([]); setActivePage("");
 
     if (!dashboard) {
       router.push("/dashboard");
@@ -109,19 +104,10 @@ export default function DashboardViewPage() {
     tokenType: models.TokenType.Embed,
     settings: {
       filterPaneEnabled: false,
-      navContentPaneEnabled: false, // abas gerenciadas pelo sistema
+      navContentPaneEnabled: true, // barra de abas nativa do Power BI
       background: models.BackgroundType.Default,
     },
   } : undefined;
-
-  async function handlePageClick(page: Page) {
-    try {
-      await page.setActive();
-      setActivePage(page.name);
-    } catch (e) {
-      console.error("[Tabs] Erro ao trocar de aba:", e);
-    }
-  }
 
   const backBar = (
     <div className="flex items-center justify-between w-full">
@@ -231,7 +217,7 @@ export default function DashboardViewPage() {
 
       {/* ─── Power BI ────────────────────────────────────────────────────── */}
       {status === "success" && embedData && embedConfig && (
-        <div ref={embedContainerRef} className="powerbi-container h-full relative flex flex-col">
+        <div ref={embedContainerRef} className="powerbi-container h-full relative">
           {isFocus && (
             <button
               onClick={toggleFocus}
@@ -240,64 +226,11 @@ export default function DashboardViewPage() {
               <Minimize2 size={13} /> Sair do foco
             </button>
           )}
-          {/* ─── Abas de navegação ──────────────────────────────────── */}
-          {pages.length > 1 && (
-            <div
-              className="flex items-center gap-1 px-4 overflow-x-auto flex-shrink-0"
-              style={{
-                background: "#FFFFFF",
-                borderBottom: "1px solid #EBEBEC",
-                height: 44,
-                scrollbarWidth: "none",
-              }}
-            >
-              {pages.map(page => {
-                const isActive = page.name === activePage;
-                return (
-                  <button
-                    key={page.name}
-                    onClick={() => handlePageClick(page)}
-                    className="flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
-                    style={{
-                      background: isActive ? "#EEF1FB" : "transparent",
-                      color: isActive ? "#4B5FBF" : "#6B7280",
-                      border: isActive ? "1px solid #C7CEED" : "1px solid transparent",
-                    }}
-                    onMouseEnter={e => { if (!isActive) (e.currentTarget.style.background = "#F4F5F7"); }}
-                    onMouseLeave={e => { if (!isActive) (e.currentTarget.style.background = "transparent"); }}
-                  >
-                    {page.displayName}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="powerbi-shifter flex-1">
+          <div className="powerbi-shifter">
             <PowerBIEmbed
               embedConfig={embedConfig}
               cssClassName="w-full h-full"
-              getEmbeddedComponent={(component) => {
-                reportRef.current = component as Report;
-              }}
               eventHandlers={new Map([
-                ["loaded", async () => {
-                  if (!reportRef.current) return;
-                  try {
-                    const allPages = await reportRef.current.getPages();
-                    // visibility 0 = visível, filtra abas ocultas
-                    const visible = allPages.filter(p => p.visibility === 0);
-                    setPages(visible);
-                    const active = allPages.find(p => p.isActive);
-                    setActivePage(active?.name ?? visible[0]?.name ?? "");
-                  } catch (e) {
-                    console.error("[Tabs] Erro ao carregar páginas:", e);
-                  }
-                }],
-                ["pageChanged", (event: unknown) => {
-                  const e = event as { detail?: { newPage?: { name?: string } } };
-                  if (e?.detail?.newPage?.name) setActivePage(e.detail.newPage.name);
-                }],
                 ["error", (event: unknown) => {
                   console.error("[PBI] Erro no embed:", event);
                 }],

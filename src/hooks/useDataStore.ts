@@ -23,7 +23,7 @@ export interface Usuario {
   nome: string;
   email: string;
   departamento: string;
-  acesso: "Administrador do Locatário" | "Usuário";
+  acesso: "Administrador do Locatário" | "Usuário" | "Matriz";
   status: "Ativo" | "Excluído";
   filiais: string[];
   dashboards: string[];

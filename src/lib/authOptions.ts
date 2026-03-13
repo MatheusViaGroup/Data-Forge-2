@@ -22,7 +22,7 @@ export const authOptions: NextAuthOptions = {
 
         const { data: user, error } = await supabaseAdmin
           .from("usuarios")
-          .select("id, nome, email, senha_hash, acesso, status, must_change_password")
+          .select("id, nome, email, senha_hash, acesso, status, must_change_password, dashboards")
           .eq("email", credentials.email)
           .eq("status", "Ativo")
           .single();
@@ -51,8 +51,11 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           name: user.nome,
           email: user.email,
-          role: user.acesso === "Administrador do Locatário" ? "admin" : "user",
+          role: user.acesso === "Administrador do Locatário" ? "admin"
+              : user.acesso === "Matriz" ? "matriz"
+              : "user",
           mustChangePassword: user.must_change_password ?? false,
+          allowedDashboards: (user.acesso === "Administrador do Locatário") ? [] : (user.dashboards ?? []),
         };
       },
     }),
@@ -63,6 +66,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = user.role;
         token.mustChangePassword = user.mustChangePassword;
+        token.allowedDashboards = user.allowedDashboards ?? [];
       }
 
       // Valida se o usuário ainda existe e está ativo no banco
@@ -84,6 +88,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.mustChangePassword = token.mustChangePassword ?? false;
+        session.user.allowedDashboards = (token.allowedDashboards as string[]) ?? [];
       }
       return session;
     },
