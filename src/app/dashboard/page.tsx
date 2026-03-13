@@ -33,7 +33,7 @@ function DashboardCard({ dash, viewMode }: { dash: Dashboard; viewMode: "grid" |
         {/* Ícone / Capa */}
         <div
           className="flex items-center justify-center rounded-xl flex-shrink-0 overflow-hidden"
-          style={{ width: 52, height: 52, background: "#EEF1FB" }}
+          style={{ width: 64, height: 64, background: "#EEF1FB" }}
         >
           {dash.urlCapa ? (
             <img src={dash.urlCapa} alt={dash.nome} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -68,7 +68,7 @@ function DashboardCard({ dash, viewMode }: { dash: Dashboard; viewMode: "grid" |
   return (
     <Link
       href={`/dashboard/${dash.id}`}
-      className="flex flex-col items-center p-6 rounded-2xl transition-all duration-150 cursor-pointer group"
+      className="flex flex-col rounded-2xl transition-all duration-150 cursor-pointer group overflow-hidden"
       style={{
         background: "#FFFFFF",
         border: "1px solid #EBEBEC",
@@ -83,34 +83,37 @@ function DashboardCard({ dash, viewMode }: { dash: Dashboard; viewMode: "grid" |
         (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
       }}
     >
-      {/* Ícone / Capa central */}
+      {/* Capa — ocupa toda a largura do card */}
       <div
-        className="flex items-center justify-center rounded-2xl mb-4 overflow-hidden"
-        style={{ width: 64, height: 64, background: "#EEF1FB" }}
+        className="w-full flex items-center justify-center overflow-hidden"
+        style={{ height: 120, background: "#EEF1FB" }}
       >
         {dash.urlCapa ? (
           <img src={dash.urlCapa} alt={dash.nome} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         ) : (
-          <BarChart2 size={28} style={{ color: "#4B5FBF" }} />
+          <BarChart2 size={36} style={{ color: "#4B5FBF" }} />
         )}
       </div>
 
-      {/* Nome */}
-      <p
-        className="font-semibold text-center leading-snug line-clamp-2"
-        style={{ color: "#1A1A2E", fontSize: "13px" }}
-      >
-        {dash.nome}
-      </p>
-
-      {dash.descricao && (
+      {/* Texto */}
+      <div className="px-4 py-3">
+        {/* Nome */}
         <p
-          className="text-center mt-1 line-clamp-2"
-          style={{ color: "#9CA3AF", fontSize: "11px" }}
+          className="font-semibold leading-snug line-clamp-2"
+          style={{ color: "#1A1A2E", fontSize: "13px" }}
         >
-          {dash.descricao}
+          {dash.nome}
         </p>
-      )}
+
+        {dash.descricao && (
+          <p
+            className="mt-0.5 line-clamp-1"
+            style={{ color: "#9CA3AF", fontSize: "11px" }}
+          >
+            {dash.descricao}
+          </p>
+        )}
+      </div>
     </Link>
   );
 }
