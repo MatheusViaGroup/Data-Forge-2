@@ -9,6 +9,8 @@
   --font-dm-mono: "DM Mono", monospace;
   /* Altura da barra de notificação gratuita da Microsoft no Power BI */
   --pbi-notif-height: 40px;
+  /* Altura da barra de abas de páginas do Power BI (nav pane) */
+  --pbi-nav-height: 36px;
   
   /* Cores da Identidade Visual - Via Core */
   --via-blue: #6366F1;
@@ -73,12 +75,12 @@ body {
 
 .powerbi-shifter {
   position: absolute;
-  /* Sobe exatamente o tamanho da barra */
+  /* Sobe para ocultar a barra de notificação do topo */
   top: calc(-1 * var(--pbi-notif-height));
   left: 0;
   right: 0;
-  /* Compensa a altura para o relatório não ser cortado embaixo */
-  bottom: calc(-1 * var(--pbi-notif-height));
+  /* bottom: 0 expõe a barra de abas de páginas na parte inferior */
+  bottom: 0;
 }
 
 /* O componente PowerBIEmbed e seu iframe precisam preencher tudo */
