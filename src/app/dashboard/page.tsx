@@ -13,6 +13,7 @@ import {
   Search,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useDataStoreContext, Dashboard } from "@/contexts/DataStoreContext";
 
 /* ─── Card de Dashboard ─────────────────────────────────────────────────── */
@@ -108,12 +109,32 @@ function DashboardCard({ dash, viewMode }: { dash: Dashboard; viewMode: "grid" |
 
 /* ─── Page ──────────────────────────────────────────────────────────────── */
 export default function DashboardPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const { dashboards, isLoaded } = useDataStoreContext();
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const isAdmin = session?.user?.role === "admin";
   const userName = session?.user?.name ?? "Usuário";
+
+  // Redireciona para login se não tiver sessão
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/login");
+    }
+  }, [status, router]);
+
+  // Tela de carregamento enquanto verifica a sessão
+  if (status === "loading" || !session) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "#F4F5F7" }}
+      >
+        <Loader2 size={30} className="animate-spin" style={{ color: "#4B5FBF" }} />
+      </div>
+    );
+  }
 
   const filtered = dashboards.filter(
     (d) =>
