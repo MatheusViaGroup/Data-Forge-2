@@ -156,19 +156,6 @@ export default function LoginPage() {
               </button>
             </div>
           </div>
-
-          {/* Recuperar Senha */}
-          <div>
-            <a
-              href="#"
-              style={{ fontSize: "13px", color: "#2454A4", fontWeight: 500 }}
-              onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
-              onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
-            >
-              Recuperar Senha
-            </a>
-          </div>
-
           {/* Botão Entrar */}
           <button
             type="submit"
