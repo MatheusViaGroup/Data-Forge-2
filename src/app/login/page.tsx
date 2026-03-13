@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, AlertCircle, Check } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+
+  // Limpa qualquer sessão ativa ao abrir a tela de login
+  useEffect(() => {
+    signOut({ redirect: false });
+  }, []);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -65,7 +70,8 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="bi@viagroup.com.br"
+                  placeholder="seu@email.com.br"
+                  autoComplete="off"
                   required
                   className="w-full px-6 py-3.5 bg-[#F0F4F8] border-0 rounded-full text-[#333333] placeholder-[#94a3b8] text-sm focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
                 />
@@ -78,6 +84,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
+                    autoComplete="new-password"
                     required
                     className="w-full px-6 py-3.5 bg-[#F0F4F8] border-0 rounded-full text-[#333333] placeholder-[#94a3b8] text-sm focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all pr-12"
                   />
@@ -154,7 +161,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-white/70 text-xs mt-6">
-          Kore Data - Conectamos dados para Gerar Resultados
+          Via Core — Portal de Inteligência Via Group
         </p>
       </div>
     </div>
