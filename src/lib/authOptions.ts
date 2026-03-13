@@ -63,6 +63,19 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role;
         token.mustChangePassword = user.mustChangePassword;
       }
+
+      // Valida se o usuário ainda existe e está ativo no banco
+      if (token.id) {
+        const { data } = await supabaseAdmin
+          .from("usuarios")
+          .select("id, status")
+          .eq("id", token.id)
+          .eq("status", "Ativo")
+          .single();
+
+        if (!data) return null; // Invalida o token → redireciona para login
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -79,6 +92,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 8 * 60 * 60, // 8 horas
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
