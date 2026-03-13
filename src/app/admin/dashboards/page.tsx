@@ -108,14 +108,14 @@ export default function AdminDashboardsPage() {
         });
         await updateDashboard(form.id, {
           nome: form.nome,
-          descricao: form.descricao,
+          descricao: form.descricao || null,
           workspaceId: form.workspaceId,
           reportId: form.reportId,
-          datasetId: form.datasetId,
+          datasetId: form.datasetId || null,
           ativo: form.ativo,
           rls: form.rls,
           status: form.status,
-          setor: form.setor,
+          setor: form.setor || null,
         });
         setFeedback({ type: "success", msg: "Dashboard atualizado com sucesso!" });
       } else {
@@ -132,14 +132,14 @@ export default function AdminDashboardsPage() {
         });
         await addDashboard({
           nome: form.nome,
-          descricao: form.descricao,
+          descricao: form.descricao || null,
           workspaceId: form.workspaceId,
           reportId: form.reportId,
-          datasetId: form.datasetId,
+          datasetId: form.datasetId || null,
           ativo: form.ativo,
           rls: form.rls,
           status: form.status,
-          setor: form.setor,
+          setor: form.setor || null,
         });
         setFeedback({ type: "success", msg: "Dashboard criado com sucesso!" });
       }
@@ -335,7 +335,7 @@ export default function AdminDashboardsPage() {
 
         {/* Rodapé */}
         <p className="text-center text-[#6C757D] text-xs mt-8">
-          Kore Data - Conectamos dados para Gerar Resultados
+          Via Labs
         </p>
       </div>
 

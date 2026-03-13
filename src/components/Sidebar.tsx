@@ -70,20 +70,6 @@ export default function Sidebar() {
               transition: "width 0.3s",
             }}
           />
-          {/* Badge CORE abaixo do logo */}
-          {!collapsed && (
-            <div
-              className="mt-2 px-3 py-0.5 rounded-full"
-              style={{
-                background: "#EEF1FB",
-                border: "1px solid #D0D7F5",
-              }}
-            >
-              <span style={{ fontSize: "9px", fontWeight: 700, color: "#4B5FBF", letterSpacing: "0.2em" }}>
-                CORE
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Avatar do usuário */}
