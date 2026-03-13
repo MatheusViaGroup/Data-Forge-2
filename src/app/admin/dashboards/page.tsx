@@ -108,14 +108,14 @@ export default function AdminDashboardsPage() {
         });
         await updateDashboard(form.id, {
           nome: form.nome,
-          descricao: form.descricao || null,
+          descricao: form.descricao || undefined,
           workspaceId: form.workspaceId,
           reportId: form.reportId,
-          datasetId: form.datasetId || null,
+          datasetId: form.datasetId || undefined,
           ativo: form.ativo,
           rls: form.rls,
           status: form.status,
-          setor: form.setor || null,
+          setor: form.setor || undefined,
         });
         setFeedback({ type: "success", msg: "Dashboard atualizado com sucesso!" });
       } else {
@@ -132,14 +132,14 @@ export default function AdminDashboardsPage() {
         });
         await addDashboard({
           nome: form.nome,
-          descricao: form.descricao || null,
+          descricao: form.descricao || undefined,
           workspaceId: form.workspaceId,
           reportId: form.reportId,
-          datasetId: form.datasetId || null,
+          datasetId: form.datasetId || undefined,
           ativo: form.ativo,
           rls: form.rls,
           status: form.status,
-          setor: form.setor || null,
+          setor: form.setor || undefined,
         });
         setFeedback({ type: "success", msg: "Dashboard criado com sucesso!" });
       }
