@@ -6,8 +6,8 @@ import Providers from "./providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Via Group — Portal de Inteligência",
-  description: "Via Group Portal de Inteligência",
+  title: "Via Core — Portal de Inteligência",
+  description: "Via Core by Via Group",
 };
 
 export default function RootLayout({

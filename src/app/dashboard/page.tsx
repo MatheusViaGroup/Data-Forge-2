@@ -32,7 +32,7 @@ function DashboardCard({ dash, viewMode }: { dash: Dashboard; viewMode: "grid" |
     return (
       <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-card hover:shadow-soft transition-all duration-200 flex items-center gap-4 px-5 py-4">
         {/* Mini thumb */}
-        <div className="relative rounded-xl overflow-hidden flex-shrink-0 border border-[#e2e8f0]" style={{ width: 120, height: 80, background: "linear-gradient(135deg, #4B5FBF 0%, #5A6FD6 100%)" }}>
+        <div className="relative rounded-xl overflow-hidden flex-shrink-0 border border-[#e2e8f0]" style={{ width: 120, height: 80, background: "linear-gradient(135deg, #6366F1 0%, #818CF8 100%)" }}>
           <div className="absolute inset-0 flex items-center justify-center">
             <BarChart2 size={32} className="text-white/40" />
           </div>
@@ -40,7 +40,7 @@ function DashboardCard({ dash, viewMode }: { dash: Dashboard; viewMode: "grid" |
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-[#4B5FBF] font-bold text-sm">{dash.nome}</p>
+            <p className="text-[#6366F1] font-bold text-sm">{dash.nome}</p>
             <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border flex items-center gap-1 ${prioridade.color}`}>
               <IconPrioridade size={10} />
               {dash.prioridade === "alta" ? "Alta" : dash.prioridade === "media" ? "Média" : "Baixa"}
@@ -48,7 +48,7 @@ function DashboardCard({ dash, viewMode }: { dash: Dashboard; viewMode: "grid" |
           </div>
           {dash.descricao && <p className="text-[#6C757D] text-xs mt-0.5 truncate">{dash.descricao}</p>}
         </div>
-        <Link href={`/dashboard/${dash.id}`} className="flex items-center gap-2 px-4 py-2 bg-[#4B5FBF] hover:bg-[#4040B0] text-white text-xs font-bold rounded-full transition-colors flex-shrink-0 shadow-md">
+        <Link href={`/dashboard/${dash.id}`} className="flex items-center gap-2 px-4 py-2 bg-[#6366F1] hover:bg-[#4F46E5] text-white text-xs font-bold rounded-full transition-colors flex-shrink-0 shadow-md">
           <ExternalLink size={13} /> Acessar
         </Link>
       </div>
@@ -58,7 +58,7 @@ function DashboardCard({ dash, viewMode }: { dash: Dashboard; viewMode: "grid" |
   return (
     <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-card overflow-hidden flex flex-col hover:shadow-soft transition-all duration-200 group">
       {/* Thumbnail */}
-      <div className="relative border-b border-[#e2e8f0]" style={{ height: 160, background: "linear-gradient(135deg, #4B5FBF 0%, #5A6FD6 100%)" }}>
+      <div className="relative border-b border-[#e2e8f0]" style={{ height: 160, background: "linear-gradient(135deg, #6366F1 0%, #818CF8 100%)" }}>
         {/* Ícone de preview */}
         <div className="absolute inset-0 flex items-center justify-center">
           <BarChart2 size={48} className="text-white/30" />
@@ -78,10 +78,10 @@ function DashboardCard({ dash, viewMode }: { dash: Dashboard; viewMode: "grid" |
       
       {/* Body */}
       <div className="flex flex-col flex-1 px-4 pt-3.5 pb-4">
-        <h3 className="text-[#4B5FBF] font-bold text-sm leading-snug line-clamp-2 mb-1 text-center">{dash.nome}</h3>
+        <h3 className="text-[#6366F1] font-bold text-sm leading-snug line-clamp-2 mb-1 text-center">{dash.nome}</h3>
         {dash.descricao && <p className="text-[#6C757D] text-[11px] leading-relaxed line-clamp-2 mb-3 text-center">{dash.descricao}</p>}
         <div className="mt-auto">
-          <Link href={`/dashboard/${dash.id}`} className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#4B5FBF] hover:bg-[#4040B0] text-white text-xs font-bold rounded-full transition-colors shadow-md">
+          <Link href={`/dashboard/${dash.id}`} className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#6366F1] hover:bg-[#4F46E5] text-white text-xs font-bold rounded-full transition-colors shadow-md">
             <ExternalLink size={13} /> Acessar Dashboard
           </Link>
         </div>
@@ -116,13 +116,13 @@ export default function DashboardPage() {
             <div className="flex items-center bg-white border border-[#e2e8f0] rounded-full p-1 shadow-sm">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`flex items-center justify-center w-9 h-9 rounded-full transition-all ${viewMode === "grid" ? "bg-[#4B5FBF] text-white shadow" : "text-[#6C757D] hover:text-[#4B5FBF]"}`}
+                className={`flex items-center justify-center w-9 h-9 rounded-full transition-all ${viewMode === "grid" ? "bg-[#6366F1] text-white shadow" : "text-[#6C757D] hover:text-[#6366F1]"}`}
               >
                 <LayoutGrid size={16} />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`flex items-center justify-center w-9 h-9 rounded-full transition-all ${viewMode === "list" ? "bg-[#4B5FBF] text-white shadow" : "text-[#6C757D] hover:text-[#4B5FBF]"}`}
+                className={`flex items-center justify-center w-9 h-9 rounded-full transition-all ${viewMode === "list" ? "bg-[#6366F1] text-white shadow" : "text-[#6C757D] hover:text-[#6366F1]"}`}
               >
                 <List size={16} />
               </button>
@@ -137,18 +137,18 @@ export default function DashboardPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Pesquisar Dashboard..."
-              className="w-full pl-11 pr-4 py-2.5 bg-white border border-[#e2e8f0] rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:border-[#4B5FBF] focus:ring-1 focus:ring-[#4B5FBF] transition-all shadow-sm"
+              className="w-full pl-11 pr-4 py-2.5 bg-white border border-[#e2e8f0] rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:border-[#6366F1] focus:ring-1 focus:ring-[#6366F1] transition-all shadow-sm"
             />
           </div>
 
           {/* Botão Pesquisar */}
-          <button className="flex items-center gap-2 px-5 py-2.5 border border-[#4B5FBF] text-[#4B5FBF] text-sm font-semibold rounded-full transition-colors hover:bg-[#4B5FBF] hover:text-white whitespace-nowrap">
+          <button className="flex items-center gap-2 px-5 py-2.5 border border-[#6366F1] text-[#6366F1] text-sm font-semibold rounded-full transition-colors hover:bg-[#6366F1] hover:text-white whitespace-nowrap">
             <Search size={15} /> Pesquisar
           </button>
 
           {/* Add button (admin only) */}
           {isAdmin && (
-            <Link href="/admin/dashboards" className="flex items-center gap-2 px-5 py-2.5 bg-[#28A745] hover:bg-[#218838] text-white text-sm font-semibold rounded-full transition-colors shadow-md whitespace-nowrap">
+            <Link href="/admin/dashboards" className="flex items-center gap-2 px-5 py-2.5 bg-[#10B981] hover:bg-[#059669] text-white text-sm font-semibold rounded-full transition-colors shadow-md whitespace-nowrap">
               <Plus size={15} /> Adicionar
             </Link>
           )}
@@ -165,7 +165,7 @@ export default function DashboardPage() {
         {/* Loading */}
         {!isLoaded && (
           <div className="flex items-center justify-center py-24">
-            <Loader2 size={28} className="animate-spin text-[#4B5FBF]" />
+            <Loader2 size={28} className="animate-spin text-[#6366F1]" />
           </div>
         )}
 
@@ -182,7 +182,7 @@ export default function DashboardPage() {
               {search ? `Não encontramos dashboards para "${search}".` : "Adicione o primeiro dashboard Power BI para visualizá-lo aqui."}
             </p>
             {!search && isAdmin && (
-              <Link href="/admin/dashboards" className="flex items-center gap-2 px-5 py-2.5 bg-[#4B5FBF] hover:bg-[#4040B0] text-white text-sm font-semibold rounded-full transition-colors shadow-md">
+              <Link href="/admin/dashboards" className="flex items-center gap-2 px-5 py-2.5 bg-[#6366F1] hover:bg-[#4F46E5] text-white text-sm font-semibold rounded-full transition-colors shadow-md">
                 <Plus size={15} /> Adicionar primeiro dashboard
               </Link>
             )}

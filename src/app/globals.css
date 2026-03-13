@@ -10,15 +10,15 @@
   /* Altura da barra de notificação gratuita da Microsoft no Power BI */
   --pbi-notif-height: 40px;
   
-  /* Cores da Identidade Visual */
-  --via-blue: #4B5FBF;
-  --via-medium: #5A6FD6;
-  --via-cyan: #00AEEF;
-  --via-dark: #4040B0;
-  --via-green: #28A745;
-  --via-gray: #6C757D;
-  --via-text: #333333;
-  --via-input: #F0F4F8;
+  /* Cores da Identidade Visual - Via Core */
+  --via-blue: #6366F1;
+  --via-medium: #818CF8;
+  --via-cyan: #06B6D4;
+  --via-dark: #4F46E5;
+  --via-green: #10B981;
+  --via-gray: #64748B;
+  --via-text: #0F172A;
+  --via-input: #F8FAFC;
 }
 
 * {
