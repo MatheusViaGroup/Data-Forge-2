@@ -13,6 +13,7 @@ class StatusEnum(str, Enum):
 class AcessoEnum(str, Enum):
     USUARIO = "Usuário"
     ADMINISTRADOR = "Administrador do Locatário"
+    MATRIZ = "Matriz"
 
 
 # ==================== USUÁRIOS ====================

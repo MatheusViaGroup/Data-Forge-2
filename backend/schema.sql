@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nome VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     departamento VARCHAR(50) NOT NULL,
-    acesso ENUM('Usuário', 'Administrador do Locatário') NOT NULL DEFAULT 'Usuário',
+    acesso ENUM('Usuário', 'Administrador do Locatário', 'Matriz') NOT NULL DEFAULT 'Usuário',
     status ENUM('Ativo', 'Inativo', 'Excluído') NOT NULL DEFAULT 'Ativo',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

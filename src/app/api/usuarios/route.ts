@@ -44,6 +44,8 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const senhaHash = await bcrypt.hash("1234", 10);
 
+  console.log("[USUARIOS API] POST - Dados recebidos:", JSON.stringify(body, null, 2));
+
   const { data, error } = await supabaseAdmin
     .from("usuarios")
     .insert({
@@ -60,7 +62,10 @@ export async function POST(request: NextRequest) {
     .select("id, nome, email, departamento, acesso, status, filiais, dashboards")
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("[USUARIOS API] Erro ao inserir:", error);
+    return NextResponse.json({ error: error.message, details: error }, { status: 500 });
+  }
   return NextResponse.json({ success: true, entry: mapRow(data) });
 }
 
