@@ -11,6 +11,7 @@ import {
   Search, Building2, LayoutDashboard,
 } from "lucide-react";
 import { useDataStoreContext, Usuario } from "@/contexts/DataStoreContext";
+import { ImportExportXlsx, ImportResult } from "@/components/ImportExportXlsx";
 
 interface Filial {
   PLANTA_ID: string;
@@ -312,10 +313,50 @@ export default function UsuariosPage() {
             <h2 className="text-[#4B5FBF] font-bold text-2xl tracking-tight">Usuários</h2>
             <p className="text-[#6C757D] text-sm mt-0.5">Gerencie os usuários e permissões de acesso</p>
           </div>
-          <button onClick={openCreate}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#28A745] hover:bg-[#218838] text-white text-sm font-semibold rounded-full transition-colors shadow-md">
-            <Plus size={16} /> Novo Usuário
-          </button>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <ImportExportXlsx
+              nomeTemplate="template_usuarios"
+              cols={[
+                { key: "nome",        header: "nome",        instrucao: "Nome completo do usuário",              exemplo: "João Silva" },
+                { key: "email",       header: "email",       instrucao: "E-mail corporativo",                    exemplo: "joao.silva@viagroup.com" },
+                { key: "senha",       header: "senha",       instrucao: "Senha inicial (mín. 6 caracteres)",     exemplo: "Senha@123" },
+                { key: "departamento",header: "departamento",instrucao: "Departamento do usuário",               exemplo: "TI" },
+                { key: "acesso",      header: "acesso",      instrucao: "Usuário  ou  Administrador do Locatário",exemplo: "Usuário" },
+                { key: "filiais",     header: "filiais",     instrucao: "Códigos de filiais separados por vírgula",exemplo: "AB01,AB02" },
+              ]}
+              onImport={async (rows): Promise<ImportResult> => {
+                let success = 0;
+                const errors: string[] = [];
+                for (const row of rows) {
+                  if (!row.nome || !row.email || !row.senha) {
+                    errors.push(`Linha ignorada: nome, email e senha são obrigatórios (email: ${row.email || "?"}).`);
+                    continue;
+                  }
+                  try {
+                    await addUsuario({
+                      nome: row.nome,
+                      email: row.email,
+                      senha: row.senha,
+                      departamento: row.departamento || "",
+                      acesso: (row.acesso === "Administrador do Locatário" ? "Administrador do Locatário" : "Usuário") as Usuario["acesso"],
+                      status: "Ativo",
+                      filiais: row.filiais ? row.filiais.split(",").map(s => s.trim()).filter(Boolean) : [],
+                      dashboards: [],
+                    });
+                    success++;
+                  } catch (e) {
+                    errors.push(`Erro ao criar ${row.email}: ${e instanceof Error ? e.message : String(e)}`);
+                  }
+                }
+                if (success > 0) loadAdminData();
+                return { success, errors };
+              }}
+            />
+            <button onClick={openCreate}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#28A745] hover:bg-[#218838] text-white text-sm font-semibold rounded-full transition-colors shadow-md">
+              <Plus size={16} /> Novo Usuário
+            </button>
+          </div>
         </div>
 
         {/* Feedback */}

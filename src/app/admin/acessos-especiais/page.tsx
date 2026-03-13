@@ -9,6 +9,7 @@ import {
   CheckCircle2, AlertCircle, Search, Building2, KeyRound,
 } from "lucide-react";
 import { useDataStoreContext, AcessoEspecial } from "@/contexts/DataStoreContext";
+import { ImportExportXlsx, ImportResult } from "@/components/ImportExportXlsx";
 
 interface Filial {
   PLANTA_ID: string;
@@ -166,12 +167,46 @@ export default function AcessosEspeciaisPage() {
             <h2 className="text-[#4B5FBF] font-bold text-2xl tracking-tight">Acessos Especiais</h2>
             <p className="text-[#6C757D] text-sm mt-0.5">{acessosEspeciais.length} acesso{acessosEspeciais.length !== 1 ? "s" : ""} cadastrado{acessosEspeciais.length !== 1 ? "s" : ""}</p>
           </div>
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#28A745] hover:bg-[#218838] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
-          >
-            <Plus size={16} /> Novo Acesso
-          </button>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <ImportExportXlsx
+              nomeTemplate="template_acessos_especiais"
+              cols={[
+                { key: "nome",      header: "nome",      instrucao: "Nome do acesso especial",                     exemplo: "Acesso Filial SP" },
+                { key: "descricao", header: "descricao", instrucao: "Descrição (opcional)",                          exemplo: "Acesso para filiais de São Paulo" },
+                { key: "filiais",   header: "filiais",   instrucao: "Códigos de filiais separados por vírgula",      exemplo: "AB01,AB02,AB03" },
+                { key: "status",    header: "status",    instrucao: "Ativo ou Inativo",                              exemplo: "Ativo" },
+              ]}
+              onImport={async (rows): Promise<ImportResult> => {
+                let success = 0;
+                const errors: string[] = [];
+                for (const row of rows) {
+                  if (!row.nome) {
+                    errors.push(`Linha ignorada: campo "nome" é obrigatório.`);
+                    continue;
+                  }
+                  try {
+                    await addAcessoEspecial({
+                      nome: row.nome,
+                      descricao: row.descricao || "",
+                      filiais: row.filiais ? row.filiais.split(",").map(s => s.trim()).filter(Boolean) : [],
+                      status: row.status === "Inativo" ? "Inativo" : "Ativo",
+                    });
+                    success++;
+                  } catch (e) {
+                    errors.push(`Erro ao criar "${row.nome}": ${e instanceof Error ? e.message : String(e)}`);
+                  }
+                }
+                if (success > 0) loadAdminData();
+                return { success, errors };
+              }}
+            />
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#28A745] hover:bg-[#218838] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
+            >
+              <Plus size={16} /> Novo Acesso
+            </button>
+          </div>
         </div>
 
         {/* Feedback */}

@@ -9,6 +9,7 @@ import {
   CheckCircle2, AlertCircle, MoreVertical, Link2,
 } from "lucide-react";
 import { useDataStoreContext, Dashboard } from "@/contexts/DataStoreContext";
+import { ImportExportXlsx, ImportResult } from "@/components/ImportExportXlsx";
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
@@ -213,12 +214,59 @@ export default function AdminDashboardsPage() {
             <h2 className="text-[#4B5FBF] font-bold text-2xl tracking-tight">Dashboards</h2>
             <p className="text-[#6C757D] text-sm mt-0.5">{dashboards.length} dashboards cadastrados</p>
           </div>
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#28A745] hover:bg-[#218838] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
-          >
-            <Plus size={16} /> Novo Dashboard
-          </button>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <ImportExportXlsx
+              nomeTemplate="template_dashboards"
+              cols={[
+                { key: "nome",        header: "nome",        instrucao: "Nome do dashboard",                    exemplo: "Vendas Mensal" },
+                { key: "descricao",   header: "descricao",   instrucao: "Descrição (opcional)",                  exemplo: "Relatório de vendas por mês" },
+                { key: "workspaceId", header: "workspaceId", instrucao: "ID do Workspace Power BI",             exemplo: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
+                { key: "reportId",    header: "reportId",    instrucao: "ID do Relatório Power BI",             exemplo: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
+                { key: "datasetId",   header: "datasetId",   instrucao: "ID do Dataset Power BI (opcional)",    exemplo: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
+                { key: "setor",       header: "setor",       instrucao: "Setor responsável (opcional)",          exemplo: "Comercial" },
+                { key: "ativo",       header: "ativo",       instrucao: "TRUE ou FALSE",                        exemplo: "TRUE" },
+                { key: "rls",         header: "rls",         instrucao: "TRUE se usa RLS, FALSE caso contrário", exemplo: "FALSE" },
+                { key: "rlsRole",     header: "rlsRole",     instrucao: "Role do RLS (deixar vazio se não usa)", exemplo: "" },
+                { key: "urlCapa",     header: "urlCapa",     instrucao: "URL da capa (SharePoint, opcional)",   exemplo: "" },
+              ]}
+              onImport={async (rows): Promise<ImportResult> => {
+                let success = 0;
+                const errors: string[] = [];
+                for (const row of rows) {
+                  if (!row.nome || !row.workspaceId || !row.reportId) {
+                    errors.push(`Linha ignorada: nome, workspaceId e reportId são obrigatórios (nome: ${row.nome || "?"}).`);
+                    continue;
+                  }
+                  try {
+                    await addDashboard({
+                      nome: row.nome,
+                      descricao: row.descricao || "",
+                      workspaceId: row.workspaceId,
+                      reportId: row.reportId,
+                      datasetId: row.datasetId || "",
+                      setor: row.setor || "",
+                      ativo: row.ativo?.toUpperCase() !== "FALSE",
+                      rls: row.rls?.toUpperCase() === "TRUE",
+                      rlsRole: row.rlsRole || "",
+                      urlCapa: row.urlCapa || "",
+                      status: "Ativo",
+                    });
+                    success++;
+                  } catch (e) {
+                    errors.push(`Erro ao criar "${row.nome}": ${e instanceof Error ? e.message : String(e)}`);
+                  }
+                }
+                if (success > 0) loadAdminData();
+                return { success, errors };
+              }}
+            />
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#28A745] hover:bg-[#218838] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
+            >
+              <Plus size={16} /> Novo Dashboard
+            </button>
+          </div>
         </div>
 
         {/* Feedback */}

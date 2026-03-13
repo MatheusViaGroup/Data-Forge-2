@@ -9,6 +9,7 @@ import {
   CheckCircle2, AlertCircle, ShieldCheck,
 } from "lucide-react";
 import { useDataStoreContext, ParametroRLS } from "@/contexts/DataStoreContext";
+import { ImportExportXlsx, ImportResult } from "@/components/ImportExportXlsx";
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
@@ -144,12 +145,48 @@ export default function ParametrosRLSPage() {
               Configure os parâmetros de segurança por linha do Power BI
             </p>
           </div>
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#28A745] hover:bg-[#218838] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
-          >
-            <Plus size={16} /> Novo Parâmetro
-          </button>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <ImportExportXlsx
+              nomeTemplate="template_rls"
+              cols={[
+                { key: "nome",                 header: "nome",                 instrucao: "Nome do parâmetro RLS",                                  exemplo: "Filial do Usuário" },
+                { key: "nomeParametroPowerBI",  header: "nomeParametroPowerBI", instrucao: "Nome exato do parâmetro no Power BI",                    exemplo: "UserFilial" },
+                { key: "tipo",                 header: "tipo",                 instrucao: "Filial  /  Usuário  /  Departamento  /  Personalizado",   exemplo: "Filial" },
+                { key: "dashboardId",          header: "dashboardId",          instrucao: "ID do Dashboard (UUID do banco de dados)",                exemplo: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
+                { key: "tenant",               header: "tenant",               instrucao: "Tenant / domínio da organização",                        exemplo: "viagroup.com" },
+              ]}
+              onImport={async (rows): Promise<ImportResult> => {
+                let success = 0;
+                const errors: string[] = [];
+                for (const row of rows) {
+                  if (!row.nome || !row.nomeParametroPowerBI || !row.dashboardId) {
+                    errors.push(`Linha ignorada: nome, nomeParametroPowerBI e dashboardId são obrigatórios (nome: ${row.nome || "?"}).`);
+                    continue;
+                  }
+                  try {
+                    await addParametroRLS({
+                      nome: row.nome,
+                      nomeParametroPowerBI: row.nomeParametroPowerBI,
+                      tipo: row.tipo || "Filial",
+                      dashboardId: row.dashboardId,
+                      tenant: row.tenant || "",
+                    });
+                    success++;
+                  } catch (e) {
+                    errors.push(`Erro ao criar "${row.nome}": ${e instanceof Error ? e.message : String(e)}`);
+                  }
+                }
+                if (success > 0) loadAdminData();
+                return { success, errors };
+              }}
+            />
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#28A745] hover:bg-[#218838] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
+            >
+              <Plus size={16} /> Novo Parâmetro
+            </button>
+          </div>
         </div>
 
         {/* Feedback */}
