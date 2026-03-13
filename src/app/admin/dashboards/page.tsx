@@ -444,21 +444,20 @@ export default function AdminDashboardsPage() {
                     className="w-4 h-4 rounded border-[#e2e8f0] text-[#4B5FBF] focus:ring-[#4B5FBF]"
                   />
                   <label htmlFor="rls" className="text-sm text-[#333333] font-medium">
-                    Possui RLS (Row Level Security) por Filiais
+                    Possui RLS?
                   </label>
                 </div>
                 {form.rls && (
                   <div>
-                    <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Nome da Role RLS (conforme configurado no Power BI Desktop)</label>
                     <input
                       type="text"
                       value={form.rlsRole ?? ""}
                       onChange={(e) => setForm({ ...form, rlsRole: e.target.value })}
                       className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] font-mono focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
-                      placeholder="ex: FilialRole"
+                      placeholder="Nome do Parametro"
                     />
                     <p className="text-xs text-[#94a3b8] mt-1 pl-2">
-                      O DAX da role deve usar <code className="bg-[#f1f5f9] px-1 rounded">CUSTOMDATA()</code> para filtrar por filial. Ex: <code className="bg-[#f1f5f9] px-1 rounded">FIND([PLANTA_ID], CUSTOMDATA(), 1, 0) &gt; 0</code>
+                      O nome do parametro acima deve estar exatamente igual ao do B'i, a formalua que deve ser inserida no parametro é: <code className="bg-[#f1f5f9] px-1 rounded">CONTAINSSTRING(CUSTOMDATA(), [NOME_EXIBICAO])()</code>
                     </p>
                   </div>
                 )}
