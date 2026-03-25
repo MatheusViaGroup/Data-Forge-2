@@ -65,7 +65,9 @@ export async function POST(request: NextRequest) {
 
   // STEP 3: Hash senha
   console.log("\n[STEP 3] Gerando hash da senha...");
-  const senhaHash = await bcrypt.hash("1234", 10);
+  const senhaPlain = body.senha || "1234";
+  console.log("  - Senha fornecida pelo admin:", body.senha ? "SIM" : "NÃO (usando padrão 1234)");
+  const senhaHash = await bcrypt.hash(senhaPlain, 10);
   console.log("Senha hash gerada:", senhaHash.substring(0, 20) + "...");
 
   // STEP 4: Insert no Supabase
