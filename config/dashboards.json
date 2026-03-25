@@ -1,0 +1,16 @@
+{
+  "entries": [
+    {
+      "id": "1772633871667",
+      "nome": "Dashboard Local",
+      "descricao": "teste",
+      "workspaceId": "a3ee8010-31d5-48e7-a722-af10405fe8df",
+      "reportId": "01a9ff1e-4c0b-468f-9a70-5a8d9aa60af2",
+      "datasetId": "9a56fadb-237c-497d-a7d6-8678a97bdb8d",
+      "ordem": 1,
+      "ativo": true,
+      "createdAt": "2026-03-04T14:17:51.667Z",
+      "updatedAt": "2026-03-04T14:17:51.667Z"
+    }
+  ]
+}

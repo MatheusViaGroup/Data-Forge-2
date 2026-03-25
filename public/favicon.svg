@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 180 180">
+  <defs>
+    <filter id="white">
+      <feColorMatrix type="matrix" values="0 0 0 0 1
+                                           0 0 0 0 1
+                                           0 0 0 0 1
+                                           0 0 0 1 0"/>
+    </filter>
+  </defs>
+  <image href="https://auth.viagroup.com.br/assets/images/icons/favicons/apple-touch-icon.png"
+         width="180" height="180" filter="url(#white)"/>
+</svg>
