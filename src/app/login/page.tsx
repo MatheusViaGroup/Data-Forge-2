@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, AlertCircle, LogIn } from "lucide-react";
 
 const SAVED_EMAIL_KEY = "via-core-saved-email";
+const SAVED_PASSWORD_KEY = "via-core-saved-password";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,10 +24,12 @@ export default function LoginPage() {
     }
   }, [status, router]);
 
-  // Carrega o e-mail salvo no localStorage
+  // Carrega e-mail e senha salvos no localStorage
   useEffect(() => {
-    const saved = localStorage.getItem(SAVED_EMAIL_KEY);
-    if (saved) setEmail(saved);
+    const savedEmail = localStorage.getItem(SAVED_EMAIL_KEY);
+    const savedPassword = localStorage.getItem(SAVED_PASSWORD_KEY);
+    if (savedEmail) setEmail(savedEmail);
+    if (savedPassword) setPassword(savedPassword);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,8 +47,9 @@ export default function LoginPage() {
       setError("E-mail ou senha incorretos. Tente novamente.");
       setLoading(false);
     } else {
-      // Salva o e-mail para preencher automaticamente no próximo login
+      // Salva e-mail e senha para preencher automaticamente no próximo login
       localStorage.setItem(SAVED_EMAIL_KEY, email);
+      localStorage.setItem(SAVED_PASSWORD_KEY, password);
       router.push("/dashboard");
       router.refresh();
     }
