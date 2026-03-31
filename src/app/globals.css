@@ -79,8 +79,10 @@ body {
   top: calc(-1 * var(--pbi-notif-height));
   left: 0;
   right: 0;
-  /* bottom: 0 expõe a barra de abas de páginas na parte inferior */
-  bottom: 0;
+  /* Ajusta bottom para compensar a altura da barra de navegação + notificação */
+  bottom: calc(-1 * var(--pbi-nav-height));
+  /* Garante que o conteúdo tenha altura suficiente */
+  min-height: calc(100% + var(--pbi-notif-height) + var(--pbi-nav-height));
 }
 
 /* O componente PowerBIEmbed e seu iframe precisam preencher tudo */
@@ -89,6 +91,10 @@ body {
   width: 100% !important;
   height: 100% !important;
   border: none !important;
+  /* Garante que o iframe ocupe todo o espaço sem cortes */
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
 }
 
 /* ─── Thumbnails dos cards ─────────────────────────────────────────────────── */
