@@ -226,17 +226,15 @@ export default function DashboardViewPage() {
               <Minimize2 size={13} /> Sair do foco
             </button>
           )}
-          <div className="powerbi-shifter">
-            <PowerBIEmbed
-              embedConfig={embedConfig}
-              cssClassName="w-full h-full"
-              eventHandlers={new Map([
-                ["error", (event: unknown) => {
-                  console.error("[PBI] Erro no embed:", event);
-                }],
-              ])}
-            />
-          </div>
+          <PowerBIEmbed
+            embedConfig={embedConfig}
+            cssClassName="w-full h-full"
+            eventHandlers={new Map([
+              ["error", (event: unknown) => {
+                console.error("[PBI] Erro no embed:", event);
+              }],
+            ])}
+          />
         </div>
       )}
     </AppShell>
