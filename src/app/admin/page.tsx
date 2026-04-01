@@ -2,12 +2,13 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Link from "next/link";
 import {
   Settings, CheckCircle2, Database, FileBarChart,
   ShieldCheck, Users, KeyRound, ArrowRight,
+  AlertTriangle, Clock, AlertCircle,
 } from "lucide-react";
 
 const WORKSPACE_ID = "a3ee8010-31d5-48e7-a722-af10405fe8df";
@@ -29,9 +30,32 @@ export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
+  // Estado para alertas de expiração de credenciais
+  const [alertas, setAlertas] = useState<any[]>([]);
+  const [alertasLoading, setAlertasLoading] = useState(true);
+
   useEffect(() => {
     if (status === "authenticated" && session?.user?.role !== "admin") router.push("/dashboard");
   }, [session, status, router]);
+
+  // Buscar alertas de expiração
+  useEffect(() => {
+    if (session?.user?.role === "admin") {
+      fetch("/api/check-credentials")
+        .then((r) => {
+          if (!r.ok) throw new Error("Falha ao carregar alertas");
+          return r.json();
+        })
+        .then((data) => {
+          setAlertas(data.credenciais.filter((c: any) => c.alerta));
+          setAlertasLoading(false);
+        })
+        .catch((err) => {
+          console.error("[AdminPage] Erro ao buscar alertas:", err);
+          setAlertasLoading(false);
+        });
+    }
+  }, [session]);
 
   if (status === "loading" || session?.user?.role !== "admin") return null;
 
@@ -71,6 +95,67 @@ export default function AdminPage() {
             <ArrowRight size={16} className="text-[#3b82f6] group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
+
+        {/* Alertas de Expiração de Credenciais */}
+        {session?.user?.role === "admin" && (
+          <div className="mb-6">
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#6C757D] mb-3">Alertas de Expiração</h3>
+            {alertasLoading ? (
+              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5 text-sm text-[#64748b]">
+                Carregando alertas...
+              </div>
+            ) : alertas.length === 0 ? (
+              <div className="bg-green-50 border border-green-200 rounded-2xl p-5">
+                <p className="text-green-800 text-sm font-medium">
+                  ✅ Todas as credenciais estão com validade em dia.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {alertas.map((credencial) => {
+                  const getCorAlerta = (nivel: string) => {
+                    switch (nivel) {
+                      case "crítico": return "bg-red-50 border-red-200 text-red-800";
+                      case "alto": return "bg-orange-50 border-orange-200 text-orange-800";
+                      case "médio": return "bg-yellow-50 border-yellow-200 text-yellow-800";
+                      default: return "bg-gray-50 border-gray-200";
+                    }
+                  };
+                  const getIconeAlerta = (nivel: string) => {
+                    switch (nivel) {
+                      case "crítico": return <AlertCircle className="text-red-500" size={18} />;
+                      case "alto": return <AlertTriangle className="text-orange-500" size={18} />;
+                      default: return <Clock className="text-yellow-500" size={18} />;
+                    }
+                  };
+                  return (
+                    <div
+                      key={credencial.id}
+                      className={`p-4 border rounded-xl flex items-start gap-3 ${getCorAlerta(credencial.nivelAlerta)}`}
+                    >
+                      <div className="mt-0.5">{getIconeAlerta(credencial.nivelAlerta)}</div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-sm">{credencial.nome}</p>
+                        <p className="text-xs opacity-80">
+                          Credencial expira em <strong>{credencial.diasRestantes} dias</strong> ({credencial.dataExpiracao})
+                        </p>
+                        <p className="text-xs opacity-80 mt-1">
+                          Usuário Power BI: <code className="bg-white/50 px-1 rounded text-[10px]">{credencial.masterUser}</code>
+                        </p>
+                      </div>
+                      <a
+                        href="/admin/credenciais"
+                        className="text-xs font-medium underline hover:no-underline self-center"
+                      >
+                        Renovar
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-7">
           <InfoCard icon={<Database size={16} />} label="Workspace ID padrão" value={WORKSPACE_ID} mono />

@@ -295,7 +295,11 @@ export async function POST(request: NextRequest) {
 
     // STEP 8: Gerar token de embed
     stepLog(8, "Gerando token de embed");
-    const generateTokenBody: any = { accessLevel: "View" };
+    const generateTokenBody: any = {
+      accessLevel: "View",
+      // Aumentar validade para 8 horas (28800 segundos) - máximo permitido
+      expiration: new Date(Date.now() + 8 * 60 * 60 * 1000)
+    };
 
     // Formatar customData como string entre aspas (para texto no Power BI)
     const customDataFormatado = userFiliais.length > 0 

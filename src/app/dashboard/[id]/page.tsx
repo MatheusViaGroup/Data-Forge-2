@@ -8,6 +8,7 @@ import AppShell from "@/components/AppShell";
 import { Loader2, RefreshCw, ArrowLeft, Maximize2, Minimize2 } from "lucide-react";
 import Link from "next/link";
 import { useDataStoreContext } from "@/contexts/DataStoreContext";
+import { useSession } from "next-auth/react";
 
 const PowerBIEmbed = dynamic(
   () => import("powerbi-client-react").then(mod => mod.PowerBIEmbed),
@@ -22,6 +23,7 @@ export default function DashboardViewPage() {
   const params   = useParams();
   const router   = useRouter();
   const dashId   = params.id as string;
+  const { data: session } = useSession(); // Adicionado para identificar usuário no cache
   const { getDashboardById, isLoaded } = useDataStoreContext();
 
   const dashboard = getDashboardById(dashId);
@@ -56,12 +58,34 @@ export default function DashboardViewPage() {
       return;
     }
 
+    // ─── Verificar cache no sessionStorage ───────────────────────────────────────
+    const cacheKey = `pbi-embed-token:${dashboard.id}:${session?.user?.email || 'anonymous'}`;
+    const cached = sessionStorage.getItem(cacheKey);
+
+    if (cached) {
+      try {
+        const { token, embedUrl, timestamp } = JSON.parse(cached);
+        const age = Date.now() - timestamp;
+        // Embed token válido por ~1 hora; reutilizar se < 55 minutos (margem de segurança)
+        if (age < 55 * 60 * 1000) {
+          console.log("[Dashboard] Token reutilizado do cache (idade:", Math.round(age/60000), "min)");
+          setEmbedData({ accessToken: token, embedUrl });
+          setStatus("success");
+          return; // Pula requisição à API
+        } else {
+        console.log("[Dashboard] Cache expirado, obtendo novo token...");
+      }
+      } catch (e) {
+        console.warn("[Dashboard] Erro ao ler cache, ignorando:", e);
+      }
+    }
+
     // Chama API para gerar token de embed
     try {
       console.log("[Dashboard] Solicitando token de embed...");
       console.log("[Dashboard] reportId:", dashboard.reportId);
       console.log("[Dashboard] groupId:", dashboard.workspaceId);
-      
+
       const tokenData = await fetch("/api/embed-token-by-id", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -76,23 +100,35 @@ export default function DashboardViewPage() {
 
       console.log("[Dashboard] Resposta da API:", tokenData);
 
-      if (!tokenData.accessToken) { 
+      if (!tokenData.accessToken) {
         console.error("[Dashboard] Erro: sem access token");
-        setApiError(tokenData); 
-        setStatus("error"); 
-        return; 
+        setApiError(tokenData);
+        setStatus("error");
+        return;
       }
 
       console.log("[Dashboard] Token obtido com sucesso!");
       setEmbedData({ accessToken: tokenData.accessToken, embedUrl: tokenData.embedUrl });
       setStatus("success");
+
+      // Salvar no cache
+      try {
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          token: tokenData.accessToken,
+          embedUrl: tokenData.embedUrl,
+          timestamp: Date.now()
+        }));
+        console.log("[Dashboard] Token salvo no cache");
+      } catch (storageError) {
+        console.error("[Dashboard] Erro ao salvar cache:", storageError);
+      }
     } catch (err: unknown) {
       const e = err as Error;
       console.error("[Dashboard] Erro inesperado:", e);
       setApiError({ error: "Erro inesperado", details: e.message });
       setStatus("error");
     }
-  }, [dashboard, isLoaded, router]);
+  }, [dashboard, isLoaded, router, session?.user?.email]);
 
   useEffect(() => { load(); }, [load, isLoaded]);
 
