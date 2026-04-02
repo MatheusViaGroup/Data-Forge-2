@@ -8,13 +8,15 @@ import { supabaseAdmin } from "@/lib/supabase";
 async function getCredentials() {
   const { data } = await supabaseAdmin
     .from("credenciais")
-    .select("client_id, tenant_id, client_secret, master_user, master_password")
+    .select("id, client_id, tenant_id, client_secret, master_user, master_password")
     .eq("status", "ativo")
     .limit(1)
     .single();
 
   if (data) {
+    console.log("[embed-token] ✅ Usando credenciais do Supabase");
     return {
+      id: data.id,
       clientId: data.client_id,
       tenantId: data.tenant_id,
       clientSecret: data.client_secret,
@@ -23,7 +25,9 @@ async function getCredentials() {
     };
   }
 
+  console.log("[embed-token] ℹ️ Fallback para variáveis de ambiente");
   return {
+    id: null,
     clientId: process.env.POWERBI_CLIENT_ID as string,
     tenantId: process.env.POWERBI_TENANT_ID as string,
     clientSecret: process.env.POWERBI_CLIENT_SECRET as string,
@@ -133,7 +137,7 @@ export async function POST(request: NextRequest) {
     stepLog(3, "Buscando credenciais no Supabase");
     const { data: credsData, error: credsError } = await supabaseAdmin
       .from("credenciais")
-      .select("client_id, tenant_id, client_secret, master_user, master_password, status")
+      .select("id, client_id, tenant_id, client_secret, master_user, master_password, status")
       .eq("status", "ativo")
       .limit(1)
       .single();
@@ -354,13 +358,36 @@ export async function POST(request: NextRequest) {
       console.error("   Error Code:", err.response?.data?.errorCode);
       console.error("   Message:", err.response?.data?.message);
       console.error("   Details:", JSON.stringify(err.response?.data, null, 2));
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: "Falha ao gerar token de embed",
         errorCode: err.response?.data?.errorCode,
         details: err.response?.data?.message ?? err.message,
         step: 8,
         powerBIResponse: err.response?.data
       }, { status: 500 });
+    }
+
+    // Registrar uso do token (auditoria)
+    if (tokenRes.data.token && credsData?.id) {
+      try {
+        await fetch("/api/token-usage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: tokenRes.data.token,
+            dashboardId: dashboardId,
+            credentialId: credsData.id,
+            expiresAt: generateTokenBody.expiration.toISOString(),
+            reportId,
+            groupId,
+          }),
+        }).catch((regError) => {
+          console.error("[embed-token] Erro ao registrar uso:", regError);
+          // Não falha a requisição se registro der erro
+        });
+      } catch (regError) {
+        console.error("[embed-token] Erro ao chamar registro de uso:", regError);
+      }
     }
 
     // STEP 9: Retornar sucesso

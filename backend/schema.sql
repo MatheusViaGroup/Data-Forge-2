@@ -71,5 +71,28 @@ INSERT INTO dashboards (id, nome, descricao, workspace_id, report_id, dataset_id
 ('2', 'Acidentes e Incidentes', 'Monitoramento de ocorrências na frota', 'ws2', 'rpt2', 'ds2', FALSE, 'Ativo', 'Segurança'),
 ('3', 'Acompanhamento de Frota', 'Status da frota em tempo real', 'ws3', 'rpt3', 'ds3', TRUE, 'Ativo', 'Frota');
 
+-- Tabela de Auditoria de Tokens Power BI
+CREATE TABLE IF NOT EXISTS uso_tokens (
+    id VARCHAR(36) PRIMARY KEY,
+    token_hash VARCHAR(64) NOT NULL,
+    dashboard_id VARCHAR(36) NOT NULL,
+    user_id VARCHAR(36) NOT NULL,
+    credential_id VARCHAR(36) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    status ENUM('ativo', 'expirado', 'revogado') NOT NULL DEFAULT 'ativo',
+    INDEX idx_token_hash (token_hash(32)),
+    INDEX idx_dashboard_id (dashboard_id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_created_at (created_at),
+    INDEX idx_expires_at (expires_at),
+    INDEX idx_status (status),
+    FOREIGN KEY (dashboard_id) REFERENCES dashboards(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (credential_id) REFERENCES credenciais(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Commit
 COMMIT;
