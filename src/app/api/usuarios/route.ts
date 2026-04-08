@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     nome: body.nome ?? "",
     email: body.email ?? "",
     senha_hash: senhaHash,
-    departamento: body.departamento ?? "",
+    departamento: (body.departamento ?? "").toUpperCase(),
     acesso: body.acesso ?? "Usuário",
     status: body.status ?? "Ativo",
     filiais: body.filiais ?? [],
@@ -132,7 +132,7 @@ export async function PUT(request: NextRequest) {
   const updates: any = {};
   if (body.nome !== undefined) updates.nome = body.nome;
   if (body.email !== undefined) updates.email = body.email;
-  if (body.departamento !== undefined) updates.departamento = body.departamento;
+  if (body.departamento !== undefined) updates.departamento = body.departamento.toUpperCase();
   if (body.acesso !== undefined) updates.acesso = body.acesso;
   if (body.status !== undefined) updates.status = body.status;
   if (body.filiais !== undefined) updates.filiais = body.filiais;

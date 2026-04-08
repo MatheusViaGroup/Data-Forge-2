@@ -337,7 +337,7 @@ export default function UsuariosPage() {
                       nome: row.nome,
                       email: row.email,
                       senha: row.senha,
-                      departamento: row.departamento || "",
+                      departamento: (row.departamento || "").toUpperCase(),
                       acesso: (row.acesso === "Administrador do Locatário" ? "Administrador do Locatário" : "Usuário") as Usuario["acesso"],
                       status: "Ativo",
                       filiais: row.filiais ? row.filiais.split(",").map(s => s.trim()).filter(Boolean) : [],
@@ -539,7 +539,7 @@ export default function UsuariosPage() {
 
               <div>
                 <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Departamento *</label>
-                <input type="text" value={form.departamento} onChange={(e) => setForm({ ...form, departamento: e.target.value })}
+                <input type="text" value={form.departamento} onChange={(e) => setForm({ ...form, departamento: e.target.value.toUpperCase() })}
                   className={`w-full px-5 py-2.5 bg-[#F0F4F8] border rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all ${erros.departamento ? "border-red-500" : "border-transparent"}`}
                   placeholder="ex: TI, RH, Frota" />
                 {erros.departamento && <p className="text-red-500 text-xs mt-1 ml-3">{erros.departamento}</p>}
