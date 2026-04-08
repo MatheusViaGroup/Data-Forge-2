@@ -156,7 +156,7 @@ export function DatePicker({
               day: "h-8 w-8 p-0 font-normal rounded-md hover:bg-[#EEF1FB] hover:text-[#4B5FBF] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] aria-selected:bg-[#4B5FBF] aria-selected:text-white",
               day_today:
                 "bg-[#F0F4F8] font-semibold text-[#4B5FBF]",
-              day_outside: "text-[#94A3B8] opacity-50",
+              day_outside: "text-[#C4C6CC]",
               day_disabled: "text-[#94A3B8] opacity-50 cursor-not-allowed",
               day_selected: "",
               day_hidden: "invisible",
