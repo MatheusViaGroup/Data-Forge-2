@@ -59,9 +59,9 @@ export async function GET(request: NextRequest) {
   }
 
   // Buscar nomes de dashboards em uma query separada (para não precisar de join)
-  const dashboardIds = [...new Set(tokens?.map((t) => t.dashboard_id) || [])];
-  const userIds = [...new Set(tokens?.map((t) => t.user_id) || [])];
-  const credentialIds = [...new Set(tokens?.map((t) => t.credential_id) || [])];
+  const dashboardIds = [...new Set(tokens?.map((t) => t.dashboard_id).filter(Boolean) || [])];
+  const userIds = [...new Set(tokens?.map((t) => t.user_id).filter(Boolean) || [])];
+  const credentialIds = [...new Set(tokens?.map((t) => t.credential_id).filter(Boolean) || [])];
 
   const [dashboardsRes, usuariosRes, credenciaisRes] = await Promise.all([
     dashboardIds.length > 0
@@ -81,26 +81,26 @@ export async function GET(request: NextRequest) {
 
   // Agrupar por dashboard
   const byDashboard = new Map<string, { nome: string; count: number }>();
-  tokens?.forEach((t) => {
-    const nome = dashboardsMap.get(t.dashboard_id) || t.dashboard_id;
-    const current = byDashboard.get(t.dashboard_id) || { nome, count: 0 };
-    byDashboard.set(t.dashboard_id, { nome, count: current.count + 1 });
+  tokens?.filter((t) => t.dashboard_id).forEach((t) => {
+    const nome = dashboardsMap.get(t.dashboard_id!) || t.dashboard_id!;
+    const current = byDashboard.get(t.dashboard_id!) || { nome, count: 0 };
+    byDashboard.set(t.dashboard_id!, { nome, count: current.count + 1 });
   });
 
   // Agrupar por usuário
   const byUser = new Map<string, { nome: string; count: number }>();
-  tokens?.forEach((t) => {
-    const nome = usuariosMap.get(t.user_id) || t.user_id;
-    const current = byUser.get(t.user_id) || { nome, count: 0 };
-    byUser.set(t.user_id, { nome, count: current.count + 1 });
+  tokens?.filter((t) => t.user_id).forEach((t) => {
+    const nome = usuariosMap.get(t.user_id!) || t.user_id!;
+    const current = byUser.get(t.user_id!) || { nome, count: 0 };
+    byUser.set(t.user_id!, { nome, count: current.count + 1 });
   });
 
   // Agrupar por credencial
   const byCredential = new Map<string, { nome: string; count: number }>();
-  tokens?.forEach((t) => {
-    const nome = credenciaisMap.get(t.credential_id) || t.credential_id;
-    const current = byCredential.get(t.credential_id) || { nome, count: 0 };
-    byCredential.set(t.credential_id, { nome, count: current.count + 1 });
+  tokens?.filter((t) => t.credential_id).forEach((t) => {
+    const nome = credenciaisMap.get(t.credential_id!) || t.credential_id!;
+    const current = byCredential.get(t.credential_id!) || { nome, count: 0 };
+    byCredential.set(t.credential_id!, { nome, count: current.count + 1 });
   });
 
   // Estimar limite restante
