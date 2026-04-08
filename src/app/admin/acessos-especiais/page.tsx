@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useDataStoreContext, AcessoEspecial } from "@/contexts/DataStoreContext";
 import { ImportExportXlsx, ImportResult } from "@/components/ImportExportXlsx";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 interface Filial {
   PLANTA_ID: string;
@@ -380,14 +381,14 @@ export default function AcessosEspeciaisPage() {
 
               <div>
                 <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Status</label>
-                <select
+                <CustomSelect
                   value={form.status}
-                  onChange={(e) => setForm({ ...form, status: e.target.value as "Ativo" | "Inativo" })}
-                  className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all appearance-none"
-                >
-                  <option value="Ativo">Ativo</option>
-                  <option value="Inativo">Inativo</option>
-                </select>
+                  onValueChange={(v) => setForm({ ...form, status: v as "Ativo" | "Inativo" })}
+                  options={[
+                    { value: "Ativo", label: "Ativo" },
+                    { value: "Inativo", label: "Inativo" },
+                  ]}
+                />
               </div>
 
               {/* Filiais */}

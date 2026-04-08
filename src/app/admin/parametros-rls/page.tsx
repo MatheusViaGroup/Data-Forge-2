@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useDataStoreContext, ParametroRLS } from "@/contexts/DataStoreContext";
 import { ImportExportXlsx, ImportResult } from "@/components/ImportExportXlsx";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
@@ -372,45 +373,33 @@ export default function ParametrosRLSPage() {
               {/* Tipo */}
               <div>
                 <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Tipo</label>
-                <select
+                <CustomSelect
                   value={form.tipo}
-                  onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-                  className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all appearance-none"
-                >
-                  {TIPOS.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
+                  onValueChange={(v) => setForm({ ...form, tipo: v })}
+                  options={TIPOS.map(t => ({ value: t, label: t }))}
+                />
               </div>
 
               {/* Dashboard */}
               <div>
                 <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Dashboard</label>
-                <select
+                <CustomSelect
                   value={form.dashboardId}
-                  onChange={(e) => setForm({ ...form, dashboardId: e.target.value })}
-                  className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all appearance-none"
-                >
-                  <option value="">— Selecione um dashboard —</option>
-                  {dashboards.map((d) => (
-                    <option key={d.id} value={d.id}>{d.nome}</option>
-                  ))}
-                </select>
+                  onValueChange={(v) => setForm({ ...form, dashboardId: v })}
+                  placeholder="— Selecione um dashboard —"
+                  options={dashboards.map(d => ({ value: d.id, label: d.nome }))}
+                />
               </div>
 
               {/* Tenant */}
               <div>
                 <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Tenant</label>
-                <select
+                <CustomSelect
                   value={form.tenant}
-                  onChange={(e) => setForm({ ...form, tenant: e.target.value })}
-                  className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all appearance-none"
-                >
-                  <option value="">— Selecione um tenant —</option>
-                  {credenciais.map((c) => (
-                    <option key={c.id} value={c.tenant}>{c.tenant} ({c.nome})</option>
-                  ))}
-                </select>
+                  onValueChange={(v) => setForm({ ...form, tenant: v })}
+                  placeholder="— Selecione um tenant —"
+                  options={credenciais.map(c => ({ value: c.tenant, label: `${c.tenant} (${c.nome})` }))}
+                />
               </div>
             </div>
 

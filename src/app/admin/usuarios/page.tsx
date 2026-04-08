@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useDataStoreContext, Usuario } from "@/contexts/DataStoreContext";
 import { ImportExportXlsx, ImportResult } from "@/components/ImportExportXlsx";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 interface Filial {
   PLANTA_ID: string;
@@ -379,12 +380,16 @@ export default function UsuariosPage() {
               className="flex-1 min-w-[200px] px-5 py-2.5 bg-[#F0F4F8] border-0 rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all" />
             <input type="text" value={filtroDepartamento} onChange={(e) => setFiltroDepartamento(e.target.value)} placeholder="Filtrar por Departamento"
               className="flex-1 min-w-[200px] px-5 py-2.5 bg-[#F0F4F8] border-0 rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all" />
-            <select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value as "Todos" | "Ativo" | "Excluído")}
-              className="px-5 py-2.5 bg-[#F0F4F8] border-0 rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all appearance-none cursor-pointer">
-              <option value="Todos">Todos</option>
-              <option value="Ativo">Ativo</option>
-              <option value="Excluído">Excluído</option>
-            </select>
+            <CustomSelect
+              value={filtroStatus}
+              onValueChange={(v) => setFiltroStatus(v as "Todos" | "Ativo" | "Excluído")}
+              options={[
+                { value: "Todos", label: "Todos" },
+                { value: "Ativo", label: "Ativo" },
+                { value: "Excluído", label: "Excluído" },
+              ]}
+              className="min-w-[160px] w-auto"
+            />
           </div>
         </div>
 
@@ -548,12 +553,15 @@ export default function UsuariosPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Nível de Acesso *</label>
-                  <select value={form.acesso} onChange={(e) => setForm({ ...form, acesso: e.target.value as Usuario["acesso"] })}
-                    className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all appearance-none">
-                    <option value="Usuário">Usuário</option>
-                    <option value="Matriz">Matriz</option>
-                    <option value="Administrador do Locatário">Administrador do Locatário</option>
-                  </select>
+                  <CustomSelect
+                    value={form.acesso}
+                    onValueChange={(v) => setForm({ ...form, acesso: v as Usuario["acesso"] })}
+                    options={[
+                      { value: "Usuário", label: "Usuário" },
+                      { value: "Matriz", label: "Matriz" },
+                      { value: "Administrador do Locatário", label: "Administrador do Locatário" },
+                    ]}
+                  />
                   {form.acesso === "Matriz" && (
                     <p className="text-xs text-[#4B5FBF] mt-1.5 ml-1 flex items-center gap-1">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
@@ -564,11 +572,14 @@ export default function UsuariosPage() {
                 {isEdit && (
                   <div>
                     <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Status</label>
-                    <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as Usuario["status"] })}
-                      className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all appearance-none">
-                      <option value="Ativo">Ativo</option>
-                      <option value="Excluído">Excluído</option>
-                    </select>
+                    <CustomSelect
+                      value={form.status}
+                      onValueChange={(v) => setForm({ ...form, status: v as Usuario["status"] })}
+                      options={[
+                        { value: "Ativo", label: "Ativo" },
+                        { value: "Excluído", label: "Excluído" },
+                      ]}
+                    />
                   </div>
                 )}
               </div>
@@ -623,20 +634,17 @@ export default function UsuariosPage() {
                   {/* Acesso Especial */}
                   <div className="mb-4">
                     <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Acesso Especial</label>
-                    <select
+                    <CustomSelect
                       value={acessoEspecialSelecionado}
-                      onChange={(e) => aplicarAcessoEspecial(e.target.value)}
-                      className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all appearance-none"
-                    >
-                      <option value="">Selecione um acesso especial (opcional)</option>
-                      {acessosEspeciais
+                      onValueChange={aplicarAcessoEspecial}
+                      placeholder="Selecione um acesso especial (opcional)"
+                      options={acessosEspeciais
                         .filter((a) => a.status === "Ativo")
-                        .map((a) => (
-                          <option key={a.id} value={a.id}>
-                            {a.nome} {a.filiais?.length > 0 && `(${a.filiais.length} filiais)`}
-                          </option>
-                        ))}
-                    </select>
+                        .map((a) => ({
+                          value: a.id,
+                          label: `${a.nome}${a.filiais?.length > 0 ? ` (${a.filiais.length} filiais)` : ""}`,
+                        }))}
+                    />
                     <p className="text-xs text-[#94a3b8] mt-1 ml-1">
                       Selecione um acesso para pré-selecionar filiais automaticamente
                     </p>
