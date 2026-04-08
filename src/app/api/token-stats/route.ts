@@ -59,9 +59,10 @@ export async function GET(request: NextRequest) {
   }
 
   // Buscar nomes de dashboards em uma query separada (para não precisar de join)
-  const dashboardIds = [...new Set(tokens?.map((t) => t.dashboard_id).filter(Boolean) || [])];
-  const userIds = [...new Set(tokens?.map((t) => t.user_id).filter(Boolean) || [])];
-  const credentialIds = [...new Set(tokens?.map((t) => t.credential_id).filter(Boolean) || [])];
+  const allTokens = tokens || [];
+  const dashboardIds = [...new Set(allTokens.map((t) => t.dashboard_id).filter(Boolean))];
+  const userIds = [...new Set(allTokens.map((t) => t.user_id).filter(Boolean))];
+  const credentialIds = [...new Set(allTokens.map((t) => t.credential_id).filter(Boolean))];
 
   const [dashboardsRes, usuariosRes, credenciaisRes] = await Promise.all([
     dashboardIds.length > 0
