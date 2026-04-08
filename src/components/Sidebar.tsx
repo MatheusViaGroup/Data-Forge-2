@@ -28,7 +28,7 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const { collapsed, toggleCollapsed } = useSidebar();
+  const { collapsed, toggleCollapsed, mobileOpen, closeMobile } = useSidebar();
   const userRole = session?.user?.role ?? "user";
   const userName = session?.user?.name ?? "Usuário";
   const initials = userName
@@ -44,9 +44,121 @@ export default function Sidebar() {
 
   return (
     <>
+      {/* Sidebar Mobile Overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+          onClick={closeMobile}
+        />
+      )}
+
+      {/* Sidebar Mobile */}
+      <aside
+        className="fixed top-0 left-0 h-screen flex md:hidden flex-col z-50 transition-transform duration-300"
+        style={{
+          width: "260px",
+          background: "#FFFFFF",
+          borderRight: "1px solid #EBEBEC",
+          transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
+        }}
+      >
+        {/* Logo Via Group */}
+        <div
+          className="flex flex-col items-center pt-6 pb-5"
+          style={{ paddingLeft: "20px", paddingRight: "20px" }}
+        >
+          <img
+            src="https://viagroup.com.br/assets/via_group-22fac685.png"
+            alt="Via Group"
+            style={{ width: "110px", height: "auto", objectFit: "contain" }}
+          />
+        </div>
+
+        {/* Avatar do usuário */}
+        <div className="mb-4" style={{ paddingLeft: "16px", paddingRight: "16px" }}>
+          <div
+            className="flex items-center rounded-xl"
+            style={{ background: "#F7F8FA", padding: "12px", gap: "12px" }}
+          >
+            <div
+              className="flex items-center justify-center w-9 h-9 rounded-full text-white text-sm font-bold flex-shrink-0"
+              style={{ background: "linear-gradient(135deg, #4B5FBF 0%, #6875D8 100%)" }}
+            >
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold truncate" style={{ color: "#1A1A2E" }}>{userName}</p>
+              <p className="text-xs" style={{ color: "#9CA3AF" }}>
+                {userRole === "admin" ? "Administrador" : "Usuário"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Navegação */}
+        <nav className="flex-1 overflow-y-auto" style={{ paddingLeft: "12px", paddingRight: "12px" }}>
+          <p className="px-3 mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: "#C4C6CC" }}>
+            Menu
+          </p>
+          <ul className="space-y-0.5">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              if (!item.roles.includes(userRole)) return null;
+
+              const isActive =
+                pathname === item.href ||
+                (item.href !== "/dashboard" && pathname.startsWith(item.href));
+
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={closeMobile}
+                    className="flex items-center rounded-xl transition-all duration-150"
+                    style={{
+                      background: isActive ? "#EEF1FB" : "transparent",
+                      color: isActive ? "#4B5FBF" : "#6B7280",
+                      fontWeight: isActive ? 600 : 400,
+                      fontSize: "14px",
+                      padding: "10px 12px",
+                      gap: "12px",
+                    }}
+                  >
+                    <Icon size={18} strokeWidth={isActive ? 2.2 : 1.8} />
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Rodapé */}
+        <div
+          className="pb-6 space-y-0.5"
+          style={{ borderTop: "1px solid #F2F2F3", paddingTop: "12px", paddingLeft: "12px", paddingRight: "12px" }}
+        >
+          <button
+            onClick={handleLogout}
+            title="Sair"
+            className="flex items-center w-full rounded-xl transition-all duration-150"
+            style={{
+              color: "#6B7280", fontSize: "14px",
+              padding: "10px 12px",
+              gap: "12px",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = "#FEF2F2")}
+            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+          >
+            <Power size={18} strokeWidth={1.8} />
+            Sair
+          </button>
+        </div>
+      </aside>
+
       {/* Sidebar Desktop */}
       <aside
-        className="fixed top-0 left-0 h-screen hidden md:flex flex-col z-50 transition-all duration-300"
+        className="fixed top-0 left-0 h-screen hidden md:flex flex-col z-30 transition-all duration-300"
         style={{
           width: collapsed ? "68px" : "230px",
           background: "#FFFFFF",

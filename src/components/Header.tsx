@@ -128,6 +128,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
                   border: "1px solid #F1F5F9",
                   borderRadius: "16px",
                   boxShadow: "0 8px 24px rgba(15,23,42,0.10), 0 2px 8px rgba(15,23,42,0.06)",
+                  maxWidth: "calc(100vw - 2rem)",
                 }}
               >
                 {/* Header dropdown */}

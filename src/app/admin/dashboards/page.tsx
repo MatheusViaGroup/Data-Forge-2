@@ -207,14 +207,14 @@ export default function AdminDashboardsPage() {
 
   return (
     <AppShell title="Lista de Dashboards" subtitle="Gerencie os dashboards do sistema">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-[#4B5FBF] font-bold text-2xl tracking-tight">Dashboards</h2>
             <p className="text-[#6C757D] text-sm mt-0.5">{dashboards.length} dashboards cadastrados</p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap justify-end">
+          <div className="flex items-center gap-2 flex-wrap sm:justify-end">
             <ImportExportXlsx
               nomeTemplate="template_dashboards"
               cols={[
@@ -288,7 +288,7 @@ export default function AdminDashboardsPage() {
               value={filtroNome}
               onChange={(e) => setFiltroNome(e.target.value)}
               placeholder="Pesquisar por Nome"
-              className="flex-1 min-w-[300px] px-5 py-2.5 bg-[#F0F4F8] border-0 rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
+              className="w-full sm:min-w-[280px] sm:w-auto flex-1 px-5 py-2.5 bg-[#F0F4F8] border-0 rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
             />
           </div>
         </div>
@@ -322,8 +322,8 @@ export default function AdminDashboardsPage() {
                 ) : (
                   filtered.map((d, idx) => (
                     <tr key={d.id} className={idx % 2 === 0 ? "bg-white" : "bg-[#F8FAFC]"}>
-                      <td className="px-5 py-4 text-sm font-medium text-[#333333]">{d.nome}</td>
-                      <td className="px-5 py-4 text-sm text-[#6C757D]">{d.descricao}</td>
+                      <td className="px-5 py-4 text-sm font-medium text-[#333333] max-w-[200px] truncate">{d.nome}</td>
+                      <td className="px-5 py-4 text-sm text-[#6C757D] max-w-[250px] truncate">{d.descricao}</td>
                       <td className="px-5 py-4 text-sm">
                         <span className={d.rls ? "text-[#4B5FBF] font-medium" : "text-[#6C757D]"}>
                           {d.rls ? "Sim" : "Não"}
@@ -393,15 +393,15 @@ export default function AdminDashboardsPage() {
       {/* Modal Criar/Editar */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-[#e2e8f0] overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0]">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-[#e2e8f0] overflow-hidden max-h-[90dvh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0] flex-shrink-0">
               <h3 className="text-[#4B5FBF] font-bold text-lg">{isEdit ? "Editar Dashboard" : "Novo Dashboard"}</h3>
               <button onClick={() => setModalOpen(false)} className="flex items-center justify-center w-8 h-8 rounded-full text-[#6C757D] hover:bg-[#F0F4F8] transition-colors">
                 <X size={18} />
               </button>
             </div>
 
-            <div className="px-6 py-5 space-y-4">
+            <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Nome *</label>
@@ -560,7 +560,7 @@ export default function AdminDashboardsPage() {
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-[#F8FAFC] flex items-center justify-end gap-3">
+            <div className="px-6 py-4 bg-[#F8FAFC] flex items-center justify-end gap-3 flex-shrink-0">
               <button
                 onClick={() => setModalOpen(false)}
                 className="px-6 py-2.5 border border-[#6C757D] text-[#6C757D] text-sm font-semibold rounded-full hover:bg-[#F0F4F8] transition-colors"

@@ -778,8 +778,8 @@ export default function UsuariosPage() {
       {/* Modal Redefinir Senha */}
       {resetPasswordModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-[#e2e8f0] overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0]">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-[#e2e8f0] overflow-hidden max-h-[90dvh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0] flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center">
                   <KeyRound size={20} className="text-amber-500" />
@@ -794,7 +794,7 @@ export default function UsuariosPage() {
               </button>
             </div>
 
-            <div className="px-6 py-5 space-y-4">
+            <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
               <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
                 <p className="text-xs text-amber-800 leading-relaxed">
                   <strong className="font-semibold">Importante:</strong> O usuário será obrigado a trocar a senha no próximo login.
@@ -843,7 +843,7 @@ export default function UsuariosPage() {
               )}
             </div>
 
-            <div className="px-6 py-4 bg-[#F8FAFC] flex items-center justify-end gap-3 border-t border-[#e2e8f0]">
+            <div className="px-6 py-4 bg-[#F8FAFC] flex items-center justify-end gap-3 border-t border-[#e2e8f0] flex-shrink-0">
               <button onClick={() => setResetPasswordModalOpen(false)}
                 className="px-6 py-2.5 border border-[#6C757D] text-[#6C757D] text-sm font-semibold rounded-full hover:bg-[#F0F4F8] transition-colors">
                 Cancelar

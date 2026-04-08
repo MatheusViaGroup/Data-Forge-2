@@ -146,7 +146,7 @@ export default function DashboardViewPage() {
   } : undefined;
 
   const backBar = (
-    <div className="flex items-center justify-between w-full">
+    <div className="flex flex-wrap items-center justify-between gap-2 w-full">
       <Link
         href="/dashboard"
         className="flex items-center gap-1.5 text-[#64748b] hover:text-[#2563eb] text-xs font-medium transition-colors"
