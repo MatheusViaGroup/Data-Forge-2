@@ -138,22 +138,22 @@ export function DatePicker({
             showOutsideDays
             fixedWeeks
             classNames={{
-              months: "p-3",
+              months: "p-3 min-w-[280px]",
               month: "space-y-3",
               caption: "flex justify-center pt-1 relative items-center",
               caption_label: "text-sm font-semibold text-[#333333]",
               nav: "space-x-1 flex items-center",
               nav_button:
-                "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 rounded-md border border-[#E2E8F0] flex items-center justify-center hover:bg-[#F0F4F8] transition-colors",
+                "h-7 w-7 bg-transparent p-0 rounded-md border border-[#E2E8F0] flex items-center justify-center hover:bg-[#F0F4F8] transition-colors",
               nav_button_previous: "absolute left-1",
               nav_button_next: "absolute right-1",
-              table: "w-full border-collapse space-y-1",
-              head_row: "flex",
+              table: "w-full border-collapse",
+              head_row: "flex w-full",
               head_cell:
-                "text-[#94A3B8] w-8 font-normal text-[0.75rem] text-center uppercase tracking-wide",
+                "flex-1 min-w-[36px] text-[#94A3B8] font-medium text-[0.75rem] text-center uppercase whitespace-nowrap py-1",
               row: "flex w-full mt-1",
-              cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-10",
-              day: "h-8 w-8 p-0 font-normal rounded-md hover:bg-[#EEF1FB] hover:text-[#4B5FBF] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] aria-selected:bg-[#4B5FBF] aria-selected:text-white",
+              cell: "flex-1 min-w-[36px] text-center text-sm p-0 relative focus-within:relative focus-within:z-10",
+              day: "h-9 w-full p-0 font-normal rounded-md hover:bg-[#EEF1FB] hover:text-[#4B5FBF] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] aria-selected:bg-[#4B5FBF] aria-selected:text-white transition-colors",
               day_today:
                 "bg-[#F0F4F8] font-semibold text-[#4B5FBF]",
               day_outside: "text-[#C4C6CC]",
