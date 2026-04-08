@@ -11,6 +11,8 @@ import {
 
 interface StatsData {
   period: string;
+  startDate: string;
+  endDate: string;
   totalTokens: number;
   byDashboard: { nome: string; count: number }[];
   byUser: { nome: string; count: number }[];
