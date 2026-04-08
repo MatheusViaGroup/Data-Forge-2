@@ -176,10 +176,16 @@ export default function AdminDashboardsPage() {
     event.stopPropagation();
     const target = event.currentTarget as HTMLElement;
     if (!target) return;
-    
+
     const rect = target.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const DROPDOWN_HEIGHT = 120;
+    const openAbove = spaceBelow < DROPDOWN_HEIGHT;
+
     setMenuPosition({
-      top: rect.bottom + window.scrollY + 4,
+      top: openAbove
+        ? rect.top + window.scrollY - DROPDOWN_HEIGHT - 4
+        : rect.bottom + window.scrollY + 4,
       right: window.innerWidth - rect.right,
     });
     setMenuOpenId(menuOpenId === id ? null : id);
@@ -300,11 +306,11 @@ export default function AdminDashboardsPage() {
             <table className="w-full">
               <thead>
                 <tr className="bg-[#F0F4F8]">
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Nome</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Descrição</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">RLS</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Status</th>
-                  <th className="px-5 py-3 text-right text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Ações</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Nome</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Descrição</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">RLS</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Status</th>
+                  <th className="px-5 py-3 text-right text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e2e8f0]">

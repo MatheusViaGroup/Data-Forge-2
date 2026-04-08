@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useDataStoreContext, Credencial } from "@/contexts/DataStoreContext";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
@@ -185,8 +186,14 @@ export default function CredenciaisPage() {
 
   const toggleMenu = (id: string, event: React.MouseEvent) => {
     const rect = (event.target as HTMLElement).getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const DROPDOWN_HEIGHT = 120;
+    const openAbove = spaceBelow < DROPDOWN_HEIGHT;
+
     setMenuPosition({
-      top: rect.bottom + window.scrollY + 4,
+      top: openAbove
+        ? rect.top + window.scrollY - DROPDOWN_HEIGHT - 4
+        : rect.bottom + window.scrollY + 4,
       right: window.innerWidth - rect.right,
     });
     setMenuOpenId(menuOpenId === id ? null : id);
@@ -236,14 +243,14 @@ export default function CredenciaisPage() {
             <table className="w-full">
               <thead>
                 <tr className="bg-[#F0F4F8]">
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">ID</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Nome</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Tenant ID</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Usuário Power BI</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Data de Registro</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Data de Expiração</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Status</th>
-                  <th className="px-5 py-3 text-center text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Ações</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">ID</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Nome</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Tenant ID</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Usuário Power BI</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Data de Registro</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Data de Expiração</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Status</th>
+                  <th className="px-5 py-3 text-center text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e2e8f0]">
@@ -331,16 +338,17 @@ export default function CredenciaisPage() {
             <div className="flex items-center justify-between px-5 py-4 border-t border-[#e2e8f0]">
               <div className="flex items-center gap-3">
                 <span className="text-sm text-[#6C757D]">Mostrar</span>
-                <select
-                  value={itensPorPagina}
-                  onChange={(e) => { setItensPorPagina(Number(e.target.value)); setPaginaAtual(1); }}
-                  className="px-3 py-1.5 bg-[#F0F4F8] border-0 rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                </select>
+                <CustomSelect
+                  value={String(itensPorPagina)}
+                  onValueChange={(v) => { setItensPorPagina(Number(v)); setPaginaAtual(1); }}
+                  options={[
+                    { value: "5", label: "5" },
+                    { value: "10", label: "10" },
+                    { value: "25", label: "25" },
+                    { value: "50", label: "50" },
+                  ]}
+                  className="w-[60px]"
+                />
                 <span className="text-sm text-[#6C757D]">
                   Mostrando {inicio + 1} até {fim} de {credenciais.length} itens
                 </span>
@@ -432,11 +440,10 @@ export default function CredenciaisPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Data de Expiração</label>
-                    <input
-                      type="date"
-                      value={form.dataExpiracao ? form.dataExpiracao.split("/").reverse().join("-") : ""}
-                      onChange={(e) => setForm({ ...form, dataExpiracao: e.target.value ? new Date(e.target.value).toLocaleDateString("pt-BR") : "" })}
-                      className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
+                    <DatePicker
+                      value={form.dataExpiracao}
+                      onChange={(v) => setForm({ ...form, dataExpiracao: v })}
+                      placeholder="dd/mm/aaaa"
                     />
                   </div>
                   <div>

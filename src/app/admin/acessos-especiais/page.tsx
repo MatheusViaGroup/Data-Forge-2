@@ -240,11 +240,11 @@ export default function AcessosEspeciaisPage() {
             <table className="w-full">
               <thead>
                 <tr className="bg-[#F0F4F8]">
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Nome</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Descrição</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Filiais</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Status</th>
-                  <th className="px-5 py-3 text-right text-xs font-semibold text-[#6C757D] uppercase tracking-wider">Ações</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Nome</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Descrição</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Filiais</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Status</th>
+                  <th className="px-5 py-3 text-right text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e2e8f0]">
@@ -293,7 +293,12 @@ export default function AcessosEspeciaisPage() {
                               const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                               const menu = document.getElementById(`menu-${a.id}`);
                               if (menu) {
-                                menu.style.top = `${rect.bottom + window.scrollY + 4}px`;
+                                const spaceBelow = window.innerHeight - rect.bottom;
+                                const DROPDOWN_HEIGHT = 120;
+                                const openAbove = spaceBelow < DROPDOWN_HEIGHT;
+                                menu.style.top = openAbove
+                                  ? `${rect.top + window.scrollY - DROPDOWN_HEIGHT - 4}px`
+                                  : `${rect.bottom + window.scrollY + 4}px`;
                                 menu.style.right = `${window.innerWidth - rect.right}px`;
                                 menu.style.display = menu.style.display === "block" ? "none" : "block";
                               }
