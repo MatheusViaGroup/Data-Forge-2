@@ -132,6 +132,20 @@ export default function DashboardViewPage() {
 
   useEffect(() => { load(); }, [load, isLoaded]);
 
+  const isIgnorablePowerBIError = useCallback((event: unknown) => {
+    try {
+      const raw = JSON.stringify((event as { detail?: unknown })?.detail ?? event).toLowerCase();
+      return (
+        raw.includes("err_blocked_by_client") ||
+        raw.includes("dc.services.visualstudio.com") ||
+        raw.includes("copilotstatus") ||
+        raw.includes("/explore/aclient/copilotstatus")
+      );
+    } catch {
+      return false;
+    }
+  }, []);
+
   const embedConfig = embedData && dashboard ? {
     type: "report" as const,
     id: dashboard.reportId,
@@ -267,7 +281,11 @@ export default function DashboardViewPage() {
             cssClassName="w-full h-full"
             eventHandlers={new Map([
               ["error", (event: unknown) => {
-                console.error("[PBI] Erro no embed:", event);
+                if (isIgnorablePowerBIError(event)) {
+                  console.debug("[PBI] Aviso não crítico ignorado:", event);
+                  return;
+                }
+                console.error("[PBI] Erro crítico no embed:", event);
               }],
             ])}
           />
