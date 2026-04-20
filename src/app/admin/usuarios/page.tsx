@@ -491,9 +491,9 @@ export default function UsuariosPage() {
 
           {/* Paginação */}
           {isLoaded && filtered.length > itensPorPagina && (
-            <div className="flex items-center justify-between px-5 py-4 border-t border-[#e2e8f0]">
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-[#6C757D]">Mostrar</span>
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-t border-[#e2e8f0]">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-sm text-[#6C757D] whitespace-nowrap shrink-0">Mostrar</span>
                 <CustomSelect
                   value={String(itensPorPagina)}
                   onValueChange={(v) => { setItensPorPagina(Number(v)); setPaginaAtual(1); }}
@@ -503,9 +503,9 @@ export default function UsuariosPage() {
                     { value: "25", label: "25" },
                     { value: "50", label: "50" },
                   ]}
-                  className="w-[60px]"
+                  className="w-[72px] min-w-[72px] shrink-0"
                 />
-                <span className="text-sm text-[#6C757D]">Mostrando {inicio + 1} até {fim} de {filtered.length} itens</span>
+                <span className="text-sm text-[#6C757D] whitespace-nowrap">Mostrando {inicio + 1} até {fim} de {filtered.length} itens</span>
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={() => setPaginaAtual(1)} disabled={paginaAtual === 1} className="flex items-center justify-center w-8 h-8 rounded-full border border-[#e2e8f0] text-[#6C757D] hover:bg-[#F0F4F8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronsLeft size={16} /></button>

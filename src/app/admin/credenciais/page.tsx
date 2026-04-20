@@ -335,9 +335,9 @@ export default function CredenciaisPage() {
 
           {/* Paginação */}
           {isLoaded && credenciais.length > 0 && (
-            <div className="flex items-center justify-between px-5 py-4 border-t border-[#e2e8f0]">
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-[#6C757D]">Mostrar</span>
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-t border-[#e2e8f0]">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-sm text-[#6C757D] whitespace-nowrap shrink-0">Mostrar</span>
                 <CustomSelect
                   value={String(itensPorPagina)}
                   onValueChange={(v) => { setItensPorPagina(Number(v)); setPaginaAtual(1); }}
@@ -347,9 +347,9 @@ export default function CredenciaisPage() {
                     { value: "25", label: "25" },
                     { value: "50", label: "50" },
                   ]}
-                  className="w-[60px]"
+                  className="w-[72px] min-w-[72px] shrink-0"
                 />
-                <span className="text-sm text-[#6C757D]">
+                <span className="text-sm text-[#6C757D] whitespace-nowrap">
                   Mostrando {inicio + 1} até {fim} de {credenciais.length} itens
                 </span>
               </div>
