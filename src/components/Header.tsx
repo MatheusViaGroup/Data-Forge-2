@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import { useSession, signOut } from "next-auth/react";
 import { UserCircle, LogOut, ChevronDown } from "lucide-react";
 import { MobileMenuButton } from "@/components/Sidebar";
@@ -13,6 +14,58 @@ interface HeaderProps {
 export default function Header({ title, subtitle }: HeaderProps) {
   const { data: session } = useSession();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties | null>(null);
+  const userButtonRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const updateDropdownPosition = useCallback(() => {
+    if (!userButtonRef.current) return;
+
+    const rect = userButtonRef.current.getBoundingClientRect();
+    const viewportPadding = 8;
+    const margin = 8;
+    const menuWidth = menuRef.current?.offsetWidth ?? 208;
+    const menuHeight = menuRef.current?.offsetHeight ?? 200;
+
+    let left = rect.right - menuWidth;
+    let top = rect.bottom + margin;
+
+    if (top + menuHeight > window.innerHeight - viewportPadding) {
+      top = rect.top - menuHeight - margin;
+    }
+
+    left = Math.max(viewportPadding, Math.min(left, window.innerWidth - menuWidth - viewportPadding));
+    top = Math.max(viewportPadding, Math.min(top, window.innerHeight - menuHeight - viewportPadding));
+
+    setMenuStyle({
+      position: "fixed",
+      top,
+      left,
+      width: menuWidth,
+      zIndex: 10000,
+      maxWidth: "calc(100vw - 1rem)",
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+
+    updateDropdownPosition();
+    const handleViewportChange = () => updateDropdownPosition();
+
+    window.addEventListener("resize", handleViewportChange, { passive: true });
+    window.addEventListener("scroll", handleViewportChange, { passive: true });
+
+    return () => {
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange);
+    };
+  }, [dropdownOpen, updateDropdownPosition]);
 
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: "/login" });
@@ -27,7 +80,6 @@ export default function Header({ title, subtitle }: HeaderProps) {
         boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
       }}
     >
-      {/* Esquerda: mobile button + título da página */}
       <div className="flex items-center gap-4">
         <MobileMenuButton />
 
@@ -51,9 +103,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
         </div>
       </div>
 
-      {/* Direita: usuário */}
       <div className="flex items-center gap-3">
-        {/* Badge Via Core */}
         <div
           className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full"
           style={{
@@ -74,19 +124,16 @@ export default function Header({ title, subtitle }: HeaderProps) {
           </span>
         </div>
 
-        {/* Divisor */}
         <div className="w-px h-8 hidden sm:block" style={{ background: "#F1F5F9" }} />
 
-        {/* Usuário com Dropdown */}
-        <div className="relative">
+        <div ref={userButtonRef} className="relative">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-all duration-150"
             style={{ background: dropdownOpen ? "#F8FAFC" : "transparent" }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#F8FAFC")}
-            onMouseLeave={e => (e.currentTarget.style.background = dropdownOpen ? "#F8FAFC" : "transparent")}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#F8FAFC")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = dropdownOpen ? "#F8FAFC" : "transparent")}
           >
-            {/* Avatar */}
             <div
               className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0"
               style={{
@@ -97,7 +144,6 @@ export default function Header({ title, subtitle }: HeaderProps) {
               <UserCircle size={17} color="white" />
             </div>
 
-            {/* Nome */}
             <div className="hidden sm:block text-left">
               <p style={{ fontSize: "12px", fontWeight: 600, color: "#0F172A", lineHeight: 1.3 }}>
                 {session?.user?.name ?? "Usuário"}
@@ -117,44 +163,48 @@ export default function Header({ title, subtitle }: HeaderProps) {
             />
           </button>
 
-          {/* Dropdown */}
-          {dropdownOpen && (
+          {dropdownOpen && mounted && (
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
-              <div
-                className="absolute right-0 top-full mt-2 w-52 z-50 overflow-hidden"
-                style={{
-                  background: "#ffffff",
-                  border: "1px solid #F1F5F9",
-                  borderRadius: "16px",
-                  boxShadow: "0 8px 24px rgba(15,23,42,0.10), 0 2px 8px rgba(15,23,42,0.06)",
-                  maxWidth: "calc(100vw - 2rem)",
-                }}
-              >
-                {/* Header dropdown */}
-                <div className="px-4 py-3" style={{ borderBottom: "1px solid #F1F5F9", background: "#FAFAFA" }}>
-                  <p style={{ fontSize: "12px", fontWeight: 600, color: "#0F172A" }}>
-                    {session?.user?.name ?? "Usuário"}
-                  </p>
-                  <p style={{ fontSize: "11px", color: "#94A3B8" }} className="truncate">
-                    {session?.user?.email ?? ""}
-                  </p>
-                </div>
-
-                {/* Logout */}
-                <div className="py-1.5">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 transition-colors"
-                    style={{ fontSize: "13px", color: "#EF4444" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "#FEF2F2")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              <div className="fixed inset-0 z-[9990]" onClick={() => setDropdownOpen(false)} />
+              {menuStyle && createPortal(
+                <div
+                  ref={menuRef}
+                  style={menuStyle}
+                  className="overflow-hidden"
+                >
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #F1F5F9",
+                      borderRadius: "16px",
+                      boxShadow: "0 8px 24px rgba(15,23,42,0.10), 0 2px 8px rgba(15,23,42,0.06)",
+                    }}
                   >
-                    <LogOut size={16} />
-                    Sair
-                  </button>
-                </div>
-              </div>
+                    <div className="px-4 py-3" style={{ borderBottom: "1px solid #F1F5F9", background: "#FAFAFA" }}>
+                      <p style={{ fontSize: "12px", fontWeight: 600, color: "#0F172A" }}>
+                        {session?.user?.name ?? "Usuário"}
+                      </p>
+                      <p style={{ fontSize: "11px", color: "#94A3B8" }} className="truncate">
+                        {session?.user?.email ?? ""}
+                      </p>
+                    </div>
+
+                    <div className="py-1.5">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 transition-colors"
+                        style={{ fontSize: "13px", color: "#EF4444" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "#FEF2F2")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                      >
+                        <LogOut size={16} />
+                        Sair
+                      </button>
+                    </div>
+                  </div>
+                </div>,
+                document.body
+              )}
             </>
           )}
         </div>

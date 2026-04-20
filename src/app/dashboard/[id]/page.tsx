@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -23,7 +23,7 @@ export default function DashboardViewPage() {
   const params   = useParams();
   const router   = useRouter();
   const dashId   = params.id as string;
-  const { data: session } = useSession(); // Adicionado para identificar usuário no cache
+  const { data: session } = useSession(); // Adicionado para identificar usuÃ¡rio no cache
   const { getDashboardById, isLoaded } = useDataStoreContext();
 
   const dashboard = getDashboardById(dashId);
@@ -31,7 +31,9 @@ export default function DashboardViewPage() {
   const [status,    setStatus]    = useState<Status>("loading");
   const [apiError,  setApiError]  = useState<ApiError | null>(null);
   const [isFocus,   setIsFocus]   = useState(false);
+  const [embedReady, setEmbedReady] = useState(false);
   const embedContainerRef = useRef<HTMLDivElement>(null);
+  const retriedWithoutCacheRef = useRef(false);
 
 
   const toggleFocus = useCallback(() => {
@@ -48,30 +50,39 @@ export default function DashboardViewPage() {
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts?: { forceNewToken?: boolean }) => {
     if (!isLoaded) return;
 
-    setStatus("loading"); setApiError(null);
+    setStatus("loading");
+    setApiError(null);
+    setEmbedReady(false);
+    if (!opts?.forceNewToken) retriedWithoutCacheRef.current = false;
 
     if (!dashboard) {
       router.push("/dashboard");
       return;
     }
 
-    // ─── Verificar cache no sessionStorage ───────────────────────────────────────
+    // â”€â”€â”€ Verificar cache no sessionStorage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const cacheKey = `pbi-embed-token:${dashboard.id}:${session?.user?.email || 'anonymous'}`;
-    const cached = sessionStorage.getItem(cacheKey);
+    const canUseCache = !opts?.forceNewToken && (session?.user?.role === "admin" || !(dashboard.rls ?? false));
+    const cached = canUseCache ? sessionStorage.getItem(cacheKey) : null;
+
+    if (!canUseCache) {
+      sessionStorage.removeItem(cacheKey);
+      console.log("[Dashboard] Cache desativado para este contexto (RLS/force refresh).");
+    }
 
     if (cached) {
       try {
         const { token, embedUrl, timestamp } = JSON.parse(cached);
         const age = Date.now() - timestamp;
-        // Embed token válido por ~1 hora; reutilizar se < 55 minutos (margem de segurança)
+        // Embed token vÃ¡lido por ~1 hora; reutilizar se < 55 minutos (margem de seguranÃ§a)
         if (age < 55 * 60 * 1000) {
           console.log("[Dashboard] Token reutilizado do cache (idade:", Math.round(age/60000), "min)");
           setEmbedData({ accessToken: token, embedUrl });
           setStatus("success");
-          return; // Pula requisição à API
+          return; // Pula requisiÃ§Ã£o Ã  API
         } else {
         console.log("[Dashboard] Cache expirado, obtendo novo token...");
       }
@@ -111,16 +122,18 @@ export default function DashboardViewPage() {
       setEmbedData({ accessToken: tokenData.accessToken, embedUrl: tokenData.embedUrl });
       setStatus("success");
 
-      // Salvar no cache
-      try {
-        sessionStorage.setItem(cacheKey, JSON.stringify({
-          token: tokenData.accessToken,
-          embedUrl: tokenData.embedUrl,
-          timestamp: Date.now()
-        }));
-        console.log("[Dashboard] Token salvo no cache");
-      } catch (storageError) {
-        console.error("[Dashboard] Erro ao salvar cache:", storageError);
+      // Salvar no cache apenas quando permitido
+      if (canUseCache) {
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify({
+            token: tokenData.accessToken,
+            embedUrl: tokenData.embedUrl,
+            timestamp: Date.now()
+          }));
+          console.log("[Dashboard] Token salvo no cache");
+        } catch (storageError) {
+          console.error("[Dashboard] Erro ao salvar cache:", storageError);
+        }
       }
     } catch (err: unknown) {
       const e = err as Error;
@@ -128,7 +141,7 @@ export default function DashboardViewPage() {
       setApiError({ error: "Erro inesperado", details: e.message });
       setStatus("error");
     }
-  }, [dashboard, isLoaded, router, session?.user?.email]);
+  }, [dashboard, isLoaded, router, session?.user?.email, session?.user?.role]);
 
   useEffect(() => { load(); }, [load, isLoaded]);
 
@@ -145,6 +158,28 @@ export default function DashboardViewPage() {
       return false;
     }
   }, []);
+
+  useEffect(() => {
+    if (status !== "success" || !embedData || embedReady) return;
+
+    const timeout = setTimeout(() => {
+      if (retriedWithoutCacheRef.current) {
+        console.error("[Dashboard] Embed nÃ£o finalizou renderizaÃ§Ã£o apÃ³s retry.");
+        setApiError({
+          error: "O relatÃ³rio nÃ£o concluiu o carregamento",
+          details: "Tente novamente. Se persistir, valide permissÃµes RLS (filiais/role) do usuÃ¡rio."
+        });
+        setStatus("error");
+        return;
+      }
+
+      console.warn("[Dashboard] Timeout de render, tentando novamente sem cache...");
+      retriedWithoutCacheRef.current = true;
+      load({ forceNewToken: true });
+    }, 30000);
+
+    return () => clearTimeout(timeout);
+  }, [status, embedData, embedReady, load]);
 
   const embedConfig = embedData && dashboard ? {
     type: "report" as const,
@@ -179,22 +214,22 @@ export default function DashboardViewPage() {
   return (
     <AppShell
       title={dashboard?.nome ?? "Carregando..."}
-      subtitle={dashboard?.descricao || "Relatório Power BI"}
+      subtitle={dashboard?.descricao || "RelatÃ³rio Power BI"}
       fullHeight
       topBar={backBar}
     >
-      {/* ─── Loading ─────────────────────────────────────────────────────── */}
+      {/* â”€â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {(!isLoaded || status === "loading") && (
         <div className="h-full flex flex-col items-center justify-center bg-[#f1f5f9]">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1d4ed8] to-[#3b82f6] flex items-center justify-center shadow-lg mb-4">
             <Loader2 size={24} className="text-white animate-spin" />
           </div>
-          <p className="text-[#0f172a] font-semibold">Carregando relatório...</p>
+          <p className="text-[#0f172a] font-semibold">Carregando relatÃ³rio...</p>
           <p className="text-[#94a3b8] text-sm mt-1">Conectando ao Power BI</p>
         </div>
       )}
 
-      {/* ─── Error ───────────────────────────────────────────────────────── */}
+      {/* â”€â”€â”€ Error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {status === "error" && apiError && (
         <div className="h-full flex items-center justify-center bg-[#f1f5f9] p-4">
           <div className="bg-white rounded-2xl shadow-sm border border-[#e2e8f0] w-full max-w-2xl">
@@ -205,33 +240,33 @@ export default function DashboardViewPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-[#0f172a] font-bold">Power BI Embed Indisponível</h3>
+                <h3 className="text-[#0f172a] font-bold">Power BI Embed IndisponÃ­vel</h3>
                 <p className="text-[#94a3b8] text-xs">Limite de tokens excedido</p>
               </div>
             </div>
             <div className="px-6 py-5 space-y-4">
               <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
                 <p className="text-sm text-amber-800">
-                  <strong className="font-semibold">🔧 Modo de Desenvolvimento:</strong>
+                  <strong className="font-semibold">ðŸ”§ Modo de Desenvolvimento:</strong>
                   <br />
-                  O limite de tokens de embed do Power BI foi excedido. Este é um limite da Microsoft para capacidades compartilhadas (Pro/ProPlus).
+                  O limite de tokens de embed do Power BI foi excedido. Este Ã© um limite da Microsoft para capacidades compartilhadas (Pro/ProPlus).
                 </p>
               </div>
               
               <div>
-                <p className="text-sm font-semibold text-[#333333] mb-2">Soluções:</p>
+                <p className="text-sm font-semibold text-[#333333] mb-2">SoluÃ§Ãµes:</p>
                 <ul className="text-sm text-[#6C757D] space-y-2">
                   <li className="flex items-start gap-2">
-                    <span className="text-[#28A745] font-bold">✓</span>
-                    <span><strong>Produção:</strong> Contratar Power BI Embedded no Azure (~$300/mês)</span>
+                    <span className="text-[#28A745] font-bold">âœ“</span>
+                    <span><strong>ProduÃ§Ã£o:</strong> Contratar Power BI Embedded no Azure (~$300/mÃªs)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-[#28A745] font-bold">✓</span>
-                    <span><strong>Testes:</strong> Usar "Publish to Web" (dados públicos)</span>
+                    <span className="text-[#28A745] font-bold">âœ“</span>
+                    <span><strong>Testes:</strong> Usar "Publish to Web" (dados pÃºblicos)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-[#28A745] font-bold">✓</span>
-                    <span><strong>Aguardar:</strong> Tokens são renovados periodicamente</span>
+                    <span className="text-[#28A745] font-bold">âœ“</span>
+                    <span><strong>Aguardar:</strong> Tokens sÃ£o renovados periodicamente</span>
                   </li>
                 </ul>
               </div>
@@ -239,9 +274,9 @@ export default function DashboardViewPage() {
               {apiError.errorCode === "DEV_MODE_LIMIT" && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
                   <p className="text-xs text-blue-800">
-                    <strong className="font-semibold">📖 Documentação:</strong>
+                    <strong className="font-semibold">ðŸ“– DocumentaÃ§Ã£o:</strong>
                     <br />
-                    Consulte o arquivo <code className="bg-white px-2 py-0.5 rounded">POWER_BI_EMBED_ERROR.md</code> para instruções detalhadas.
+                    Consulte o arquivo <code className="bg-white px-2 py-0.5 rounded">POWER_BI_EMBED_ERROR.md</code> para instruÃ§Ãµes detalhadas.
                   </p>
                 </div>
               )}
@@ -254,7 +289,7 @@ export default function DashboardViewPage() {
               )}
             </div>
             <div className="px-6 pb-5 flex gap-3">
-              <button onClick={load} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-semibold rounded-xl transition-colors">
+              <button onClick={() => load()} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-semibold rounded-xl transition-colors">
                 <RefreshCw size={14} /> Tentar novamente
               </button>
               <Link href="/dashboard" className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#475569] text-sm font-semibold rounded-xl transition-colors border border-[#e2e8f0]">
@@ -265,7 +300,7 @@ export default function DashboardViewPage() {
         </div>
       )}
 
-      {/* ─── Power BI ────────────────────────────────────────────────────── */}
+      {/* â”€â”€â”€ Power BI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {status === "success" && embedData && embedConfig && (
         <div ref={embedContainerRef} className="powerbi-container h-full relative">
           {isFocus && (
@@ -280,12 +315,27 @@ export default function DashboardViewPage() {
             embedConfig={embedConfig}
             cssClassName="w-full h-full"
             eventHandlers={new Map([
+              ["loaded", () => {
+                console.log("[PBI] Evento loaded");
+                setEmbedReady(true);
+                retriedWithoutCacheRef.current = false;
+              }],
+              ["rendered", () => {
+                console.log("[PBI] Evento rendered");
+                setEmbedReady(true);
+                retriedWithoutCacheRef.current = false;
+              }],
               ["error", (event: unknown) => {
                 if (isIgnorablePowerBIError(event)) {
-                  console.debug("[PBI] Aviso não crítico ignorado:", event);
+                  console.debug("[PBI] Aviso nao critico ignorado:", event);
                   return;
                 }
-                console.error("[PBI] Erro crítico no embed:", event);
+                console.error("[PBI] Erro no embed:", event);
+                setApiError({
+                  error: "Erro ao renderizar o relatorio",
+                  details: "O Power BI retornou um erro de embed para este usuario."
+                });
+                setStatus("error");
               }],
             ])}
           />
@@ -295,3 +345,4 @@ export default function DashboardViewPage() {
 
   );
 }
+

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, Check } from "lucide-react";
 
 interface SelectOption {
@@ -19,17 +20,6 @@ interface CustomSelectProps {
   position?: "top" | "bottom";
 }
 
-/**
- * CustomSelect — dropdown customizado coerente com o design system Via Core
- *
- * Padrão visual extraído dos inputs existentes no projeto:
- * - Background: #F0F4F8
- * - Border radius: rounded-full (2rem / 30px)
- * - Focus ring: 2px solid #4B5FBF
- * - Texto: text-sm (#333333)
- * - Sombra dropdown: shadow-lg
- * - Hover item: #EEF1FB
- */
 export function CustomSelect({
   options,
   value,
@@ -40,33 +30,80 @@ export function CustomSelect({
   position = "bottom",
 }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const selected = options.find((o) => o.value === value);
+  const estimatedMenuHeight = useMemo(() => Math.min(240, options.length * 44 + 8), [options.length]);
 
-  // Fechar ao clicar fora
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const updateMenuPosition = useCallback(() => {
+    if (!triggerRef.current) return;
+
+    const rect = triggerRef.current.getBoundingClientRect();
+    const viewportPadding = 8;
+    const margin = 4;
+    const menuHeight = menuRef.current?.offsetHeight ?? estimatedMenuHeight;
+    const menuWidth = rect.width;
+
+    let top = position === "top" ? rect.top - menuHeight - margin : rect.bottom + margin;
+    let left = rect.left;
+
+    left = Math.max(viewportPadding, Math.min(left, window.innerWidth - menuWidth - viewportPadding));
+    top = Math.max(viewportPadding, Math.min(top, window.innerHeight - menuHeight - viewportPadding));
+
+    setMenuStyle({
+      position: "fixed",
+      top,
+      left,
+      width: menuWidth,
+      zIndex: 10000,
+    });
+  }, [estimatedMenuHeight, position]);
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const isInsideTrigger = rootRef.current?.contains(target);
+      const isInsideMenu = menuRef.current?.contains(target);
+      if (!isInsideTrigger && !isInsideMenu) {
         setOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fechar com Escape
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setOpen(false);
-      }
-      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-        e.preventDefault();
-        setOpen(true);
-      }
-    },
-    []
-  );
+  useEffect(() => {
+    if (!open) return;
+
+    updateMenuPosition();
+    const handleViewportChange = () => updateMenuPosition();
+
+    window.addEventListener("resize", handleViewportChange, { passive: true });
+    window.addEventListener("scroll", handleViewportChange, { passive: true });
+
+    return () => {
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange);
+    };
+  }, [open, updateMenuPosition]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setOpen(false);
+    }
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      setOpen(true);
+    }
+  }, []);
 
   const handleSelect = (optionValue: string) => {
     onValueChange?.(optionValue);
@@ -74,9 +111,9 @@ export function CustomSelect({
   };
 
   return (
-    <div ref={ref} className={`relative w-full ${className}`} onKeyDown={handleKeyDown}>
-      {/* Trigger */}
+    <div ref={rootRef} className={`relative w-full ${className}`} onKeyDown={handleKeyDown}>
       <button
+        ref={triggerRef}
         type="button"
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
@@ -103,19 +140,18 @@ export function CustomSelect({
         />
       </button>
 
-      {/* Dropdown list */}
-      {open && (
+      {open && mounted && menuStyle && createPortal(
         <div
+          ref={menuRef}
           role="listbox"
-          className={`
-            absolute z-[60] w-full
+          style={menuStyle}
+          className="
             max-h-60 overflow-y-auto
             bg-white rounded-xl
             border border-[#E2E8F0]
             shadow-lg
             p-1
-            ${position === "top" ? "bottom-full mb-1" : "top-full mt-1"}
-          `}
+          "
         >
           {options.map((option) => (
             <div
@@ -143,7 +179,8 @@ export function CustomSelect({
               Nenhuma opção disponível
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
