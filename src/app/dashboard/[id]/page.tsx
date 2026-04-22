@@ -38,6 +38,7 @@ export default function DashboardViewPage() {
   const [embedReady, setEmbedReady] = useState(false);
   const embedContainerRef = useRef<HTMLDivElement>(null);
   const retriedWithoutCacheRef = useRef(false);
+  const embedReadyRef = useRef(false);
 
 
   const toggleFocus = useCallback(() => {
@@ -60,6 +61,7 @@ export default function DashboardViewPage() {
     setStatus("loading");
     setApiError(null);
     setEmbedReady(false);
+    embedReadyRef.current = false;
     if (!opts?.forceNewToken) retriedWithoutCacheRef.current = false;
 
     if (!dashboard) {
@@ -148,6 +150,10 @@ export default function DashboardViewPage() {
   }, [dashboard, isLoaded, router, session?.user?.email, session?.user?.role]);
 
   useEffect(() => { load(); }, [load, isLoaded]);
+
+  useEffect(() => {
+    embedReadyRef.current = embedReady;
+  }, [embedReady]);
 
   const isIgnorablePowerBIError = useCallback((event: unknown) => {
     try {
@@ -244,6 +250,9 @@ export default function DashboardViewPage() {
 
       {/* â”€â”€â”€ Error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {status === "error" && apiError && (
+        (() => {
+          const isDevModeLimit = apiError.errorCode === "DEV_MODE_LIMIT";
+          return (
         <div className="h-full flex items-center justify-center bg-[#f1f5f9] p-4">
           <div className="bg-white rounded-2xl shadow-sm border border-[#e2e8f0] w-full max-w-2xl">
             <div className="flex items-center gap-3 px-6 py-5 border-b border-[#e2e8f0]">
@@ -254,18 +263,30 @@ export default function DashboardViewPage() {
               </div>
               <div>
                 <h3 className="text-[#0f172a] font-bold">Power BI Embed IndisponÃ­vel</h3>
-                <p className="text-[#94a3b8] text-xs">Limite de tokens excedido</p>
+                <p className="text-[#94a3b8] text-xs">
+                  {isDevModeLimit ? "Limite de tokens excedido" : (apiError.error || "Falha ao carregar o relatÃ³rio")}
+                </p>
               </div>
             </div>
             <div className="px-6 py-5 space-y-4">
-              <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
-                <p className="text-sm text-amber-800">
-                  <strong className="font-semibold">ðŸ”§ Modo de Desenvolvimento:</strong>
-                  <br />
-                  O limite de tokens de embed do Power BI foi excedido. Este Ã© um limite da Microsoft para capacidades compartilhadas (Pro/ProPlus).
-                </p>
-              </div>
+              {isDevModeLimit ? (
+                <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+                  <p className="text-sm text-amber-800">
+                    <strong className="font-semibold">Modo de Desenvolvimento:</strong>
+                    <br />
+                    O limite de tokens de embed do Power BI foi excedido. Este e um limite da Microsoft para capacidades compartilhadas (Pro/ProPlus).
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                  <p className="text-sm text-red-800">
+                    <strong className="font-semibold">{apiError.error}</strong>
+                    {apiError.details ? ` ${apiError.details}` : ""}
+                  </p>
+                </div>
+              )}
               
+              {isDevModeLimit && (
               <div>
                 <p className="text-sm font-semibold text-[#333333] mb-2">SoluÃ§Ãµes:</p>
                 <ul className="text-sm text-[#6C757D] space-y-2">
@@ -283,22 +304,16 @@ export default function DashboardViewPage() {
                   </li>
                 </ul>
               </div>
+              )}
 
-              {apiError.errorCode === "DEV_MODE_LIMIT" && (
+              {isDevModeLimit && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
                   <p className="text-xs text-blue-800">
-                    <strong className="font-semibold">ðŸ“– DocumentaÃ§Ã£o:</strong>
+                    <strong className="font-semibold">Documentacao:</strong>
                     <br />
                     Consulte o arquivo <code className="bg-white px-2 py-0.5 rounded">POWER_BI_EMBED_ERROR.md</code> para instruÃ§Ãµes detalhadas.
                   </p>
                 </div>
-              )}
-
-              {apiError.errorCode && apiError.errorCode !== "DEV_MODE_LIMIT" && (
-                <>
-                  <p className="text-red-600 font-semibold text-sm">{apiError.error}</p>
-                  {apiError.details && <p className="text-[#64748b] text-xs bg-red-50 border border-red-100 rounded-lg px-4 py-3 leading-relaxed">{apiError.details}</p>}
-                </>
               )}
             </div>
             <div className="px-6 pb-5 flex gap-3">
@@ -311,6 +326,8 @@ export default function DashboardViewPage() {
             </div>
           </div>
         </div>
+          );
+        })()
       )}
 
       {/* â”€â”€â”€ Power BI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
@@ -330,11 +347,13 @@ export default function DashboardViewPage() {
             eventHandlers={new Map([
               ["loaded", () => {
                 console.log("[PBI] Evento loaded");
+                embedReadyRef.current = true;
                 setEmbedReady(true);
                 retriedWithoutCacheRef.current = false;
               }],
               ["rendered", () => {
                 console.log("[PBI] Evento rendered");
+                embedReadyRef.current = true;
                 setEmbedReady(true);
                 retriedWithoutCacheRef.current = false;
               }],
@@ -348,7 +367,7 @@ export default function DashboardViewPage() {
 
                 // Durante interacoes de menu do visual (ex.: "mostrar ponto de dados como tabela"),
                 // o SDK pode emitir eventos de erro nao bloqueantes. Nao derrubar o embed nesses casos.
-                if (embedReady && !isTokenExpired) {
+                if (embedReadyRef.current && !isTokenExpired) {
                   console.warn("[PBI] Erro nao bloqueante durante interacao. Embed mantido.", {
                     errorCode,
                     message,
