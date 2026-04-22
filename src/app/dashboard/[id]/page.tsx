@@ -18,6 +18,10 @@ const PowerBIEmbed = dynamic(
 interface EmbedData  { accessToken: string; embedUrl: string; }
 interface ApiError   { error: string; details?: string; errorCode?: string; }
 type Status = "loading" | "success" | "error";
+interface PowerBIEventDetailLike {
+  message?: string;
+  errorCode?: string;
+}
 
 export default function DashboardViewPage() {
   const params   = useParams();
@@ -157,6 +161,15 @@ export default function DashboardViewPage() {
     } catch {
       return false;
     }
+  }, []);
+
+  const getPowerBIEventDetails = useCallback((event: unknown) => {
+    const detail = (event as { detail?: PowerBIEventDetailLike })?.detail;
+    return {
+      message: detail?.message || "",
+      errorCode: detail?.errorCode || "",
+      raw: JSON.stringify(detail ?? event).toLowerCase(),
+    };
   }, []);
 
   useEffect(() => {
@@ -330,10 +343,31 @@ export default function DashboardViewPage() {
                   console.debug("[PBI] Aviso nao critico ignorado:", event);
                   return;
                 }
-                console.error("[PBI] Erro no embed:", event);
+                const { message, errorCode, raw } = getPowerBIEventDetails(event);
+                const isTokenExpired = errorCode.toLowerCase() === "tokenexpired" || raw.includes("tokenexpired");
+
+                // Durante interacoes de menu do visual (ex.: "mostrar ponto de dados como tabela"),
+                // o SDK pode emitir eventos de erro nao bloqueantes. Nao derrubar o embed nesses casos.
+                if (embedReady && !isTokenExpired) {
+                  console.warn("[PBI] Erro nao bloqueante durante interacao. Embed mantido.", {
+                    errorCode,
+                    message,
+                    event,
+                  });
+                  return;
+                }
+
+                if (isTokenExpired) {
+                  console.warn("[PBI] Token expirado detectado. Renovando token de embed...");
+                  load({ forceNewToken: true });
+                  return;
+                }
+
+                console.error("[PBI] Erro bloqueante no embed:", event);
                 setApiError({
                   error: "Erro ao renderizar o relatorio",
-                  details: "O Power BI retornou um erro de embed para este usuario."
+                  details: message || "O Power BI retornou um erro de embed para este usuario.",
+                  errorCode: errorCode || undefined,
                 });
                 setStatus("error");
               }],
