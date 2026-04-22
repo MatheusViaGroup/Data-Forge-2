@@ -37,7 +37,6 @@ export default function DashboardViewPage() {
   const [isFocus,   setIsFocus]   = useState(false);
   const [embedReady, setEmbedReady] = useState(false);
   const embedContainerRef = useRef<HTMLDivElement>(null);
-  const embeddedReportRef = useRef<any>(null);
   const retriedWithoutCacheRef = useRef(false);
   const embedReadyRef = useRef(false);
 
@@ -177,20 +176,6 @@ export default function DashboardViewPage() {
       errorCode: detail?.errorCode || "",
       raw: JSON.stringify(detail ?? event).toLowerCase(),
     };
-  }, []);
-
-  const clearPowerBITableOverlayState = useCallback(async () => {
-    const report = embeddedReportRef.current;
-    if (!report) return;
-
-    try {
-      // Remove estados "popped out" (show as table, focus mode, spotlight) e fecha overlays abertos.
-      await report.clearSelectedVisuals(true);
-      await report.closeAllOverlays();
-      console.log("[PBI] Estado de overlay/show-as-table limpo com sucesso.");
-    } catch (e) {
-      console.warn("[PBI] Nao foi possivel limpar estado de overlay:", e);
-    }
   }, []);
 
   useEffect(() => {
@@ -375,23 +360,18 @@ export default function DashboardViewPage() {
           <PowerBIEmbed
             embedConfig={embedConfig}
             cssClassName="w-full h-full"
-            getEmbeddedComponent={(embeddedReport: unknown) => {
-              embeddedReportRef.current = embeddedReport;
-            }}
             eventHandlers={new Map([
               ["loaded", () => {
                 console.log("[PBI] Evento loaded");
                 embedReadyRef.current = true;
                 setEmbedReady(true);
                 retriedWithoutCacheRef.current = false;
-                void clearPowerBITableOverlayState();
               }],
               ["rendered", () => {
                 console.log("[PBI] Evento rendered");
                 embedReadyRef.current = true;
                 setEmbedReady(true);
                 retriedWithoutCacheRef.current = false;
-                void clearPowerBITableOverlayState();
               }],
               ["error", (event: unknown) => {
                 if (isIgnorablePowerBIError(event)) {
