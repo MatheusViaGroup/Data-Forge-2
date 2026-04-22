@@ -210,6 +210,22 @@ export default function DashboardViewPage() {
       filterPaneEnabled: false,
       navContentPaneEnabled: true, // barra de abas nativa do Power BI
       background: models.BackgroundType.Default,
+      visualSettings: {
+        visualHeaders: [
+          {
+            settings: {
+              visible: false,
+            },
+          },
+        ],
+      },
+      commands: [
+        {
+          seeData: {
+            displayOption: models.CommandDisplayOption.Hidden,
+          },
+        },
+      ],
     },
   } : undefined;
 
