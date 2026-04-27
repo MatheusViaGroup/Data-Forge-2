@@ -76,7 +76,6 @@ export default function DashboardViewPage() {
 
     if (!canUseCache) {
       sessionStorage.removeItem(cacheKey);
-      console.log("[Dashboard] Cache desativado para este contexto (RLS/force refresh).");
     }
 
     if (cached) {
@@ -85,24 +84,17 @@ export default function DashboardViewPage() {
         const age = Date.now() - timestamp;
         // Embed token válido por ~1 hora; reutilizar se < 55 minutos (margem de segurança)
         if (age < 55 * 60 * 1000) {
-          console.log("[Dashboard] Token reutilizado do cache (idade:", Math.round(age/60000), "min)");
           setEmbedData({ accessToken: token, embedUrl });
           setStatus("success");
           return; // Pula requisição à API
-        } else {
-        console.log("[Dashboard] Cache expirado, obtendo novo token...");
-      }
+        }
       } catch (e) {
-        console.warn("[Dashboard] Erro ao ler cache, ignorando:", e);
+        // Ignora cache inválido e segue com novo token.
       }
     }
 
     // Chama API para gerar token de embed
     try {
-      console.log("[Dashboard] Solicitando token de embed...");
-      console.log("[Dashboard] reportId:", dashboard.reportId);
-      console.log("[Dashboard] groupId:", dashboard.workspaceId);
-
       const tokenData = await fetch("/api/embed-token-by-id", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -115,16 +107,12 @@ export default function DashboardViewPage() {
         }),
       }).then(r => r.json());
 
-      console.log("[Dashboard] Resposta da API:", tokenData);
-
       if (!tokenData.accessToken) {
-        console.error("[Dashboard] Erro: sem access token");
         setApiError(tokenData);
         setStatus("error");
         return;
       }
 
-      console.log("[Dashboard] Token obtido com sucesso!");
       setEmbedData({ accessToken: tokenData.accessToken, embedUrl: tokenData.embedUrl });
       setStatus("success");
 
@@ -136,14 +124,12 @@ export default function DashboardViewPage() {
             embedUrl: tokenData.embedUrl,
             timestamp: Date.now()
           }));
-          console.log("[Dashboard] Token salvo no cache");
         } catch (storageError) {
-          console.error("[Dashboard] Erro ao salvar cache:", storageError);
+          void storageError;
         }
       }
     } catch (err: unknown) {
       const e = err as Error;
-      console.error("[Dashboard] Erro inesperado:", e);
       setApiError({ error: "Erro inesperado", details: e.message });
       setStatus("error");
     }
@@ -183,7 +169,6 @@ export default function DashboardViewPage() {
 
     const timeout = setTimeout(() => {
       if (retriedWithoutCacheRef.current) {
-        console.error("[Dashboard] Embed não finalizou renderização após retry.");
         setApiError({
           error: "O relatório não concluiu o carregamento",
           details: "Tente novamente. Se persistir, valide permissões RLS (filiais/role) do usuário."
@@ -192,7 +177,6 @@ export default function DashboardViewPage() {
         return;
       }
 
-      console.warn("[Dashboard] Timeout de render, tentando novamente sem cache...");
       retriedWithoutCacheRef.current = true;
       load({ forceNewToken: true });
     }, 30000);
@@ -357,20 +341,17 @@ export default function DashboardViewPage() {
             cssClassName="w-full h-full"
             eventHandlers={new Map([
               ["loaded", () => {
-                console.log("[PBI] Evento loaded");
                 embedReadyRef.current = true;
                 setEmbedReady(true);
                 retriedWithoutCacheRef.current = false;
               }],
               ["rendered", () => {
-                console.log("[PBI] Evento rendered");
                 embedReadyRef.current = true;
                 setEmbedReady(true);
                 retriedWithoutCacheRef.current = false;
               }],
               ["error", (event: unknown) => {
                 if (isIgnorablePowerBIError(event)) {
-                  console.debug("[PBI] Aviso nao critico ignorado:", event);
                   return;
                 }
                 const { message, errorCode, raw } = getPowerBIEventDetails(event);
@@ -379,21 +360,14 @@ export default function DashboardViewPage() {
                 // Durante interacoes de menu do visual (ex.: "mostrar ponto de dados como tabela"),
                 // o SDK pode emitir eventos de erro nao bloqueantes. Nao derrubar o embed nesses casos.
                 if (embedReadyRef.current && !isTokenExpired) {
-                  console.warn("[PBI] Erro nao bloqueante durante interacao. Embed mantido.", {
-                    errorCode,
-                    message,
-                    event,
-                  });
                   return;
                 }
 
                 if (isTokenExpired) {
-                  console.warn("[PBI] Token expirado detectado. Renovando token de embed...");
                   load({ forceNewToken: true });
                   return;
                 }
 
-                console.error("[PBI] Erro bloqueante no embed:", event);
                 setApiError({
                   error: "Erro ao renderizar o relatorio",
                   details: message || "O Power BI retornou um erro de embed para este usuario.",
@@ -409,4 +383,3 @@ export default function DashboardViewPage() {
 
   );
 }
-
