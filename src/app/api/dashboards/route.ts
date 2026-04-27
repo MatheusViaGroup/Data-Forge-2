@@ -36,7 +36,7 @@ export async function GET() {
 
     const all = rows.map(mapRow);
     console.log("[API GET] Dashboards carregados:", all.length);
-    all.forEach(d => {
+    all.forEach((d: any) => {
       console.log(`  - ${d.nome}: rls=${d.rls}, rlsRole="${d.rlsRole}"`);
     });
 
