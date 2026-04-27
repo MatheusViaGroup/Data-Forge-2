@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(find '/c/Projetos Vercel/Via Core - Visualizador de Power bi/Data-Forge-2' -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.js -o -name *.jsx -o -name *.json -o -name *.css -o -name *.scss -o -name *.env* -o -name *.env -o -name .env* \\\\\\))",
+      "Bash(ls -la \"/c/Projetos Vercel/Via Core - Visualizador de Power bi/Data-Forge-2/.env\"*)",
+      "Bash(ls -la \"C:/Projetos Vercel/Via Core - Visualizador de Power bi/Data-Forge-2/.env\"*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(ls -la \"C:/Projetos Vercel/Via Core - Visualizador de Power bi/Data-Forge-2/\"*.env*)",
+      "Bash(grep \"\"\"pg\"\"\" \"C:/Projetos Vercel/Via Core - Visualizador de Power bi/Data-Forge-2/package.json\")"
     ]
   }
 }

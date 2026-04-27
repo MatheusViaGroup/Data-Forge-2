@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { supabaseAdmin } from "@/lib/supabase";
+import { query, queryOne } from "@/lib/db";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapRow(row: any) {
@@ -22,13 +22,14 @@ export async function GET() {
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("parametros_rls")
-    .select("*")
-    .order("created_at");
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ entries: (data || []).map(mapRow) });
+  try {
+    const { rows } = await query(
+      "SELECT * FROM via_core.parametros_rls ORDER BY created_at"
+    );
+    return NextResponse.json({ entries: rows.map(mapRow) });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 // ─── POST ─────────────────────────────────────────────────────────────────────
@@ -39,20 +40,28 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { data, error } = await supabaseAdmin
-    .from("parametros_rls")
-    .insert({
-      nome: body.nome ?? "",
-      nome_parametro_powerbi: body.nomeParametroPowerBI ?? "",
-      tipo: body.tipo ?? "Filial",
-      dashboard_id: body.dashboardId || null,
-      tenant: body.tenant ?? "",
-    })
-    .select()
-    .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, entry: mapRow(data) });
+  try {
+    const data = await queryOne(
+      `INSERT INTO via_core.parametros_rls (nome, nome_parametro_powerbi, tipo, dashboard_id, tenant)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [
+        body.nome ?? "",
+        body.nomeParametroPowerBI ?? "",
+        body.tipo ?? "Filial",
+        body.dashboardId || null,
+        body.tenant ?? "",
+      ]
+    );
+
+    if (!data) {
+      return NextResponse.json({ error: "Erro ao inserir parâmetro RLS" }, { status: 500 });
+    }
+    return NextResponse.json({ success: true, entry: mapRow(data) });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 // ─── PUT ──────────────────────────────────────────────────────────────────────
@@ -63,21 +72,30 @@ export async function PUT(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { data, error } = await supabaseAdmin
-    .from("parametros_rls")
-    .update({
-      nome: body.nome,
-      nome_parametro_powerbi: body.nomeParametroPowerBI,
-      tipo: body.tipo,
-      dashboard_id: body.dashboardId || null,
-      tenant: body.tenant,
-    })
-    .eq("id", body.id)
-    .select()
-    .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, entry: mapRow(data) });
+  try {
+    const data = await queryOne(
+      `UPDATE via_core.parametros_rls
+       SET nome = $1, nome_parametro_powerbi = $2, tipo = $3, dashboard_id = $4, tenant = $5
+       WHERE id = $6
+       RETURNING *`,
+      [
+        body.nome,
+        body.nomeParametroPowerBI,
+        body.tipo,
+        body.dashboardId || null,
+        body.tenant,
+        body.id,
+      ]
+    );
+
+    if (!data) {
+      return NextResponse.json({ error: "Parâmetro RLS não encontrado" }, { status: 404 });
+    }
+    return NextResponse.json({ success: true, entry: mapRow(data) });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 // ─── DELETE ───────────────────────────────────────────────────────────────────
@@ -91,7 +109,10 @@ export async function DELETE(request: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
 
-  const { error } = await supabaseAdmin.from("parametros_rls").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true });
+  try {
+    await query("DELETE FROM via_core.parametros_rls WHERE id = $1", [id]);
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

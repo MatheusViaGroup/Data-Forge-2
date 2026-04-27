@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { supabaseAdmin } from "@/lib/supabase";
+import { query, queryOne } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
@@ -26,13 +26,14 @@ export async function GET() {
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("usuarios")
-    .select("id, nome, email, departamento, acesso, status, filiais, dashboards")
-    .order("created_at");
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ entries: (data || []).map(mapRow) });
+  try {
+    const { rows } = await query(
+      "SELECT id, nome, email, departamento, acesso, status, filiais, dashboards FROM via_core.usuarios ORDER BY created_at"
+    );
+    return NextResponse.json({ entries: rows.map(mapRow) });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 // ─── POST ─────────────────────────────────────────────────────────────────────
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   console.log("Session:", session ? "✓" : "✗");
   console.log("User role:", session?.user?.role ?? "NENHUMA");
-  
+
   if (!session || session.user?.role !== "admin") {
     console.error("❌ ERRO: Usuário não autorizado");
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
@@ -71,8 +72,8 @@ export async function POST(request: NextRequest) {
   const senhaHash = await bcrypt.hash(senhaPlain, 10);
   console.log("Senha hash gerada:", senhaHash.substring(0, 20) + "...");
 
-  // STEP 4: Insert no Supabase
-  console.log("\n[STEP 4] Inserindo no Supabase...");
+  // STEP 4: Insert no banco
+  console.log("\n[STEP 4] Inserindo no banco...");
   const insertData = {
     nome: body.nome ?? "",
     email: body.email ?? "",
@@ -86,39 +87,59 @@ export async function POST(request: NextRequest) {
   };
   console.log("Dados para insert:", JSON.stringify(insertData, null, 2));
 
-  const { data, error } = await supabaseAdmin
-    .from("usuarios")
-    .insert(insertData)
-    .select("id, nome, email, departamento, acesso, status, filiais, dashboards")
-    .single();
+  try {
+    const data = await queryOne(
+      `INSERT INTO via_core.usuarios (nome, email, senha_hash, departamento, acesso, status, filiais, dashboards, must_change_password)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9)
+       RETURNING id, nome, email, departamento, acesso, status, filiais, dashboards`,
+      [
+        insertData.nome,
+        insertData.email,
+        insertData.senha_hash,
+        insertData.departamento,
+        insertData.acesso,
+        insertData.status,
+        JSON.stringify(insertData.filiais),
+        JSON.stringify(insertData.dashboards),
+        insertData.must_change_password,
+      ]
+    );
 
-  if (error) {
+    if (!data) {
+      console.error("\n❌ [USUARIOS API] ERRO: Insert retornou sem dados");
+      console.log("\n" + "=".repeat(60));
+      return NextResponse.json({ error: "Erro ao inserir usuário" }, { status: 500 });
+    }
+
+    console.log("\n✅ [USUARIOS API] Usuário criado com sucesso!");
+    console.log("  - ID:", data.id);
+    console.log("  - Nome:", data.nome);
+    console.log("  - Email:", data.email);
+    console.log("  - Acesso:", data.acesso);
+    console.log("  - Status:", data.status);
+    console.log("  - Filiais:", (data.filiais as any[])?.length ?? 0, "filiais");
+    console.log("  - Dashboards:", (data.dashboards as any[])?.length ?? 0, "dashboards");
+    console.log("\n" + "=".repeat(60) + "\n");
+
+    return NextResponse.json({ success: true, entry: mapRow(data) });
+  } catch (error: any) {
     console.error("\n❌ [USUARIOS API] ERRO AO INSERIR:");
     console.error("  - Message:", error.message);
-    console.error("  - Code:", (error as any).code ?? "N/A");
-    console.error("  - Details:", (error as any).details ?? "N/A");
-    console.error("  - Hint:", (error as any).hint ?? "N/A");
+    console.error("  - Code:", error.code ?? "N/A");
+    console.error("  - Details:", error.detail ?? "N/A");
+    console.error("  - Hint:", error.hint ?? "N/A");
     console.error("  - Full error:", JSON.stringify(error, null, 2));
     console.log("\n" + "=".repeat(60));
-    return NextResponse.json({ 
-      error: error.message, 
-      code: (error as any).code,
-      details: (error as any).details,
-      hint: (error as any).hint
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: error.message,
+        code: error.code,
+        details: error.detail,
+        hint: error.hint,
+      },
+      { status: 500 }
+    );
   }
-
-  console.log("\n✅ [USUARIOS API] Usuário criado com sucesso!");
-  console.log("  - ID:", data.id);
-  console.log("  - Nome:", data.nome);
-  console.log("  - Email:", data.email);
-  console.log("  - Acesso:", data.acesso);
-  console.log("  - Status:", data.status);
-  console.log("  - Filiais:", data.filiais?.length ?? 0, "filiais");
-  console.log("  - Dashboards:", data.dashboards?.length ?? 0, "dashboards");
-  console.log("\n" + "=".repeat(60) + "\n");
-
-  return NextResponse.json({ success: true, entry: mapRow(data) });
 }
 
 // ─── PUT ──────────────────────────────────────────────────────────────────────
@@ -129,29 +150,67 @@ export async function PUT(request: NextRequest) {
   }
 
   const body = await request.json();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updates: any = {};
-  if (body.nome !== undefined) updates.nome = body.nome;
-  if (body.email !== undefined) updates.email = body.email;
-  if (body.departamento !== undefined) updates.departamento = body.departamento.toUpperCase();
-  if (body.acesso !== undefined) updates.acesso = body.acesso;
-  if (body.status !== undefined) updates.status = body.status;
-  if (body.filiais !== undefined) updates.filiais = body.filiais;
-  if (body.dashboards !== undefined) updates.dashboards = body.dashboards;
-  if (body.must_change_password !== undefined) updates.must_change_password = body.must_change_password;
+
+  // Build dynamic SET clause
+  const setClauses: string[] = [];
+  const params: unknown[] = [];
+  let paramIdx = 1;
+
+  if (body.nome !== undefined) {
+    setClauses.push(`nome = $${paramIdx++}`);
+    params.push(body.nome);
+  }
+  if (body.email !== undefined) {
+    setClauses.push(`email = $${paramIdx++}`);
+    params.push(body.email);
+  }
+  if (body.departamento !== undefined) {
+    setClauses.push(`departamento = $${paramIdx++}`);
+    params.push(body.departamento.toUpperCase());
+  }
+  if (body.acesso !== undefined) {
+    setClauses.push(`acesso = $${paramIdx++}`);
+    params.push(body.acesso);
+  }
+  if (body.status !== undefined) {
+    setClauses.push(`status = $${paramIdx++}`);
+    params.push(body.status);
+  }
+  if (body.filiais !== undefined) {
+    setClauses.push(`filiais = $${paramIdx++}::jsonb`);
+    params.push(JSON.stringify(body.filiais));
+  }
+  if (body.dashboards !== undefined) {
+    setClauses.push(`dashboards = $${paramIdx++}::jsonb`);
+    params.push(JSON.stringify(body.dashboards));
+  }
+  if (body.must_change_password !== undefined) {
+    setClauses.push(`must_change_password = $${paramIdx++}`);
+    params.push(body.must_change_password);
+  }
   if (body.senha) {
-    updates.senha_hash = await bcrypt.hash(body.senha, 10);
+    const senhaHash = await bcrypt.hash(body.senha, 10);
+    setClauses.push(`senha_hash = $${paramIdx++}`);
+    params.push(senhaHash);
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("usuarios")
-    .update(updates)
-    .eq("id", body.id)
-    .select("id, nome, email, departamento, acesso, status, filiais, dashboards")
-    .single();
+  // id is the last parameter
+  params.push(body.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, entry: mapRow(data) });
+  try {
+    const data = await queryOne(
+      `UPDATE via_core.usuarios SET ${setClauses.join(", ")} WHERE id = $${paramIdx}
+       RETURNING id, nome, email, departamento, acesso, status, filiais, dashboards`,
+      params
+    );
+
+    if (!data) {
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    }
+    return NextResponse.json({ success: true, entry: mapRow(data) });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 // ─── DELETE ───────────────────────────────────────────────────────────────────
@@ -165,7 +224,10 @@ export async function DELETE(request: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
 
-  const { error } = await supabaseAdmin.from("usuarios").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true });
+  try {
+    await query("DELETE FROM via_core.usuarios WHERE id = $1", [id]);
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

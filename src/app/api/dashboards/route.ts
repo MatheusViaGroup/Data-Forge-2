@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { supabaseAdmin } from "@/lib/supabase";
+import { query, queryOne } from "@/lib/db";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapRow(row: any) {
@@ -29,21 +29,23 @@ export async function GET() {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("dashboards")
-    .select("*")
-    .order("created_at");
+  try {
+    const { rows } = await query(
+      "SELECT * FROM via_core.dashboards ORDER BY created_at"
+    );
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const all = rows.map(mapRow);
+    console.log("[API GET] Dashboards carregados:", all.length);
+    all.forEach(d => {
+      console.log(`  - ${d.nome}: rls=${d.rls}, rlsRole="${d.rlsRole}"`);
+    });
 
-  const all = (data || []).map(mapRow);
-  console.log("[API GET] Dashboards carregados:", all.length);
-  all.forEach(d => {
-    console.log(`  - ${d.nome}: rls=${d.rls}, rlsRole="${d.rlsRole}"`);
-  });
-  
-  const entries = all.filter((d) => d.ativo);
-  return NextResponse.json({ entries, all });
+    const entries = all.filter((d) => d.ativo);
+    return NextResponse.json({ entries, all });
+  } catch (error: any) {
+    console.error("[API GET] Erro ao buscar dashboards:", error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 // ─── POST: cria novo ──────────────────────────────────────────────────────────
@@ -57,51 +59,60 @@ export async function POST(request: NextRequest) {
   console.log("[API POST] Body recebido:", body);
   console.log("[API POST] descricao:", body.descricao);
   console.log("[API POST] setor:", body.setor);
-  
-  const { data, error } = await supabaseAdmin
-    .from("dashboards")
-    .insert({
-      nome: body.nome ?? "",
-      descricao: body.descricao ?? "",
-      workspace_id: body.workspaceId ?? "",
-      report_id: body.reportId ?? "",
-      dataset_id: body.datasetId ?? "",
-      ativo: body.ativo ?? true,
-      prioridade: body.prioridade ?? "media",
-      setor: body.setor ?? "",
-      rls: body.rls ?? false,
-      rls_role: body.rlsRole ?? "",
-      status: body.status ?? "Ativo",
-      "url-dash": body.urlCapa ?? "",
-    })
-    .select()
-    .single();
 
-  if (error) {
-    console.error("[API POST] Erro ao inserir:", error);
+  try {
+    const data = await queryOne(
+      `INSERT INTO via_core.dashboards (nome, descricao, workspace_id, report_id, dataset_id, ativo, prioridade, setor, rls, rls_role, status, "url-dash")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       RETURNING *`,
+      [
+        body.nome ?? "",
+        body.descricao ?? "",
+        body.workspaceId ?? "",
+        body.reportId ?? "",
+        body.datasetId ?? "",
+        body.ativo ?? true,
+        body.prioridade ?? "media",
+        body.setor ?? "",
+        body.rls ?? false,
+        body.rlsRole ?? "",
+        body.status ?? "Ativo",
+        body.urlCapa ?? "",
+      ]
+    );
+
+    if (!data) {
+      console.error("[API POST] Erro ao inserir: nenhum dado retornado");
+      return NextResponse.json({ error: "Erro ao inserir dashboard" }, { status: 500 });
+    }
+
+    console.log("[API POST] Dados inseridos com sucesso:", data);
+
+    // Se RLS estiver ativado, cria parâmetro RLS automaticamente
+    if (body.rls && data) {
+      try {
+        await queryOne(
+          `INSERT INTO via_core.parametros_rls (nome, nome_parametro_powerbi, tipo, dashboard_id, tenant)
+           VALUES ($1, $2, $3, $4, $5)
+           RETURNING id`,
+          [
+            body.nome ?? "RLS " + data.id,
+            body.rlsRole || "Filial",
+            "Filial",
+            data.id,
+            "VIA GROUP",
+          ]
+        );
+      } catch (rlsError: any) {
+        console.error("Erro ao criar parâmetro RLS:", rlsError.message);
+      }
+    }
+
+    return NextResponse.json({ success: true, entry: mapRow(data) });
+  } catch (error: any) {
+    console.error("[API POST] Erro ao inserir:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  
-  console.log("[API POST] Dados inseridos com sucesso:", data);
-
-  // Se RLS estiver ativado, cria parâmetro RLS automaticamente
-  if (body.rls && data) {
-    const { error: rlsError } = await supabaseAdmin
-      .from("parametros_rls")
-      .insert({
-        nome: body.nome ?? "RLS " + data.id,
-        nome_parametro_powerbi: body.rlsRole || "Filial",
-        tipo: "Filial",
-        dashboard_id: data.id,
-        tenant: "VIA GROUP",
-      });
-
-    if (rlsError) {
-      console.error("Erro ao criar parâmetro RLS:", rlsError.message);
-    }
-  }
-
-  return NextResponse.json({ success: true, entry: mapRow(data) });
 }
 
 // ─── PUT: atualiza ────────────────────────────────────────────────────────────
@@ -115,62 +126,71 @@ export async function PUT(request: NextRequest) {
   console.log("[API PUT] Body recebido:", body);
   console.log("[API PUT] descricao:", body.descricao);
   console.log("[API PUT] setor:", body.setor);
-  
-  const { data, error } = await supabaseAdmin
-    .from("dashboards")
-    .update({
-      nome: body.nome,
-      descricao: body.descricao,
-      workspace_id: body.workspaceId,
-      report_id: body.reportId,
-      dataset_id: body.datasetId,
-      ativo: body.ativo,
-      prioridade: body.prioridade,
-      setor: body.setor,
-      rls: body.rls,
-      rls_role: body.rlsRole ?? "",
-      status: body.status,
-      "url-dash": body.urlCapa ?? "",
-    })
-    .eq("id", body.id)
-    .select()
-    .single();
 
-  if (error) {
-    console.error("[API PUT] Erro ao atualizar:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-  
-  console.log("[API PUT] Dados atualizados com sucesso:", data);
+  try {
+    const data = await queryOne(
+      `UPDATE via_core.dashboards
+       SET nome = $1, descricao = $2, workspace_id = $3, report_id = $4, dataset_id = $5,
+           ativo = $6, prioridade = $7, setor = $8, rls = $9, rls_role = $10,
+           status = $11, "url-dash" = $12
+       WHERE id = $13
+       RETURNING *`,
+      [
+        body.nome,
+        body.descricao,
+        body.workspaceId,
+        body.reportId,
+        body.datasetId,
+        body.ativo,
+        body.prioridade,
+        body.setor,
+        body.rls,
+        body.rlsRole ?? "",
+        body.status,
+        body.urlCapa ?? "",
+        body.id,
+      ]
+    );
 
-  // Se RLS estiver ativado, verifica se existe parâmetro RLS
-  if (body.rls && data) {
-    // Verifica se já existe parâmetro RLS para este dashboard
-    const { data: existingRls } = await supabaseAdmin
-      .from("parametros_rls")
-      .select("id")
-      .eq("dashboard_id", body.id)
-      .single();
+    if (!data) {
+      console.error("[API PUT] Erro ao atualizar: nenhum dado retornado");
+      return NextResponse.json({ error: "Dashboard não encontrado" }, { status: 404 });
+    }
 
-    if (!existingRls) {
-      // Não existe, cria automaticamente
-      const { error: rlsError } = await supabaseAdmin
-        .from("parametros_rls")
-        .insert({
-          nome: body.nome ?? "RLS " + data.id,
-          nome_parametro_powerbi: body.rlsRole || "Filial",
-          tipo: "Filial",
-          dashboard_id: body.id,
-          tenant: "VIA GROUP",
-        });
+    console.log("[API PUT] Dados atualizados com sucesso:", data);
 
-      if (rlsError) {
-        console.error("Erro ao criar parâmetro RLS:", rlsError.message);
+    // Se RLS estiver ativado, verifica se existe parâmetro RLS
+    if (body.rls && data) {
+      const existingRls = await queryOne(
+        "SELECT id FROM via_core.parametros_rls WHERE dashboard_id = $1 LIMIT 1",
+        [body.id]
+      );
+
+      if (!existingRls) {
+        try {
+          await queryOne(
+            `INSERT INTO via_core.parametros_rls (nome, nome_parametro_powerbi, tipo, dashboard_id, tenant)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id`,
+            [
+              body.nome ?? "RLS " + data.id,
+              body.rlsRole || "Filial",
+              "Filial",
+              body.id,
+              "VIA GROUP",
+            ]
+          );
+        } catch (rlsError: any) {
+          console.error("Erro ao criar parâmetro RLS:", rlsError.message);
+        }
       }
     }
-  }
 
-  return NextResponse.json({ success: true, entry: mapRow(data) });
+    return NextResponse.json({ success: true, entry: mapRow(data) });
+  } catch (error: any) {
+    console.error("[API PUT] Erro ao atualizar:", error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 // ─── DELETE ───────────────────────────────────────────────────────────────────
@@ -184,7 +204,10 @@ export async function DELETE(request: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
 
-  const { error } = await supabaseAdmin.from("dashboards").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true });
+  try {
+    await query("DELETE FROM via_core.dashboards WHERE id = $1", [id]);
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

@@ -2,7 +2,23 @@ import type { NextAuthOptions } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { supabaseAdmin } from "@/lib/supabase";
+import { queryOne } from "@/lib/db";
+
+interface UserRow {
+  id: string;
+  nome: string;
+  email: string;
+  senha_hash: string;
+  acesso: string;
+  status: string;
+  must_change_password: boolean;
+  dashboards: string[];
+}
+
+interface StatusRow {
+  id: string;
+  status: string;
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -20,17 +36,13 @@ export const authOptions: NextAuthOptions = {
 
         console.log('[Auth] Tentando autenticar:', credentials.email);
 
-        const { data: user, error } = await supabaseAdmin
-          .from("usuarios")
-          .select("id, nome, email, senha_hash, acesso, status, must_change_password, dashboards")
-          .eq("email", credentials.email)
-          .eq("status", "Ativo")
-          .single();
-
-        if (error) {
-          console.log('[Auth] Erro ao buscar usuário:', error.message);
-          return null;
-        }
+        const user = await queryOne<UserRow>(
+          `SELECT id, nome, email, senha_hash, acesso, status, must_change_password, dashboards
+           FROM via_core.usuarios
+           WHERE email = $1 AND status = 'Ativo'
+           LIMIT 1`,
+          [credentials.email]
+        );
 
         if (!user) {
           console.log('[Auth] Usuário não encontrado:', credentials.email);
@@ -71,12 +83,10 @@ export const authOptions: NextAuthOptions = {
 
       // Valida se o usuário ainda existe e está ativo no banco
       if (token.id) {
-        const { data } = await supabaseAdmin
-          .from("usuarios")
-          .select("id, status")
-          .eq("id", token.id)
-          .eq("status", "Ativo")
-          .single();
+        const data = await queryOne<StatusRow>(
+          `SELECT id, status FROM via_core.usuarios WHERE id = $1 AND status = 'Ativo' LIMIT 1`,
+          [token.id as string]
+        );
 
         if (!data) return null as unknown as JWT; // Invalida o token → redireciona para login
       }

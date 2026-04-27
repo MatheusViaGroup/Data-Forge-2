@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { supabaseAdmin } from "@/lib/supabase";
+import { queryOne } from "@/lib/db";
 import * as msal from "@azure/msal-node";
 
 function encodeSharingUrl(url: string): string {
@@ -41,16 +41,24 @@ export async function GET(request: NextRequest) {
   }
 
   // Buscar credencial ativa (status pode ser "Ativo" ou "ativo")
-  const { data: cred, error: credError } = await supabaseAdmin
-    .from("credenciais")
-    .select("tenant_id, client_id, client_secret")
-    .ilike("status", "ativo")
-    .limit(1)
-    .single();
-
-  if (credError || !cred) {
+  let cred;
+  try {
+    cred = await queryOne(
+      `SELECT tenant_id, client_id, client_secret
+       FROM via_core.credenciais
+       WHERE status ILIKE 'ativo'
+       LIMIT 1`
+    );
+  } catch (credError: any) {
     return NextResponse.json(
       { error: "Credencial ativa não encontrada", detail: credError?.message },
+      { status: 500 }
+    );
+  }
+
+  if (!cred) {
+    return NextResponse.json(
+      { error: "Credencial ativa não encontrada" },
       { status: 500 }
     );
   }
@@ -60,9 +68,9 @@ export async function GET(request: NextRequest) {
   try {
     const cca = new msal.ConfidentialClientApplication({
       auth: {
-        clientId: cred.client_id,
+        clientId: cred.client_id as string,
         authority: `https://login.microsoftonline.com/${cred.tenant_id}`,
-        clientSecret: cred.client_secret,
+        clientSecret: cred.client_secret as string,
       },
     });
 

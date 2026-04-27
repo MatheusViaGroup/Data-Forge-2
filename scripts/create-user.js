@@ -1,16 +1,17 @@
-const { createClient } = require('@supabase/supabase-js');
+const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
-// Configuração do Supabase - credenciais via variáveis de ambiente
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const connectionString = process.env.DATABASE_URL;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Erro: NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY devem estar definidos no .env');
+if (!connectionString) {
+  console.error('Erro: DATABASE_URL deve estar definida no .env');
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const pool = new Pool({
+  connectionString,
+  ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+});
 
 async function createUser() {
   const email = process.env.ADMIN_EMAIL;
@@ -26,49 +27,30 @@ async function createUser() {
 
   try {
     // Verificar se usuário já existe
-    const { data: existingUser } = await supabase
-      .from('usuarios')
-      .select('id')
-      .eq('email', email)
-      .single();
+    const { rows } = await pool.query(
+      "SELECT id FROM via_core.usuarios WHERE email = $1 LIMIT 1",
+      [email]
+    );
 
-    if (existingUser) {
+    if (rows.length > 0) {
       console.log('Usuário já existe, atualizando senha...');
 
       const senhaHash = await bcrypt.hash(senha, 10);
 
-      const { error } = await supabase
-        .from('usuarios')
-        .update({
-          senha_hash: senhaHash,
-          status: 'Ativo',
-          must_change_password: false
-        })
-        .eq('email', email);
-
-      if (error) throw error;
+      await pool.query(
+        "UPDATE via_core.usuarios SET senha_hash = $1, status = 'Ativo', must_change_password = false WHERE email = $2",
+        [senhaHash, email]
+      );
 
       console.log('Senha atualizada com sucesso!');
     } else {
       const senhaHash = await bcrypt.hash(senha, 10);
 
-      const { data, error } = await supabase
-        .from('usuarios')
-        .insert({
-          nome: nome,
-          email: email,
-          senha_hash: senhaHash,
-          departamento: departamento,
-          acesso: acesso,
-          status: 'Ativo',
-          filiais: [],
-          dashboards: [],
-          must_change_password: false
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      await pool.query(
+        `INSERT INTO via_core.usuarios (nome, email, senha_hash, departamento, acesso, status, filiais, dashboards, must_change_password)
+         VALUES ($1, $2, $3, $4, $5, 'Ativo', '[]'::jsonb, '[]'::jsonb, false)`,
+        [nome, email, senhaHash, departamento, acesso]
+      );
 
       console.log('Usuário criado com sucesso!');
       console.log('Email:', email);
@@ -76,6 +58,8 @@ async function createUser() {
   } catch (error) {
     console.error('Erro:', error.message);
     process.exit(1);
+  } finally {
+    await pool.end();
   }
 }
 

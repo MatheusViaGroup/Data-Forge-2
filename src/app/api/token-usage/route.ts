@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { supabaseAdmin } from "@/lib/supabase";
+import { query, queryOne } from "@/lib/db";
 import crypto from "crypto";
 
 // Gera hash SHA-256 do token para armazenamento seguro
@@ -30,11 +30,10 @@ export async function POST(request: NextRequest) {
     const expiresAtDate = new Date(expiresAt);
 
     // Verificar se já existe registro com mesmo hash (evita duplicatas)
-    const { data: existing } = await supabaseAdmin
-      .from("uso_tokens")
-      .select("id")
-      .eq("token_hash", tokenHash)
-      .single();
+    const existing = await queryOne(
+      "SELECT id FROM via_core.uso_tokens WHERE token_hash = $1 LIMIT 1",
+      [tokenHash]
+    );
 
     if (existing) {
       console.log("[token-usage] Token já registrado anteriormente:", tokenHash.substring(0, 16));
@@ -42,25 +41,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Inserir novo registro
-    const { data: inserted, error } = await supabaseAdmin
-      .from("uso_tokens")
-      .insert({
-        id: crypto.randomUUID(),
-        token_hash: tokenHash,
-        dashboard_id: dashboardId,
-        user_id: session.user.id,
-        credential_id: credentialId,
-        expires_at: expiresAtDate.toISOString(),
-        ip_address: request.headers.get("x-forwarded-for") || request.headers.get("remote-addr") || null,
-        user_agent: request.headers.get("user-agent") || null,
-        status: "ativo",
-      })
-      .select()
-      .single();
+    const inserted = await queryOne(
+      `INSERT INTO via_core.uso_tokens (id, token_hash, dashboard_id, user_id, credential_id, expires_at, ip_address, user_agent, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING *`,
+      [
+        crypto.randomUUID(),
+        tokenHash,
+        dashboardId,
+        session.user.id,
+        credentialId,
+        expiresAtDate.toISOString(),
+        request.headers.get("x-forwarded-for") || request.headers.get("remote-addr") || null,
+        request.headers.get("user-agent") || null,
+        "ativo",
+      ]
+    );
 
-    if (error) {
-      console.error("[token-usage] Erro ao registrar token:", error.message);
-      return NextResponse.json({ error: "Falha ao registrar token", details: error.message }, { status: 500 });
+    if (!inserted) {
+      console.error("[token-usage] Erro ao registrar token: nenhum dado retornado");
+      return NextResponse.json({ error: "Falha ao registrar token" }, { status: 500 });
     }
 
     console.log("[token-usage] Token registrado com sucesso:", {

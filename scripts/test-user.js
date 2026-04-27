@@ -1,41 +1,54 @@
-const { createClient } = require('@supabase/supabase-js');
+const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
-const supabaseUrl = 'https://zctlgwpfodidgmutxmjw.supabase.co';
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjdGxnd3Bmb2RpZGdtdXR4bWp3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzE1MjU3MywiZXhwIjoyMDg4NzI4NTczfQ._xWks_8UQq9l0LxX2pEa6ZAtMvsfyxA0pTKMEmQny1s';
+const connectionString = process.env.DATABASE_URL;
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+if (!connectionString) {
+  console.error('Erro: DATABASE_URL deve estar definida no .env');
+  process.exit(1);
+}
+
+const pool = new Pool({
+  connectionString,
+  ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+});
 
 async function test() {
-  const email = 'matheus.henrique@viagroup.com.br';
-  const senha = 'admin321';
-  
+  const email = process.env.TEST_EMAIL || 'matheus.henrique@viagroup.com.br';
+  const senha = process.env.TEST_SENHA;
+
+  if (!senha) {
+    console.error('Erro: TEST_SENHA deve estar definida no .env');
+    process.exit(1);
+  }
+
   console.log('Buscando usuário:', email);
-  
-  const { data: user, error } = await supabase
-    .from('usuarios')
-    .select('id, nome, email, senha_hash, acesso, status, must_change_password')
-    .eq('email', email)
-    .eq('status', 'Ativo')
-    .single();
-  
-  if (error) {
-    console.error('Erro ao buscar:', error.message);
-    return;
+
+  try {
+    const { rows } = await pool.query(
+      "SELECT id, nome, email, senha_hash, acesso, status, must_change_password FROM via_core.usuarios WHERE email = $1 AND status = 'Ativo' LIMIT 1",
+      [email]
+    );
+
+    if (rows.length === 0) {
+      console.log('Usuário não encontrado!');
+      return;
+    }
+
+    const user = rows[0];
+    console.log('Usuário encontrado:', user.nome);
+    console.log('Status:', user.status);
+    console.log('Acesso:', user.acesso);
+    console.log('Hash da senha:', user.senha_hash.substring(0, 20) + '...');
+
+    const match = await bcrypt.compare(senha, user.senha_hash);
+    console.log('Senha confere:', match);
+  } catch (error) {
+    console.error('Erro:', error.message);
+    process.exit(1);
+  } finally {
+    await pool.end();
   }
-  
-  if (!user) {
-    console.log('Usuário não encontrado!');
-    return;
-  }
-  
-  console.log('Usuário encontrado:', user.nome);
-  console.log('Status:', user.status);
-  console.log('Acesso:', user.acesso);
-  console.log('Hash da senha:', user.senha_hash.substring(0, 20) + '...');
-  
-  const match = await bcrypt.compare(senha, user.senha_hash);
-  console.log('Senha confere:', match);
 }
 
 test();

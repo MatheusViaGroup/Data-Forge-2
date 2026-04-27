@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { supabaseAdmin } from "@/lib/supabase";
+import { query, queryOne } from "@/lib/db";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapRow(row: any) {
@@ -31,13 +31,14 @@ export async function GET() {
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("credenciais")
-    .select("*")
-    .order("created_at");
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ entries: (data || []).map(mapRow) });
+  try {
+    const { rows } = await query(
+      "SELECT * FROM via_core.credenciais ORDER BY created_at"
+    );
+    return NextResponse.json({ entries: rows.map(mapRow) });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 // ─── POST ─────────────────────────────────────────────────────────────────────
@@ -48,26 +49,34 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { data, error } = await supabaseAdmin
-    .from("credenciais")
-    .insert({
-      nome: body.nome ?? "",
-      tenant: body.tenant ?? "",
-      client_id: body.clientId ?? "",
-      client_secret: body.clientSecret ?? "",
-      tenant_id: body.tenantId ?? "",
-      master_user: body.usuarioPowerBI ?? "",
-      master_password: body.masterPassword ?? "",
-      secret_expiration: body.dataExpiracao
-        ? body.dataExpiracao.split("/").reverse().join("-")
-        : null,
-      status: body.status === "Ativo" ? "ativo" : "inativo",
-    })
-    .select()
-    .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, entry: mapRow(data) });
+  try {
+    const data = await queryOne(
+      `INSERT INTO via_core.credenciais (nome, tenant, client_id, client_secret, tenant_id, master_user, master_password, secret_expiration, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING *`,
+      [
+        body.nome ?? "",
+        body.tenant ?? "",
+        body.clientId ?? "",
+        body.clientSecret ?? "",
+        body.tenantId ?? "",
+        body.usuarioPowerBI ?? "",
+        body.masterPassword ?? "",
+        body.dataExpiracao
+          ? body.dataExpiracao.split("/").reverse().join("-")
+          : null,
+        body.status === "Ativo" ? "ativo" : "inativo",
+      ]
+    );
+
+    if (!data) {
+      return NextResponse.json({ error: "Erro ao inserir credencial" }, { status: 500 });
+    }
+    return NextResponse.json({ success: true, entry: mapRow(data) });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 // ─── PUT ──────────────────────────────────────────────────────────────────────
@@ -78,33 +87,63 @@ export async function PUT(request: NextRequest) {
   }
 
   const body = await request.json();
-  const updates: any = {
-    nome: body.nome,
-    tenant: body.tenant,
-    client_id: body.clientId,
-    tenant_id: body.tenantId,
-    master_user: body.usuarioPowerBI,
-    secret_expiration: body.dataExpiracao
+
+  // Build dynamic SET clause
+  const setClauses: string[] = [];
+  const params: unknown[] = [];
+  let paramIdx = 1;
+
+  setClauses.push(`nome = $${paramIdx++}`);
+  params.push(body.nome);
+
+  setClauses.push(`tenant = $${paramIdx++}`);
+  params.push(body.tenant);
+
+  setClauses.push(`client_id = $${paramIdx++}`);
+  params.push(body.clientId);
+
+  setClauses.push(`tenant_id = $${paramIdx++}`);
+  params.push(body.tenantId);
+
+  setClauses.push(`master_user = $${paramIdx++}`);
+  params.push(body.usuarioPowerBI);
+
+  setClauses.push(`secret_expiration = $${paramIdx++}`);
+  params.push(
+    body.dataExpiracao
       ? body.dataExpiracao.split("/").reverse().join("-")
-      : null,
-    status: body.status === "Ativo" ? "ativo" : "inativo",
-  };
+      : null
+  );
+
+  setClauses.push(`status = $${paramIdx++}`);
+  params.push(body.status === "Ativo" ? "ativo" : "inativo");
+
   // Só atualiza secrets se vierem preenchidos (não placeholder)
   if (body.clientSecret && body.clientSecret !== "••••••••") {
-    updates.client_secret = body.clientSecret;
+    setClauses.push(`client_secret = $${paramIdx++}`);
+    params.push(body.clientSecret);
   }
   if (body.masterPassword && body.masterPassword !== "••••••••") {
-    updates.master_password = body.masterPassword;
+    setClauses.push(`master_password = $${paramIdx++}`);
+    params.push(body.masterPassword);
   }
-  const { data, error } = await supabaseAdmin
-    .from("credenciais")
-    .update(updates)
-    .eq("id", body.id)
-    .select()
-    .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, entry: mapRow(data) });
+  // id is the last parameter
+  params.push(body.id);
+
+  try {
+    const data = await queryOne(
+      `UPDATE via_core.credenciais SET ${setClauses.join(", ")} WHERE id = $${paramIdx} RETURNING *`,
+      params
+    );
+
+    if (!data) {
+      return NextResponse.json({ error: "Credencial não encontrada" }, { status: 404 });
+    }
+    return NextResponse.json({ success: true, entry: mapRow(data) });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 // ─── DELETE ───────────────────────────────────────────────────────────────────
@@ -118,7 +157,10 @@ export async function DELETE(request: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
 
-  const { error } = await supabaseAdmin.from("credenciais").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true });
+  try {
+    await query("DELETE FROM via_core.credenciais WHERE id = $1", [id]);
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

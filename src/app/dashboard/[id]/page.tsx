@@ -207,25 +207,20 @@ export default function DashboardViewPage() {
     accessToken: embedData.accessToken,
     tokenType: models.TokenType.Embed,
     settings: {
-      filterPaneEnabled: false,
-      navContentPaneEnabled: true, // barra de abas nativa do Power BI
+      panes: {
+        filters: { visible: false },
+        pageNavigation: { visible: true },
+      },
       background: models.BackgroundType.Default,
       visualSettings: {
         visualHeaders: [
           {
             settings: {
-              visible: false,
+              visible: true,
             },
           },
         ],
       },
-      commands: [
-        {
-          seeData: {
-            displayOption: models.CommandDisplayOption.Hidden,
-          },
-        },
-      ],
     },
   } : undefined;
 

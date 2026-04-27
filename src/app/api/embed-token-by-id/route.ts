@@ -3,29 +3,29 @@ import * as msal from "@azure/msal-node";
 import axios from "axios";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { supabaseAdmin } from "@/lib/supabase";
+import { query, queryOne } from "@/lib/db";
 
 async function getCredentials() {
-  const { data } = await supabaseAdmin
-    .from("credenciais")
-    .select("id, client_id, tenant_id, client_secret, master_user, master_password")
-    .eq("status", "ativo")
-    .limit(1)
-    .single();
+  const data = await queryOne(
+    `SELECT id, client_id, tenant_id, client_secret, master_user, master_password
+     FROM via_core.credenciais
+     WHERE status = 'ativo'
+     LIMIT 1`
+  );
 
   if (data) {
-    console.log("[embed-token] ✅ Usando credenciais do Supabase");
+    console.log("[embed-token] Usando credenciais do banco");
     return {
-      id: data.id,
-      clientId: data.client_id,
-      tenantId: data.tenant_id,
-      clientSecret: data.client_secret,
-      masterUser: data.master_user,
-      masterPassword: data.master_password,
+      id: data.id as string,
+      clientId: data.client_id as string,
+      tenantId: data.tenant_id as string,
+      clientSecret: data.client_secret as string,
+      masterUser: data.master_user as string,
+      masterPassword: data.master_password as string,
     };
   }
 
-  console.log("[embed-token] ℹ️ Fallback para variáveis de ambiente");
+  console.log("[embed-token] Fallback para variáveis de ambiente");
   return {
     id: null,
     clientId: process.env.POWERBI_CLIENT_ID as string,
@@ -48,13 +48,13 @@ async function getAccessToken(): Promise<string> {
 
   console.log("[MSAL] Buscando credenciais...");
   const creds = await getCredentials();
-  
+
   console.log("[MSAL] Credenciais obtidas:", {
-    clientId: creds.clientId ? "✓" : "✗",
-    tenantId: creds.tenantId ? "✓" : "✗",
-    clientSecret: creds.clientSecret ? "✓ (oculto)" : "✗",
-    masterUser: creds.masterUser ? "✓" : "✗",
-    masterPassword: creds.masterPassword ? "✓ (oculto)" : "✗",
+    clientId: creds.clientId ? "ok" : "vazio",
+    tenantId: creds.tenantId ? "ok" : "vazio",
+    clientSecret: creds.clientSecret ? "ok (oculto)" : "vazio",
+    masterUser: creds.masterUser ? "ok" : "vazio",
+    masterPassword: creds.masterPassword ? "ok (oculto)" : "vazio",
   });
 
   const msalConfig: msal.Configuration = {
@@ -72,7 +72,7 @@ async function getAccessToken(): Promise<string> {
   console.log("[MSAL] Username:", creds.masterUser);
 
   const cca = new msal.ConfidentialClientApplication(msalConfig);
-  
+
   console.log("[MSAL] Solicitando token por username/password...");
   const result = await cca.acquireTokenByUsernamePassword({
     scopes: ["https://analysis.windows.net/powerbi/api/.default"],
@@ -80,7 +80,7 @@ async function getAccessToken(): Promise<string> {
     password: creds.masterPassword,
   });
 
-  console.log("[MSAL] Resposta do Azure:", result ? "✓" : "✗");
+  console.log("[MSAL] Resposta do Azure:", result ? "ok" : "vazio");
   console.log("[MSAL] Token expires on:", result?.expiresOn);
 
   if (!result?.accessToken) {
@@ -99,22 +99,22 @@ async function getAccessToken(): Promise<string> {
 
 export async function POST(request: NextRequest) {
   console.log("\n" + "=".repeat(60));
-  console.log("🔍 [API] INICIANDO GERAÇÃO DE TOKEN");
+  console.log("[API] INICIANDO GERAÇÃO DE TOKEN");
   console.log("=".repeat(60));
-  
+
   const stepLog = (step: number, msg: string) => {
     console.log(`\n[STEP ${step}] ${msg}`);
     console.log("-".repeat(60));
   };
-  
+
   try {
     // STEP 1: Session
     stepLog(1, "Verificando sessão do usuário");
     const session = await getServerSession(authOptions);
     console.log("Email:", session?.user?.email ?? "NENHUMA SESSION");
-    
+
     if (!session?.user?.email) {
-      console.error("❌ ERRO: Usuário não autenticado");
+      console.error("ERRO: Usuário não autenticado");
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
@@ -126,24 +126,25 @@ export async function POST(request: NextRequest) {
     console.log("dashboardId:", body.dashboardId ?? "NÃO INFORMADO");
     console.log("rls:", body.rls ?? false);
     console.log("rlsRole:", body.rlsRole ?? "NÃO INFORMADO");
-    
+
     const { reportId, groupId, dashboardId, rls, rlsRole } = body;
     if (!reportId || !groupId) {
-      console.error("❌ ERRO: reportId e groupId são obrigatórios");
+      console.error("ERRO: reportId e groupId são obrigatórios");
       return NextResponse.json({ error: "reportId e groupId obrigatórios" }, { status: 400 });
     }
 
     // STEP 3: Buscar credenciais
-    stepLog(3, "Buscando credenciais no Supabase");
-    const { data: credsData, error: credsError } = await supabaseAdmin
-      .from("credenciais")
-      .select("id, client_id, tenant_id, client_secret, master_user, master_password, status")
-      .eq("status", "ativo")
-      .limit(1)
-      .single();
-
-    if (credsError) {
-      console.error("❌ ERRO ao buscar credenciais:", credsError.message);
+    stepLog(3, "Buscando credenciais no banco");
+    let credsData;
+    try {
+      credsData = await queryOne(
+        `SELECT id, client_id, tenant_id, client_secret, master_user, master_password, status
+         FROM via_core.credenciais
+         WHERE status = 'ativo'
+         LIMIT 1`
+      );
+    } catch (credsError: any) {
+      console.error("ERRO ao buscar credenciais:", credsError.message);
       console.error("Detalhes:", credsError);
       return NextResponse.json({
         error: "Credenciais não encontradas",
@@ -153,19 +154,19 @@ export async function POST(request: NextRequest) {
     }
 
     if (!credsData) {
-      console.error("❌ ERRO: Nenhuma credencial ativa encontrada");
+      console.error("ERRO: Nenhuma credencial ativa encontrada");
       return NextResponse.json({
         error: "Nenhuma credencial ativa encontrada no banco",
         step: 3
       }, { status: 500 });
     }
 
-    console.log("✅ Credenciais encontradas:");
-    console.log("   - client_id:", credsData.client_id ? "✓" : "✗");
-    console.log("   - tenant_id:", credsData.tenant_id ? "✓" : "✗");
-    console.log("   - client_secret:", credsData.client_secret ? "✓" : "✗");
-    console.log("   - master_user:", credsData.master_user ? "✓" : "✗");
-    console.log("   - master_password:", credsData.master_password ? "✓" : "✗");
+    console.log("Credenciais encontradas:");
+    console.log("   - client_id:", credsData.client_id ? "ok" : "vazio");
+    console.log("   - tenant_id:", credsData.tenant_id ? "ok" : "vazio");
+    console.log("   - client_secret:", credsData.client_secret ? "ok" : "vazio");
+    console.log("   - master_user:", credsData.master_user ? "ok" : "vazio");
+    console.log("   - master_password:", credsData.master_password ? "ok" : "vazio");
 
     // STEP 4: Buscar dados do usuário para RLS
     stepLog(4, "Buscando dados do usuário para RLS");
@@ -174,11 +175,10 @@ export async function POST(request: NextRequest) {
     let isAdmin = false;
 
     // Verifica se o usuário é admin
-    const { data: userData } = await supabaseAdmin
-      .from("usuarios")
-      .select("filiais, acesso")
-      .eq("email", session.user.email)
-      .single();
+    const userData = await queryOne<{ filiais: string[]; acesso: string }>(
+      `SELECT filiais, acesso FROM via_core.usuarios WHERE email = $1 LIMIT 1`,
+      [session.user.email]
+    );
 
     // Matriz tem todas as filiais liberadas (sem filtro RLS por filial)
     isAdmin = userData?.acesso === "Administrador do Locatário" || userData?.acesso === "Matriz";
@@ -190,55 +190,54 @@ export async function POST(request: NextRequest) {
       userFiliais = userData?.filiais ?? [];
       console.log("Filiais (NOMES) do usuário:", userFiliais);
     } else if (isAdmin) {
-      console.log("⏭️  Pulando RLS - usuário é ADMINISTRADOR");
+      console.log("Pulando RLS - usuário é ADMINISTRADOR");
     }
 
     // STEP 5: Buscar parâmetros RLS
     stepLog(5, "Buscando parâmetros RLS do dashboard");
     let resolvedRlsRole = rlsRole as string | undefined;
     let customDataOrigem = "nome"; // Padrão: usar nome da filial
-    
+
     console.log("rls (do request):", rls);
     console.log("rlsRole (do request):", rlsRole);
     console.log("dashboardId:", dashboardId);
-    
+
     if (rls && dashboardId) {
-      console.log("\n🔍 BUSCANDO PARAMETROS RLS...");
+      console.log("\nBUSCANDO PARAMETROS RLS...");
       console.log("Tabela: parametros_rls");
       console.log("dashboard_id buscado:", dashboardId);
-      
-      const { data: rlsParams, error: rlsError } = await supabaseAdmin
-        .from("parametros_rls")
-        .select("tipo, nome_parametro_powerbi")
-        .eq("dashboard_id", dashboardId);
 
-      console.log("Erro na query:", rlsError ?? "NENHUM");
+      const { rows: rlsParams } = await query(
+        `SELECT tipo, nome_parametro_powerbi FROM via_core.parametros_rls WHERE dashboard_id = $1`,
+        [dashboardId]
+      );
+
       console.log("Resultados encontrados:", rlsParams?.length ?? 0);
       console.log("Dados:", JSON.stringify(rlsParams, null, 2));
 
       if (rlsParams && rlsParams.length > 0) {
         console.log("Parâmetros RLS encontrados:", rlsParams.length);
-        rlsParams.forEach((p, i) => {
+        rlsParams.forEach((p: any, i: number) => {
           console.log(`  [${i}] tipo: "${p.tipo}", nome_parametro_powerbi: "${p.nome_parametro_powerbi}"`);
         });
 
-        const filialParam = rlsParams.find((p) => p.tipo === "Filial");
+        const filialParam = rlsParams.find((p: any) => p.tipo === "Filial");
         if (filialParam) {
           resolvedRlsRole = filialParam.nome_parametro_powerbi;
           console.log("Tipo: Filial");
           console.log("  resolvedRlsRole:", resolvedRlsRole);
         }
-        const userParam = rlsParams.find((p) => p.tipo === "Usuário");
+        const userParam = rlsParams.find((p: any) => p.tipo === "Usuário");
         if (userParam && !filialParam) {
           customData = session.user.email ?? "";
           resolvedRlsRole = userParam.nome_parametro_powerbi;
           console.log("Tipo: Usuário");
         }
       } else {
-        console.log("⚠️ Nenhum parâmetro RLS encontrado para este dashboard");
+        console.log("Nenhum parâmetro RLS encontrado para este dashboard");
       }
     } else {
-      console.log("⚠️ RLS desativado ou dashboardId não informado");
+      console.log("RLS desativado ou dashboardId não informado");
       console.log("  rls:", rls);
       console.log("  dashboardId:", dashboardId);
     }
@@ -248,19 +247,19 @@ export async function POST(request: NextRequest) {
     console.log("Tenant ID:", credsData.tenant_id);
     console.log("Client ID:", credsData.client_id);
     console.log("Master User:", credsData.master_user);
-    
+
     let accessToken: string;
     try {
       accessToken = await getAccessToken();
-      console.log("✅ Access token obtido com sucesso!");
+      console.log("Access token obtido com sucesso!");
       console.log("   Token length:", accessToken.length);
       console.log("   Primeiros chars:", accessToken.substring(0, 20) + "...");
     } catch (azureError: unknown) {
       const err = azureError as Error;
-      console.error("❌ ERRO ao obter token do Azure:");
+      console.error("ERRO ao obter token do Azure:");
       console.error("   Mensagem:", err.message);
       console.error("   Stack:", err.stack);
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: "Falha ao autenticar no Azure AD",
         details: err.message,
         step: 6
@@ -271,21 +270,21 @@ export async function POST(request: NextRequest) {
     stepLog(7, "Buscando informações do relatório no Power BI");
     const reportUrl = `https://api.powerbi.com/v1.0/myorg/groups/${groupId}/reports/${reportId}`;
     console.log("URL:", reportUrl);
-    
+
     let reportRes;
     try {
       reportRes = await axios.get(reportUrl, {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
-      console.log("✅ Relatório encontrado:");
+      console.log("Relatório encontrado:");
       console.log("   Nome:", reportRes.data.name);
       console.log("   Embed URL:", reportRes.data.embedUrl?.substring(0, 50) + "...");
     } catch (reportError: unknown) {
       const err = reportError as any;
-      console.error("❌ ERRO ao buscar relatório:");
+      console.error("ERRO ao buscar relatório:");
       console.error("   Status:", err.response?.status);
       console.error("   Mensagem:", err.response?.data?.message ?? err.message);
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: "Relatório não encontrado no Power BI",
         details: err.response?.data?.message ?? err.message,
         step: 7,
@@ -293,7 +292,7 @@ export async function POST(request: NextRequest) {
         groupId
       }, { status: 500 });
     }
-    
+
     const embedUrl = reportRes.data.embedUrl;
     const datasetId = reportRes.data.datasetId;
 
@@ -306,11 +305,11 @@ export async function POST(request: NextRequest) {
     };
 
     // Formatar customData como string entre aspas (para texto no Power BI)
-    const customDataFormatado = userFiliais.length > 0 
+    const customDataFormatado = userFiliais.length > 0
       ? userFiliais.map(f => `"${f}"`).join(",")
       : "";
 
-    console.log("\n📊 VERIFICAÇÃO RLS:");
+    console.log("\nVERIFICAÇÃO RLS:");
     console.log("   rls:", rls);
     console.log("   resolvedRlsRole:", resolvedRlsRole);
     console.log("   datasetId:", datasetId);
@@ -327,13 +326,13 @@ export async function POST(request: NextRequest) {
           datasets: [datasetId],
         },
       ];
-      console.log("\n✅ RLS CONFIGURADO:");
+      console.log("\nRLS CONFIGURADO:");
       console.log("   username:", session.user.email);
       console.log("   roles:", [resolvedRlsRole]);
       console.log("   customData:", customDataFormatado);
       console.log("   datasets:", [datasetId]);
     } else {
-      console.log("\n⚠️ RLS NÃO CONFIGURADO:");
+      console.log("\nRLS NÃO CONFIGURADO:");
       if (!rls) console.log("   → rls está false");
       if (!resolvedRlsRole) console.log("   → resolvedRlsRole está vazio");
       if (!datasetId) console.log("   → datasetId não informado");
@@ -349,11 +348,11 @@ export async function POST(request: NextRequest) {
       tokenRes = await axios.post(tokenUrl, generateTokenBody, {
         headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }
       });
-      console.log("✅ Token gerado com sucesso!");
+      console.log("Token gerado com sucesso!");
       console.log("   Token length:", tokenRes.data.token?.length);
     } catch (tokenError: unknown) {
       const err = tokenError as any;
-      console.error("❌ ERRO ao gerar token de embed:");
+      console.error("ERRO ao gerar token de embed:");
       console.error("   Status:", err.response?.status);
       console.error("   Error Code:", err.response?.data?.errorCode);
       console.error("   Message:", err.response?.data?.message);
@@ -392,7 +391,7 @@ export async function POST(request: NextRequest) {
 
     // STEP 9: Retornar sucesso
     stepLog(9, "Retornando token para o frontend");
-    console.log("✅ PROCESSO CONCLUÍDO COM SUCESSO!");
+    console.log("PROCESSO CONCLUÍDO COM SUCESSO!");
     console.log("=".repeat(60) + "\n");
 
     return NextResponse.json({
@@ -400,17 +399,17 @@ export async function POST(request: NextRequest) {
       embedUrl,
       reportName: reportRes.data.name,
     });
-    
+
   } catch (error: unknown) {
     const err = error as Error & { errorCode?: string; errorMessage?: string; response?: { data: unknown } };
     console.error("\n" + "=".repeat(60));
-    console.error("❌ [API] ERRO DESCONHECIDO");
+    console.error("[API] ERRO DESCONHECIDO");
     console.error("=".repeat(60));
     console.error("Erro:", err.message);
     console.error("Stack:", err.stack);
     console.error("Response:", JSON.stringify(err.response?.data, null, 2));
     console.error("=".repeat(60) + "\n");
-    
+
     return NextResponse.json(
       { error: "Erro interno do servidor" },
       { status: 500 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { supabaseAdmin } from "@/lib/supabase";
+import { query } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: NextRequest) {
@@ -17,12 +17,13 @@ export async function POST(request: NextRequest) {
 
   const hash = await bcrypt.hash(novaSenha, 10);
 
-  const { error } = await supabaseAdmin
-    .from("usuarios")
-    .update({ senha_hash: hash, must_change_password: false })
-    .eq("id", session.user.id);
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json({ success: true });
+  try {
+    await query(
+      `UPDATE via_core.usuarios SET senha_hash = $1, must_change_password = false WHERE id = $2`,
+      [hash, session.user.id]
+    );
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
