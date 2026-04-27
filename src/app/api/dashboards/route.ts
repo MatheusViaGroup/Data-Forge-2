@@ -5,6 +5,13 @@ import { query, queryOne } from "@/lib/db";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapRow(row: any) {
+  const urlCapa =
+    row["url-dash"] ??
+    row.url_dash ??
+    row.url_capa ??
+    row.urlCapa ??
+    "";
+
   return {
     id: row.id,
     nome: row.nome,
@@ -18,7 +25,7 @@ function mapRow(row: any) {
     rls: row.rls ?? false,
     rlsRole: row.rls_role ?? "",
     status: row.status ?? "Ativo",
-    urlCapa: row["url-dash"] ?? "",
+    urlCapa,
   };
 }
 
