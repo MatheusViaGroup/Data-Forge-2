@@ -40,7 +40,7 @@ export async function GET() {
       console.log(`  - ${d.nome}: rls=${d.rls}, rlsRole="${d.rlsRole}"`);
     });
 
-    const entries = all.filter((d) => d.ativo);
+    const entries = all.filter((d: any) => d.ativo);
     return NextResponse.json({ entries, all });
   } catch (error: any) {
     console.error("[API GET] Erro ao buscar dashboards:", error.message);
