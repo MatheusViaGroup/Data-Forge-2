@@ -5,6 +5,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { query, queryOne } from "@/lib/db";
 
+type RlsParamRow = {
+  tipo: string;
+  nome_parametro_powerbi: string | null;
+};
+
 async function getCredentials() {
   const data = await queryOne(
     `SELECT id, client_id, tenant_id, client_secret, master_user, master_password
@@ -207,7 +212,7 @@ export async function POST(request: NextRequest) {
       console.log("Tabela: parametros_rls");
       console.log("dashboard_id buscado:", dashboardId);
 
-      const { rows: rlsParams } = await query(
+      const { rows: rlsParams } = await query<RlsParamRow>(
         `SELECT tipo, nome_parametro_powerbi FROM via_core.parametros_rls WHERE dashboard_id = $1`,
         [dashboardId]
       );
@@ -217,20 +222,20 @@ export async function POST(request: NextRequest) {
 
       if (rlsParams && rlsParams.length > 0) {
         console.log("Parâmetros RLS encontrados:", rlsParams.length);
-        rlsParams.forEach((p: any, i: number) => {
+        rlsParams.forEach((p, i: number) => {
           console.log(`  [${i}] tipo: "${p.tipo}", nome_parametro_powerbi: "${p.nome_parametro_powerbi}"`);
         });
 
-        const filialParam = rlsParams.find((p: any) => p.tipo === "Filial");
+        const filialParam = rlsParams.find((p) => p.tipo === "Filial");
         if (filialParam) {
-          resolvedRlsRole = filialParam.nome_parametro_powerbi;
+          resolvedRlsRole = filialParam.nome_parametro_powerbi ?? undefined;
           console.log("Tipo: Filial");
           console.log("  resolvedRlsRole:", resolvedRlsRole);
         }
-        const userParam = rlsParams.find((p: any) => p.tipo === "Usuário");
+        const userParam = rlsParams.find((p) => p.tipo === "Usuário");
         if (userParam && !filialParam) {
           customData = session.user.email ?? "";
-          resolvedRlsRole = userParam.nome_parametro_powerbi;
+          resolvedRlsRole = userParam.nome_parametro_powerbi ?? undefined;
           console.log("Tipo: Usuário");
         }
       } else {
