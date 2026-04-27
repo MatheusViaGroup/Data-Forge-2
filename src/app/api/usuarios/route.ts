@@ -19,6 +19,14 @@ function mapRow(row: any) {
   };
 }
 
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 // ─── GET ──────────────────────────────────────────────────────────────────────
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -81,7 +89,7 @@ export async function POST(request: NextRequest) {
     departamento: (body.departamento ?? "").toUpperCase(),
     acesso: body.acesso ?? "Usuário",
     status: body.status ?? "Ativo",
-    filiais: body.filiais ?? [],
+    filiais: normalizeStringArray(body.filiais),
     dashboards: body.dashboards ?? [],
     must_change_password: true,
   };
@@ -90,7 +98,7 @@ export async function POST(request: NextRequest) {
   try {
     const data = await queryOne(
       `INSERT INTO via_core.usuarios (nome, email, senha_hash, departamento, acesso, status, filiais, dashboards, must_change_password)
-       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8::jsonb, $9)
        RETURNING id, nome, email, departamento, acesso, status, filiais, dashboards`,
       [
         insertData.nome,
@@ -99,7 +107,7 @@ export async function POST(request: NextRequest) {
         insertData.departamento,
         insertData.acesso,
         insertData.status,
-        JSON.stringify(insertData.filiais),
+        insertData.filiais,
         JSON.stringify(insertData.dashboards),
         insertData.must_change_password,
       ]
@@ -177,8 +185,8 @@ export async function PUT(request: NextRequest) {
     params.push(body.status);
   }
   if (body.filiais !== undefined) {
-    setClauses.push(`filiais = $${paramIdx++}::jsonb`);
-    params.push(JSON.stringify(body.filiais));
+    setClauses.push(`filiais = $${paramIdx++}::text[]`);
+    params.push(normalizeStringArray(body.filiais));
   }
   if (body.dashboards !== undefined) {
     setClauses.push(`dashboards = $${paramIdx++}::jsonb`);
