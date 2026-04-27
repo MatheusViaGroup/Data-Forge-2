@@ -4,7 +4,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { queryOne } from "@/lib/db";
 
-interface UserRow {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface UserRow extends Record<string, unknown> {
   id: string;
   nome: string;
   email: string;
@@ -15,7 +16,8 @@ interface UserRow {
   dashboards: string[];
 }
 
-interface StatusRow {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface StatusRow extends Record<string, unknown> {
   id: string;
   status: string;
 }
