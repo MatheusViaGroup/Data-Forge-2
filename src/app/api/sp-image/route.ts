@@ -25,6 +25,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Parâmetro url obrigatório" }, { status: 400 });
   }
 
+  // Validar que a URL pertence ao domínio SharePoint da organização (anti-SSRF)
+  const allowedHosts = ["sharepoint.com", "viagroup.sharepoint.com"];
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    return NextResponse.json({ error: "URL inválida" }, { status: 400 });
+  }
+  const hostAllowed = allowedHosts.some(
+    (h) => parsedUrl.hostname === h || parsedUrl.hostname.endsWith("." + h)
+  );
+  if (!hostAllowed) {
+    return NextResponse.json({ error: "Domínio não permitido" }, { status: 403 });
+  }
+
   // Buscar credencial ativa (status pode ser "Ativo" ou "ativo")
   const { data: cred, error: credError } = await supabaseAdmin
     .from("credenciais")

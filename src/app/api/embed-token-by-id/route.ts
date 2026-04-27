@@ -412,7 +412,7 @@ export async function POST(request: NextRequest) {
     console.error("=".repeat(60) + "\n");
     
     return NextResponse.json(
-      { error: "Erro inesperado", details: err.message, stack: err.stack },
+      { error: "Erro interno do servidor" },
       { status: 500 }
     );
   }

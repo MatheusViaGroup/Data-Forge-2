@@ -1,19 +1,29 @@
 const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcryptjs');
 
-// Configuração do Supabase
-const supabaseUrl = 'https://zctlgwpfodidgmutxmjw.supabase.co';
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjdGxnd3Bmb2RpZGdtdXR4bWp3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzE1MjU3MywiZXhwIjoyMDg4NzI4NTczfQ._xWks_8UQq9l0LxX2pEa6ZAtMvsfyxA0pTKMEmQny1s';
+// Configuração do Supabase - credenciais via variáveis de ambiente
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Erro: NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY devem estar definidos no .env');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function createUser() {
-  const email = 'matheus.henrique@viagroup.com.br';
-  const nome = 'Matheus Henrique';
-  const senha = 'admin321';
-  const departamento = 'TI';
-  const acesso = 'Administrador do Locatário';
-  
+  const email = process.env.ADMIN_EMAIL;
+  const nome = process.env.ADMIN_NOME;
+  const senha = process.env.ADMIN_SENHA;
+  const departamento = process.env.ADMIN_DEPARTAMENTO || 'TI';
+  const acesso = process.env.ADMIN_ACESSO || 'Administrador do Locatário';
+
+  if (!email || !nome || !senha) {
+    console.error('Erro: ADMIN_EMAIL, ADMIN_NOME e ADMIN_SENHA devem estar definidos no .env');
+    process.exit(1);
+  }
+
   try {
     // Verificar se usuário já existe
     const { data: existingUser } = await supabase
@@ -21,27 +31,27 @@ async function createUser() {
       .select('id')
       .eq('email', email)
       .single();
-    
+
     if (existingUser) {
       console.log('Usuário já existe, atualizando senha...');
-      
+
       const senhaHash = await bcrypt.hash(senha, 10);
-      
+
       const { error } = await supabase
         .from('usuarios')
-        .update({ 
+        .update({
           senha_hash: senhaHash,
           status: 'Ativo',
           must_change_password: false
         })
         .eq('email', email);
-      
+
       if (error) throw error;
-      
+
       console.log('Senha atualizada com sucesso!');
     } else {
       const senhaHash = await bcrypt.hash(senha, 10);
-      
+
       const { data, error } = await supabase
         .from('usuarios')
         .insert({
@@ -57,12 +67,11 @@ async function createUser() {
         })
         .select()
         .single();
-      
+
       if (error) throw error;
-      
+
       console.log('Usuário criado com sucesso!');
       console.log('Email:', email);
-      console.log('Senha:', senha);
     }
   } catch (error) {
     console.error('Erro:', error.message);

@@ -1,8 +1,11 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Depends, Security
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List
 import uuid
 from datetime import datetime
+import os
+import secrets
 
 from database import db
 from models import (
@@ -11,6 +14,18 @@ from models import (
     CredencialCreate, CredencialUpdate, CredencialResponse,
     MessageResponse, ErrorResponse, StatusEnum
 )
+
+# ─── Autenticação via API Key (Bearer token) ──────────────────────────────────
+security = HTTPBearer()
+
+async def verify_api_key(credentials: HTTPAuthorizationCredentials = Security(security)):
+    """Verifica se o request inclui um API key válido."""
+    API_KEY = os.getenv("BACKEND_API_KEY", "")
+    if not API_KEY:
+        raise HTTPException(status_code=500, detail="BACKEND_API_KEY não configurada no servidor")
+    if not secrets.compare_digest(credentials.credentials, API_KEY):
+        raise HTTPException(status_code=401, detail="API key inválida")
+    return credentials
 
 app = FastAPI(
     title="Via Group Portal BI API",
@@ -31,7 +46,7 @@ app.add_middleware(
 # ==================== USUÁRIOS ====================
 
 @app.get("/api/usuarios", response_model=List[UsuarioResponse], tags=["Usuários"])
-async def listar_usuarios():
+async def listar_usuarios(auth=Depends(verify_api_key)):
     """Lista todos os usuários do sistema"""
     query = "SELECT * FROM usuarios ORDER BY nome"
     resultados = db.execute_query(query)
@@ -43,7 +58,7 @@ async def listar_usuarios():
 
 
 @app.post("/api/usuarios", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED, tags=["Usuários"])
-async def criar_usuario(usuario: UsuarioCreate):
+async def criar_usuario(usuario: UsuarioCreate, auth=Depends(verify_api_key)):
     """Cria um novo usuário"""
     usuario_id = str(uuid.uuid4())
     query = """
@@ -74,7 +89,7 @@ async def criar_usuario(usuario: UsuarioCreate):
 
 
 @app.put("/api/usuarios/{id}", response_model=UsuarioResponse, tags=["Usuários"])
-async def atualizar_usuario(id: str, usuario: UsuarioUpdate):
+async def atualizar_usuario(id: str, usuario: UsuarioUpdate, auth=Depends(verify_api_key)):
     """Atualiza um usuário existente"""
     campos = []
     params = []
@@ -111,7 +126,7 @@ async def atualizar_usuario(id: str, usuario: UsuarioUpdate):
 
 
 @app.delete("/api/usuarios/{id}", response_model=MessageResponse, tags=["Usuários"])
-async def excluir_usuario(id: str):
+async def excluir_usuario(id: str, auth=Depends(verify_api_key)):
     """Exclui um usuário"""
     query = "DELETE FROM usuarios WHERE id = %s"
     resultado = db.execute_query(query, (id,))
@@ -146,7 +161,7 @@ def formatar_usuario(row: dict) -> UsuarioResponse:
 # ==================== DASHBOARDS ====================
 
 @app.get("/api/dashboards", response_model=List[DashboardResponse], tags=["Dashboards"])
-async def listar_dashboards():
+async def listar_dashboards(auth=Depends(verify_api_key)):
     """Lista todos os dashboards do sistema"""
     query = "SELECT * FROM dashboards ORDER BY nome"
     resultados = db.execute_query(query)
@@ -158,7 +173,7 @@ async def listar_dashboards():
 
 
 @app.post("/api/dashboards", response_model=DashboardResponse, status_code=status.HTTP_201_CREATED, tags=["Dashboards"])
-async def criar_dashboard(dashboard: DashboardCreate):
+async def criar_dashboard(dashboard: DashboardCreate, auth=Depends(verify_api_key)):
     """Cria um novo dashboard"""
     dashboard_id = str(uuid.uuid4())
     query = """
@@ -195,7 +210,7 @@ async def criar_dashboard(dashboard: DashboardCreate):
 
 
 @app.put("/api/dashboards/{id}", response_model=DashboardResponse, tags=["Dashboards"])
-async def atualizar_dashboard(id: str, dashboard: DashboardUpdate):
+async def atualizar_dashboard(id: str, dashboard: DashboardUpdate, auth=Depends(verify_api_key)):
     """Atualiza um dashboard existente"""
     campos = []
     params = []
@@ -241,7 +256,7 @@ async def atualizar_dashboard(id: str, dashboard: DashboardUpdate):
 
 
 @app.delete("/api/dashboards/{id}", response_model=MessageResponse, tags=["Dashboards"])
-async def excluir_dashboard(id: str):
+async def excluir_dashboard(id: str, auth=Depends(verify_api_key)):
     """Exclui um dashboard"""
     query = "DELETE FROM dashboards WHERE id = %s"
     resultado = db.execute_query(query, (id,))
@@ -279,7 +294,7 @@ def formatar_dashboard(row: dict) -> DashboardResponse:
 # ==================== CREDENCIAIS ====================
 
 @app.get("/api/credenciais", response_model=List[CredencialResponse], tags=["Credenciais"])
-async def listar_credenciais():
+async def listar_credenciais(auth=Depends(verify_api_key)):
     """Lista todas as credenciais do sistema"""
     query = "SELECT * FROM credenciais ORDER BY nome"
     resultados = db.execute_query(query)
@@ -291,7 +306,7 @@ async def listar_credenciais():
 
 
 @app.post("/api/credenciais", response_model=CredencialResponse, status_code=status.HTTP_201_CREATED, tags=["Credenciais"])
-async def criar_credencial(credencial: CredencialCreate):
+async def criar_credencial(credencial: CredencialCreate, auth=Depends(verify_api_key)):
     """Cria uma nova credencial"""
     credencial_id = str(uuid.uuid4())
     data_registro = datetime.now().strftime("%d/%m/%Y")
@@ -331,7 +346,7 @@ async def criar_credencial(credencial: CredencialCreate):
 
 
 @app.put("/api/credenciais/{id}", response_model=CredencialResponse, tags=["Credenciais"])
-async def atualizar_credencial(id: str, credencial: CredencialUpdate):
+async def atualizar_credencial(id: str, credencial: CredencialUpdate, auth=Depends(verify_api_key)):
     """Atualiza uma credencial existente"""
     campos = []
     params = []
@@ -380,7 +395,7 @@ async def atualizar_credencial(id: str, credencial: CredencialUpdate):
 
 
 @app.delete("/api/credenciais/{id}", response_model=MessageResponse, tags=["Credenciais"])
-async def excluir_credencial(id: str):
+async def excluir_credencial(id: str, auth=Depends(verify_api_key)):
     """Exclui uma credencial"""
     query = "DELETE FROM credenciais WHERE id = %s"
     resultado = db.execute_query(query, (id,))
@@ -427,22 +442,14 @@ async def health_check():
     try:
         result = db.test_connection()
         if result["status"] == "connected":
-            return {
-                "status": "healthy",
-                "database": "connected",
-                "details": result
-            }
-        return {
-            "status": "unhealthy",
-            "database": "disconnected",
-            "details": result
-        }
-    except Exception as e:
-        return {"status": "unhealthy", "database": str(e)}
+            return {"status": "healthy", "database": "connected"}
+        return {"status": "unhealthy", "database": "disconnected"}
+    except Exception:
+        return {"status": "unhealthy", "database": "disconnected"}
 
 
 @app.get("/db/test", tags=["Health"])
-async def test_database_connection():
+async def test_database_connection(auth=Depends(verify_api_key)):
     """Testa a conexão com o banco de dados e retorna informações detalhadas"""
     return db.test_connection()
 

@@ -10,10 +10,10 @@ function mapRow(row: any) {
     nome: row.nome,
     tenant: row.tenant ?? "",
     clientId: row.client_id,
-    clientSecret: row.client_secret,
+    clientSecret: row.client_secret ? "••••••••" : "",
     tenantId: row.tenant_id,
     usuarioPowerBI: row.master_user,
-    masterPassword: row.master_password,
+    masterPassword: row.master_password ? "••••••••" : "",
     dataRegistro: row.created_at
       ? new Date(row.created_at).toLocaleDateString("pt-BR")
       : "",
@@ -78,21 +78,27 @@ export async function PUT(request: NextRequest) {
   }
 
   const body = await request.json();
+  const updates: any = {
+    nome: body.nome,
+    tenant: body.tenant,
+    client_id: body.clientId,
+    tenant_id: body.tenantId,
+    master_user: body.usuarioPowerBI,
+    secret_expiration: body.dataExpiracao
+      ? body.dataExpiracao.split("/").reverse().join("-")
+      : null,
+    status: body.status === "Ativo" ? "ativo" : "inativo",
+  };
+  // Só atualiza secrets se vierem preenchidos (não placeholder)
+  if (body.clientSecret && body.clientSecret !== "••••••••") {
+    updates.client_secret = body.clientSecret;
+  }
+  if (body.masterPassword && body.masterPassword !== "••••••••") {
+    updates.master_password = body.masterPassword;
+  }
   const { data, error } = await supabaseAdmin
     .from("credenciais")
-    .update({
-      nome: body.nome,
-      tenant: body.tenant,
-      client_id: body.clientId,
-      client_secret: body.clientSecret,
-      tenant_id: body.tenantId,
-      master_user: body.usuarioPowerBI,
-      master_password: body.masterPassword,
-      secret_expiration: body.dataExpiracao
-        ? body.dataExpiracao.split("/").reverse().join("-")
-        : null,
-      status: body.status === "Ativo" ? "ativo" : "inativo",
-    })
+    .update(updates)
     .eq("id", body.id)
     .select()
     .single();

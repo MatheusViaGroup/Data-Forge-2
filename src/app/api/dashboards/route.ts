@@ -24,6 +24,11 @@ function mapRow(row: any) {
 
 // ─── GET: lista todos ─────────────────────────────────────────────────────────
 export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
   const { data, error } = await supabaseAdmin
     .from("dashboards")
     .select("*")

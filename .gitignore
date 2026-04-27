@@ -57,3 +57,6 @@ next-env.d.ts
 $null
 \$null
 config/credentials.json
+
+# scripts com credenciais - usar apenas local
+scripts/

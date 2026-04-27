@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { supabaseAdmin } from "@/lib/supabase";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -15,7 +16,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "ID do usuário é obrigatório" }, { status: 400 });
   }
 
-  const hash = await bcrypt.hash("1234", 10);
+  const tempPassword = crypto.randomBytes(8).toString("hex");
+  const hash = await bcrypt.hash(tempPassword, 10);
 
   const { error } = await supabaseAdmin
     .from("usuarios")
@@ -24,5 +26,5 @@ export async function POST(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, tempPassword });
 }
