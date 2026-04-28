@@ -14,7 +14,7 @@ import { CustomSelect } from "@/components/ui/CustomSelect";
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
-const TIPOS = ["Filial", "Usuário", "Departamento", "Personalizado"];
+const TIPOS = ["Filial", "UsuÃ¡rio", "Departamento", "Personalizado"];
 
 const emptyForm = (): Omit<ParametroRLS, "id"> & { id: string } => ({
   id: "",
@@ -47,7 +47,7 @@ export default function ParametrosRLSPage() {
   const [form, setForm] = useState(emptyForm());
   const [erros, setErros] = useState<Record<string, string>>({});
 
-  // Carrega dados admin quando a página monta
+  // Carrega dados admin quando a pÃ¡gina monta
   useEffect(() => {
     if (authStatus === "authenticated") {
       loadAdminData();
@@ -79,8 +79,8 @@ export default function ParametrosRLSPage() {
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!form.nome.trim()) e.nome = "Nome é obrigatório";
-    if (!form.nomeParametroPowerBI.trim()) e.nomeParametroPowerBI = "Nome do parâmetro no Power BI é obrigatório";
+    if (!form.nome.trim()) e.nome = "Nome Ã© obrigatÃ³rio";
+    if (!form.nomeParametroPowerBI.trim()) e.nomeParametroPowerBI = "Nome do parÃ¢metro no Power BI Ã© obrigatÃ³rio";
     setErros(e);
     return Object.keys(e).length === 0;
   };
@@ -99,69 +99,69 @@ export default function ParametrosRLSPage() {
       };
       if (isEdit) {
         await updateParametroRLS(form.id, payload);
-        setFeedback({ type: "success", msg: "Parâmetro atualizado com sucesso!" });
+        setFeedback({ type: "success", msg: "ParÃ¢metro atualizado com sucesso!" });
       } else {
         await addParametroRLS(payload);
-        setFeedback({ type: "success", msg: "Parâmetro criado com sucesso!" });
+        setFeedback({ type: "success", msg: "ParÃ¢metro criado com sucesso!" });
       }
       setModalOpen(false);
     } catch {
-      setFeedback({ type: "error", msg: "Erro ao salvar. Verifique sua conexão." });
+      setFeedback({ type: "error", msg: "Erro ao salvar. Verifique sua conexÃ£o." });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Excluir este parâmetro RLS?")) return;
+    if (!confirm("Excluir este parÃ¢metro RLS?")) return;
     try {
       await deleteParametroRLS(id);
-      setFeedback({ type: "success", msg: "Parâmetro excluído com sucesso!" });
+      setFeedback({ type: "success", msg: "ParÃ¢metro excluÃ­do com sucesso!" });
     } catch {
-      setFeedback({ type: "error", msg: "Erro ao excluir parâmetro." });
+      setFeedback({ type: "error", msg: "Erro ao excluir parÃ¢metro." });
     }
   };
 
   const getDashboardNome = (id: string) =>
-    dashboards.find((d) => d.id === id)?.nome ?? "—";
+    dashboards.find((d) => d.id === id)?.nome ?? "-";
 
   if (authStatus === "authenticated" && session?.user?.role !== "admin") {
     return (
-      <AppShell title="Parâmetros RLS">
+      <AppShell title="ParÃ¢metros RLS">
         <div className="flex items-center justify-center h-full">
-          <Loader2 size={28} className="animate-spin text-[#4B5FBF]" />
+          <Loader2 size={28} className="animate-spin text-[var(--brand-primary)]" />
         </div>
       </AppShell>
     );
   }
 
   return (
-    <AppShell title="Parâmetros RLS" subtitle="Configure os parâmetros de Row Level Security">
+    <AppShell title="ParÃ¢metros RLS" subtitle="Configure os parÃ¢metros de Row Level Security">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-[#4B5FBF] font-bold text-2xl tracking-tight">Parâmetros RLS</h2>
-            <p className="text-[#6C757D] text-sm mt-0.5">
-              Configure os parâmetros de segurança por linha do Power BI
+            <h2 className="text-[var(--brand-primary)] font-bold text-2xl tracking-tight">ParÃ¢metros RLS</h2>
+            <p className="text-[var(--text-secondary)] text-sm mt-0.5">
+              Configure os parÃ¢metros de seguranÃ§a por linha do Power BI
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
             <ImportExportXlsx
               nomeTemplate="template_rls"
               cols={[
-                { key: "nome",                 header: "nome",                 instrucao: "Nome do parâmetro RLS",                                  exemplo: "Filial do Usuário" },
-                { key: "nomeParametroPowerBI",  header: "nomeParametroPowerBI", instrucao: "Nome exato do parâmetro no Power BI",                    exemplo: "UserFilial" },
-                { key: "tipo",                 header: "tipo",                 instrucao: "Filial  /  Usuário  /  Departamento  /  Personalizado",   exemplo: "Filial" },
+                { key: "nome",                 header: "nome",                 instrucao: "Nome do parÃ¢metro RLS",                                  exemplo: "Filial do UsuÃ¡rio" },
+                { key: "nomeParametroPowerBI",  header: "nomeParametroPowerBI", instrucao: "Nome exato do parÃ¢metro no Power BI",                    exemplo: "UserFilial" },
+                { key: "tipo",                 header: "tipo",                 instrucao: "Filial  /  UsuÃ¡rio  /  Departamento  /  Personalizado",   exemplo: "Filial" },
                 { key: "dashboardId",          header: "dashboardId",          instrucao: "ID do Dashboard (UUID do banco de dados)",                exemplo: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
-                { key: "tenant",               header: "tenant",               instrucao: "Tenant / domínio da organização",                        exemplo: "viagroup.com" },
+                { key: "tenant",               header: "tenant",               instrucao: "Tenant / domÃ­nio da organizaÃ§Ã£o",                        exemplo: "viagroup.com" },
               ]}
               onImport={async (rows): Promise<ImportResult> => {
                 let success = 0;
                 const errors: string[] = [];
                 for (const row of rows) {
                   if (!row.nome || !row.nomeParametroPowerBI || !row.dashboardId) {
-                    errors.push(`Linha ignorada: nome, nomeParametroPowerBI e dashboardId são obrigatórios (nome: ${row.nome || "?"}).`);
+                    errors.push(`Linha ignorada: nome, nomeParametroPowerBI e dashboardId sÃ£o obrigatÃ³rios (nome: ${row.nome || "?"}).`);
                     continue;
                   }
                   try {
@@ -183,9 +183,9 @@ export default function ParametrosRLSPage() {
             />
             <button
               onClick={openCreate}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#28A745] hover:bg-[#218838] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--status-success)] hover:bg-[color-mix(in srgb, var(--status-success) 82%, black)] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
             >
-              <Plus size={16} /> Novo Parâmetro
+              <Plus size={16} /> Novo ParÃ¢metro
             </button>
           </div>
         </div>
@@ -206,82 +206,82 @@ export default function ParametrosRLSPage() {
         )}
 
         {/* Filtro */}
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-card p-4 mb-6">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card p-4 mb-6">
           <input
             type="text"
             value={filtroNome}
             onChange={(e) => setFiltroNome(e.target.value)}
-            placeholder="Pesquisar por nome ou parâmetro Power BI..."
-            className="w-full px-5 py-2.5 bg-[#F0F4F8] border-0 rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
+            placeholder="Pesquisar por nome ou parÃ¢metro Power BI..."
+            className="w-full px-5 py-2.5 bg-[var(--bg-input)] border-0 rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
           />
         </div>
 
         {/* Tabela */}
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-card overflow-hidden">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card overflow-hidden">
           <div className="px-5 py-3 border-b border-[#e2e8f0]">
-            <p className="text-[#6C757D] text-sm font-medium">
-              {filtered.length} parâmetro{filtered.length !== 1 ? "s" : ""} cadastrado{filtered.length !== 1 ? "s" : ""}
+            <p className="text-[var(--text-secondary)] text-sm font-medium">
+              {filtered.length} parÃ¢metro{filtered.length !== 1 ? "s" : ""} cadastrado{filtered.length !== 1 ? "s" : ""}
             </p>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-[#F0F4F8]">
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Nome (Portal)</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Parâmetro Power BI</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Tipo</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Dashboard</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Tenant</th>
-                  <th className="px-5 py-3 text-center text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Ações</th>
+                <tr className="bg-[var(--bg-input)]">
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Nome (Portal)</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">ParÃ¢metro Power BI</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Tipo</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Dashboard</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Tenant</th>
+                  <th className="px-5 py-3 text-center text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">AÃ§Ãµes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e2e8f0]">
                 {!isLoaded ? (
                   <tr>
                     <td colSpan={6} className="px-5 py-12 text-center">
-                      <Loader2 size={24} className="animate-spin text-[#4B5FBF] mx-auto" />
+                      <Loader2 size={24} className="animate-spin text-[var(--brand-primary)] mx-auto" />
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-5 py-12 text-center text-[#6C757D]">
-                      Nenhum parâmetro RLS encontrado
+                    <td colSpan={6} className="px-5 py-12 text-center text-[var(--text-secondary)]">
+                      Nenhum parÃ¢metro RLS encontrado
                     </td>
                   </tr>
                 ) : (
                   filtered.map((p, idx) => (
-                    <tr key={p.id} className={idx % 2 === 0 ? "bg-white" : "bg-[#F8FAFC]"}>
-                      <td className="px-5 py-4 text-sm font-medium text-[#333333]">
+                    <tr key={p.id} className={idx % 2 === 0 ? "bg-white" : "bg-[var(--bg-panel-soft)]"}>
+                      <td className="px-5 py-4 text-sm font-medium text-[var(--text-primary)]">
                         <span className="flex items-center gap-2">
-                          <ShieldCheck size={14} className="text-[#4B5FBF] flex-shrink-0" />
+                          <ShieldCheck size={14} className="text-[var(--brand-primary)] flex-shrink-0" />
                           {p.nome}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-sm">
-                        <code className="px-2 py-0.5 bg-[#F0F4F8] text-[#4B5FBF] rounded text-xs font-mono">
+                        <code className="px-2 py-0.5 bg-[var(--bg-input)] text-[var(--brand-primary)] rounded text-xs font-mono">
                           {p.nomeParametroPowerBI}
                         </code>
                       </td>
                       <td className="px-5 py-4 text-sm">
-                        <span className="px-3 py-1 bg-[#4B5FBF]/10 text-[#4B5FBF] rounded-full text-xs font-medium">
+                        <span className="px-3 py-1 bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] rounded-full text-xs font-medium">
                           {p.tipo}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-sm text-[#6C757D]">
-                        {p.dashboardId ? getDashboardNome(p.dashboardId) : <span className="text-[#cbd5e1]">—</span>}
+                      <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">
+                        {p.dashboardId ? getDashboardNome(p.dashboardId) : <span className="text-[#cbd5e1]">â€”</span>}
                       </td>
-                      <td className="px-5 py-4 text-sm text-[#6C757D]">
-                        {p.tenant || <span className="text-[#cbd5e1]">—</span>}
+                      <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">
+                        {p.tenant || <span className="text-[#cbd5e1]">â€”</span>}
                       </td>
                       <td className="px-5 py-4 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <button
                             onClick={() => openEdit(p)}
                             title="Editar"
-                            className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#4B5FBF]/10 transition-colors"
+                            className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[var(--brand-primary)]/10 transition-colors"
                           >
-                            <Pencil size={15} className="text-[#4B5FBF]" />
+                            <Pencil size={15} className="text-[var(--brand-primary)]" />
                           </button>
                           <button
                             onClick={() => handleDelete(p.id)}
@@ -301,37 +301,37 @@ export default function ParametrosRLSPage() {
         </div>
 
         {/* Bloco informativo */}
-        <div className="mt-6 bg-[#4B5FBF]/5 border border-[#4B5FBF]/20 rounded-2xl p-5">
+        <div className="mt-6 bg-[var(--brand-primary)]/5 border border-[var(--brand-primary)]/20 rounded-2xl p-5">
           <div className="flex items-start gap-3">
-            <ShieldCheck size={18} className="text-[#4B5FBF] flex-shrink-0 mt-0.5" />
+            <ShieldCheck size={18} className="text-[var(--brand-primary)] flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-[#4B5FBF] mb-1">Como funciona a integração RLS</p>
-              <p className="text-xs text-[#6C757D] leading-relaxed">
-                Cada parâmetro define a relação entre o portal e o Power BI.
-                O <strong>Nome do Parâmetro no Power BI</strong> deve corresponder ao campo usado na DAX da Role RLS.
-                Para tipo <strong>Filial</strong>, o sistema envia automaticamente as filiais do usuário como <code className="bg-white px-1 rounded">CUSTOMDATA()</code> ao gerar o token de embed.
-                Exemplo DAX: <code className="bg-white px-1 rounded">FIND([PLANTA_ID], CUSTOMDATA(), 1, 0) &gt; 0</code>
+              <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">Como funciona a integraÃ§Ã£o RLS</p>
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                Cada parÃ¢metro define a relaÃ§Ã£o entre o portal e o Power BI.
+                O <strong>Nome do ParÃ¢metro no Power BI</strong> deve corresponder ao campo usado na DAX da Role RLS.
+                Para tipo <strong>Filial</strong>, o sistema envia automaticamente as filiais do usuÃ¡rio como <code className="bg-[var(--bg-panel)] px-1 rounded">CUSTOMDATA()</code> ao gerar o token de embed.
+                Exemplo DAX: <code className="bg-[var(--bg-panel)] px-1 rounded">FIND([PLANTA_ID], CUSTOMDATA(), 1, 0) &gt; 0</code>
               </p>
             </div>
           </div>
         </div>
 
-        <p className="text-center text-[#6C757D] text-xs mt-8">
+        <p className="text-center text-[var(--text-secondary)] text-xs mt-8">
           Via Labs
         </p>
       </div>
 
       {/* Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-[#e2e8f0] flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay)] backdrop-blur-sm p-4">
+          <div className="bg-[var(--bg-panel)] rounded-2xl shadow-2xl w-full max-w-lg border border-[#e2e8f0] flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0] flex-shrink-0">
-              <h3 className="text-[#4B5FBF] font-bold text-lg">
-                {isEdit ? "Editar RLS Parameter" : "Novo Parâmetro RLS"}
+              <h3 className="text-[var(--brand-primary)] font-bold text-lg">
+                {isEdit ? "Editar RLS Parameter" : "Novo ParÃ¢metro RLS"}
               </h3>
               <button
                 onClick={() => setModalOpen(false)}
-                className="flex items-center justify-center w-8 h-8 rounded-full text-[#6C757D] hover:bg-[#F0F4F8] transition-colors"
+                className="flex items-center justify-center w-8 h-8 rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-input)] transition-colors"
               >
                 <X size={18} />
               </button>
@@ -340,39 +340,39 @@ export default function ParametrosRLSPage() {
             <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
               {/* Nome */}
               <div>
-                <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Nome *</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Nome *</label>
                 <input
                   type="text"
                   value={form.nome}
                   onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                  className={`w-full px-5 py-2.5 bg-[#F0F4F8] border rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all ${erros.nome ? "border-red-500" : "border-transparent"}`}
+                  className={`w-full px-5 py-2.5 bg-[var(--bg-input)] border rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all ${erros.nome ? "border-red-500" : "border-transparent"}`}
                   placeholder="ex: Filial Custo por KM"
                 />
                 {erros.nome && <p className="text-red-500 text-xs mt-1 ml-3">{erros.nome}</p>}
-                <p className="text-xs text-[#94a3b8] mt-1 ml-3">Identificador interno no portal</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1 ml-3">Identificador interno no portal</p>
               </div>
 
-              {/* Nome do Parâmetro no Power BI */}
+              {/* Nome do ParÃ¢metro no Power BI */}
               <div>
-                <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Nome do Parâmetro no Power BI *</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Nome do ParÃ¢metro no Power BI *</label>
                 <input
                   type="text"
                   value={form.nomeParametroPowerBI}
                   onChange={(e) => setForm({ ...form, nomeParametroPowerBI: e.target.value })}
-                  className={`w-full px-5 py-2.5 bg-[#F0F4F8] border rounded-full text-sm text-[#333333] font-mono focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all ${erros.nomeParametroPowerBI ? "border-red-500" : "border-transparent"}`}
+                  className={`w-full px-5 py-2.5 bg-[var(--bg-input)] border rounded-full text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all ${erros.nomeParametroPowerBI ? "border-red-500" : "border-transparent"}`}
                   placeholder="ex: Filial"
                 />
                 {erros.nomeParametroPowerBI && (
                   <p className="text-red-500 text-xs mt-1 ml-3">{erros.nomeParametroPowerBI}</p>
                 )}
-                <p className="text-xs text-[#94a3b8] mt-1 ml-3">
+                <p className="text-xs text-[var(--text-muted)] mt-1 ml-3">
                   Nome usado nas regras de RLS dentro do Power BI Desktop
                 </p>
               </div>
 
               {/* Tipo */}
               <div>
-                <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Tipo</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Tipo</label>
                 <CustomSelect
                   value={form.tipo}
                   onValueChange={(v) => setForm({ ...form, tipo: v })}
@@ -382,38 +382,38 @@ export default function ParametrosRLSPage() {
 
               {/* Dashboard */}
               <div>
-                <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Dashboard</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Dashboard</label>
                 <CustomSelect
                   value={form.dashboardId}
                   onValueChange={(v) => setForm({ ...form, dashboardId: v })}
-                  placeholder="— Selecione um dashboard —"
+                  placeholder="- Selecione um dashboard -"
                   options={dashboards.map(d => ({ value: d.id, label: d.nome }))}
                 />
               </div>
 
               {/* Tenant */}
               <div>
-                <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Tenant</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Tenant</label>
                 <CustomSelect
                   value={form.tenant}
                   onValueChange={(v) => setForm({ ...form, tenant: v })}
-                  placeholder="— Selecione um tenant —"
+                  placeholder="- Selecione um tenant -"
                   options={credenciais.map(c => ({ value: c.tenant, label: `${c.tenant} (${c.nome})` }))}
                 />
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-[#F8FAFC] flex items-center justify-end gap-3 flex-shrink-0 border-t border-[#e2e8f0]">
+            <div className="px-6 py-4 bg-[var(--bg-panel-soft)] flex items-center justify-end gap-3 flex-shrink-0 border-t border-[#e2e8f0]">
               <button
                 onClick={() => setModalOpen(false)}
-                className="px-6 py-2.5 border border-[#6C757D] text-[#6C757D] text-sm font-semibold rounded-full hover:bg-[#F0F4F8] transition-colors"
+                className="px-6 py-2.5 border border-[var(--text-secondary)] text-[var(--text-secondary)] text-sm font-semibold rounded-full hover:bg-[var(--bg-input)] transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-6 py-2.5 bg-[#4B5FBF] hover:bg-[#4040B0] text-white text-sm font-semibold rounded-full transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-6 py-2.5 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white text-sm font-semibold rounded-full transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {saving
                   ? <><Loader2 size={14} className="animate-spin" />Salvando...</>

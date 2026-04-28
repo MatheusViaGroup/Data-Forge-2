@@ -24,7 +24,7 @@ export function CustomSelect({
   options,
   value,
   onValueChange,
-  placeholder = "— Selecione —",
+  placeholder = "- Selecione -",
   disabled = false,
   className = "",
   position = "bottom",
@@ -120,21 +120,21 @@ export function CustomSelect({
         className={`
           flex w-full items-center justify-between
           px-5 py-2.5
-          bg-[#F0F4F8] border border-transparent rounded-full
-          text-sm text-[#333333]
-          focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all
+          bg-[var(--bg-input)] border border-transparent rounded-full
+          text-sm text-[var(--text-primary)]
+          focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all
           disabled:opacity-50 disabled:cursor-not-allowed
-          ${open ? "ring-2 ring-[#4B5FBF] border-transparent" : ""}
+          ${open ? "ring-2 ring-[var(--brand-primary)] border-transparent" : ""}
         `}
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <span className={selected ? "" : "text-[#94A3B8]"}>
+        <span className={selected ? "" : "text-[var(--text-muted)]"}>
           {selected ? selected.label : placeholder}
         </span>
         <ChevronDown
           className={`
-            h-4 w-4 text-[#94A3B8] transition-transform duration-200 flex-shrink-0 ml-2
+            h-4 w-4 text-[var(--text-muted)] transition-transform duration-200 flex-shrink-0 ml-2
             ${open ? "rotate-180" : ""}
           `}
         />
@@ -148,7 +148,7 @@ export function CustomSelect({
           className="
             max-h-60 overflow-y-auto
             bg-white rounded-xl
-            border border-[#E2E8F0]
+            border border-[var(--border-default)]
             shadow-lg
             p-1
           "
@@ -163,20 +163,20 @@ export function CustomSelect({
                 relative flex cursor-pointer select-none items-center
                 rounded-lg px-4 py-2.5 text-sm outline-none
                 transition-colors
-                hover:bg-[#EEF1FB] hover:text-[#4B5FBF]
-                ${option.value === value ? "bg-[#EEF1FB] font-semibold text-[#4B5FBF]" : "text-[#333333]"}
+                hover:bg-[var(--bg-hover)] hover:text-[var(--brand-primary)]
+                ${option.value === value ? "bg-[var(--bg-hover)] font-semibold text-[var(--brand-primary)]" : "text-[var(--text-primary)]"}
               `}
             >
               <span className="flex-1 truncate">{option.label}</span>
               {option.value === value && (
-                <Check className="h-4 w-4 text-[#4B5FBF] flex-shrink-0 ml-2" />
+                <Check className="h-4 w-4 text-[var(--brand-primary)] flex-shrink-0 ml-2" />
               )}
             </div>
           ))}
 
           {options.length === 0 && (
-            <div className="px-4 py-3 text-sm text-[#94A3B8] text-center">
-              Nenhuma opção disponível
+            <div className="px-4 py-3 text-sm text-[var(--text-muted)] text-center">
+              Nenhuma opÃ§Ã£o disponÃ­vel
             </div>
           )}
         </div>,

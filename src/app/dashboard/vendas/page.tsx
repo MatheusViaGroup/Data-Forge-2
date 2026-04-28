@@ -14,7 +14,7 @@ export default function VendasPage() {
           subtitle="Acompanhamento de performance comercial"
         />
         <div className="flex-1 flex items-center justify-center">
-          <div className="bg-white rounded-2xl shadow-sm border border-[#e2e8f0] p-12 max-w-md text-center">
+          <div className="bg-[var(--bg-panel)] rounded-2xl shadow-sm border border-[#e2e8f0] p-12 max-w-md text-center">
             <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-50 border border-amber-100 mx-auto mb-5">
               <Construction size={28} className="text-amber-500" />
             </div>
@@ -25,7 +25,7 @@ export default function VendasPage() {
               O relatório de Vendas & Metas será configurado em breve.
               Configure o REPORT_ID nesta página para ativar.
             </p>
-            <div className="mt-6 flex items-center gap-2 justify-center text-[#94a3b8] text-xs">
+            <div className="mt-6 flex items-center gap-2 justify-center text-[var(--text-muted)] text-xs">
               <Clock size={13} />
               <span>Disponível em breve</span>
             </div>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -218,7 +218,7 @@ export default function DashboardViewPage() {
       </Link>
       <button
         onClick={toggleFocus}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-[#e2e8f0] bg-white hover:bg-[#4B5FBF] hover:text-white hover:border-[#4B5FBF] text-[#4B5FBF] transition-all shadow-sm"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-[#e2e8f0] bg-white hover:bg-[var(--brand-primary)] hover:text-white hover:border-[var(--brand-primary)] text-[var(--brand-primary)] transition-all shadow-sm"
       >
         {isFocus ? <><Minimize2 size={13} /> Sair do foco</> : <><Maximize2 size={13} /> Modo Foco</>}
       </button>
@@ -236,10 +236,10 @@ export default function DashboardViewPage() {
       {(!isLoaded || status === "loading") && (
         <div className="h-full flex flex-col items-center justify-center bg-[#f1f5f9]">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1d4ed8] to-[#3b82f6] flex items-center justify-center shadow-lg mb-4">
-            <Loader2 size={24} className="text-white animate-spin" />
+            <Loader2 size={24} className="text-[var(--bg-panel)] animate-spin" />
           </div>
           <p className="text-[#0f172a] font-semibold">Carregando relatório...</p>
-          <p className="text-[#94a3b8] text-sm mt-1">Conectando ao Power BI</p>
+          <p className="text-[var(--text-muted)] text-sm mt-1">Conectando ao Power BI</p>
         </div>
       )}
 
@@ -249,7 +249,7 @@ export default function DashboardViewPage() {
           const isDevModeLimit = apiError.errorCode === "DEV_MODE_LIMIT";
           return (
         <div className="h-full flex items-center justify-center bg-[#f1f5f9] p-4">
-          <div className="bg-white rounded-2xl shadow-sm border border-[#e2e8f0] w-full max-w-2xl">
+          <div className="bg-[var(--bg-panel)] rounded-2xl shadow-sm border border-[#e2e8f0] w-full max-w-2xl">
             <div className="flex items-center gap-3 px-6 py-5 border-b border-[#e2e8f0]">
               <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0">
                 <svg className="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -258,7 +258,7 @@ export default function DashboardViewPage() {
               </div>
               <div>
                 <h3 className="text-[#0f172a] font-bold">Power BI Embed Indisponível</h3>
-                <p className="text-[#94a3b8] text-xs">
+                <p className="text-[var(--text-muted)] text-xs">
                   {isDevModeLimit ? "Limite de tokens excedido" : (apiError.error || "Falha ao carregar o relatório")}
                 </p>
               </div>
@@ -283,18 +283,18 @@ export default function DashboardViewPage() {
               
               {isDevModeLimit && (
               <div>
-                <p className="text-sm font-semibold text-[#333333] mb-2">Soluções:</p>
-                <ul className="text-sm text-[#6C757D] space-y-2">
+                <p className="text-sm font-semibold text-[var(--text-primary)] mb-2">Soluções:</p>
+                <ul className="text-sm text-[var(--text-secondary)] space-y-2">
                   <li className="flex items-start gap-2">
-                    <span className="text-[#28A745] font-bold">✓</span>
+                    <span className="text-[var(--status-success)] font-bold">✓</span>
                     <span><strong>Produção:</strong> Contratar Power BI Embedded no Azure (~$300/mês)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-[#28A745] font-bold">✓</span>
+                    <span className="text-[var(--status-success)] font-bold">✓</span>
                     <span><strong>Testes:</strong> Usar "Publish to Web" (dados públicos)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-[#28A745] font-bold">✓</span>
+                    <span className="text-[var(--status-success)] font-bold">✓</span>
                     <span><strong>Aguardar:</strong> Tokens são renovados periodicamente</span>
                   </li>
                 </ul>
@@ -306,7 +306,7 @@ export default function DashboardViewPage() {
                   <p className="text-xs text-blue-800">
                     <strong className="font-semibold">Documentacao:</strong>
                     <br />
-                    Consulte o arquivo <code className="bg-white px-2 py-0.5 rounded">POWER_BI_EMBED_ERROR.md</code> para instruções detalhadas.
+                    Consulte o arquivo <code className="bg-[var(--bg-panel)] px-2 py-0.5 rounded">POWER_BI_EMBED_ERROR.md</code> para instruções detalhadas.
                   </p>
                 </div>
               )}

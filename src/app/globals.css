@@ -2,25 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
 
 :root {
   --font-inter: "Inter", system-ui, sans-serif;
   --font-dm-mono: "DM Mono", monospace;
-  /* Altura da barra de notificação gratuita da Microsoft no Power BI */
   --pbi-notif-height: 40px;
-  /* Altura da barra de abas de páginas do Power BI (nav pane) */
   --pbi-nav-height: 36px;
-  
-  /* Cores da Identidade Visual - Via Core */
-  --via-blue: #6366F1;
-  --via-medium: #818CF8;
-  --via-cyan: #06B6D4;
-  --via-dark: #4F46E5;
-  --via-green: #10B981;
-  --via-gray: #64748B;
-  --via-text: #0F172A;
-  --via-input: #F8FAFC;
+
+  --brand-primary: var(--brand-primary);
+  --brand-primary-hover: var(--brand-primary-hover);
+  --brand-cyan: #22d3ee;
+  --status-success: var(--status-success);
+  --status-danger: var(--status-danger);
+  --status-warning: var(--status-warning);
+
+  --bg-app: var(--bg-app);
+  --bg-panel: var(--bg-panel);
+  --bg-panel-soft: var(--bg-panel-soft);
+  --bg-input: var(--bg-input);
+  --bg-hover: var(--bg-hover);
+  --bg-muted: var(--bg-muted);
+
+  --text-primary: var(--text-primary);
+  --text-strong: var(--text-strong);
+  --text-secondary: var(--text-secondary);
+  --text-muted: var(--text-muted);
+  --text-subtle: var(--text-subtle);
+
+  --border-default: var(--border-default);
+  --border-soft: var(--border-soft);
+  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.08), 0 2px 8px rgba(15, 23, 42, 0.05);
+  --overlay: rgba(2, 6, 23, 0.45);
+
+  --scroll-track: var(--bg-muted);
+  --scroll-thumb: var(--border-default);
+  --scroll-thumb-hover: var(--text-muted);
+}
+
+html[data-theme="dark"] {
+  --brand-primary: #3b82f6;
+  --brand-primary-hover: #2563eb;
+  --brand-cyan: #22d3ee;
+  --status-success: #22c55e;
+  --status-danger: #f87171;
+  --status-warning: #fbbf24;
+
+  --bg-app: #070b14;
+  --bg-panel: #0f1b2f;
+  --bg-panel-soft: #13233b;
+  --bg-input: #16263f;
+  --bg-hover: #1a2f4a;
+  --bg-muted: #0b1525;
+
+  --text-primary: #e6edf7;
+  --text-strong: #f2f7ff;
+  --text-secondary: #b8c4d8;
+  --text-muted: #90a2bd;
+  --text-subtle: #6f84a3;
+
+  --border-default: rgba(148, 163, 184, 0.2);
+  --border-soft: rgba(148, 163, 184, 0.16);
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.32);
+  --shadow-card: 0 14px 28px rgba(0, 0, 0, 0.42), 0 6px 14px rgba(0, 0, 0, 0.28);
+  --overlay: rgba(2, 6, 23, 0.6);
+
+  --scroll-track: #0b1525;
+  --scroll-thumb: #2a3e5d;
+  --scroll-thumb-hover: #3b557a;
 }
 
 * {
@@ -35,49 +85,80 @@ body {
   font-family: var(--font-inter);
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 body {
+  background: var(--bg-app);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-wrap: break-word;
   word-break: break-word;
 }
 
-/* Prevenir scroll horizontal indesejado */
-html {
-  overflow-x: hidden;
-  max-width: 100vw;
-}
-
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--scroll-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: var(--scroll-thumb);
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--scroll-thumb-hover);
 }
 
-/* ─── Power BI: Container principal ───────────────────────────────────────────
-   Container que abriga o embed do Power BI
-   ─────────────────────────────────────────────────────────────────────────── */
+.logo-dark {
+  transition: filter 0.2s ease;
+}
+
+html[data-theme="dark"] .logo-dark {
+  filter: brightness(0) invert(1);
+}
+
+.surface-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-soft);
+}
+
+.surface-soft {
+  background: var(--bg-panel-soft);
+  border: 1px solid var(--border-soft);
+}
+
+.text-primary-theme {
+  color: var(--text-primary);
+}
+
+.text-strong-theme {
+  color: var(--text-strong);
+}
+
+.text-secondary-theme {
+  color: var(--text-secondary);
+}
+
+.text-muted-theme {
+  color: var(--text-muted);
+}
+
 .powerbi-container {
   position: relative;
   width: 100%;
   height: 100%;
-  background: #fff;
+  background: var(--bg-panel);
 }
 
-/* O componente PowerBIEmbed e seu iframe precisam preencher tudo */
 .powerbi-container > div,
 .powerbi-container iframe {
   width: 100% !important;
@@ -85,7 +166,6 @@ html {
   border: none !important;
 }
 
-/* ─── Thumbnails dos cards ─────────────────────────────────────────────────── */
 .powerbi-thumb-container {
   position: relative;
   overflow: hidden;
@@ -108,8 +188,4 @@ html {
   pointer-events: none;
 }
 
-/* ─── Custom scrollbar ─────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #475569; }
+

@@ -61,7 +61,7 @@ export default function TokenMonitorPage() {
       <AppShell title="Monitor de Tokens">
         <div className="flex items-center justify-center h-full">
           <div className="flex items-center gap-3">
-            <RefreshCw size={24} className="animate-spin text-[#4B5FBF]" />
+            <RefreshCw size={24} className="animate-spin text-[var(--brand-primary)]" />
             <span className="text-[#64748b]">Carregando...</span>
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function TokenMonitorPage() {
                 onClick={() => setPeriod(p)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   period === p
-                    ? "bg-[#4B5FBF] text-white"
+                    ? "bg-[var(--brand-primary)] text-white"
                     : "bg-white border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc]"
                 }`}
               >
@@ -113,13 +113,13 @@ export default function TokenMonitorPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <RefreshCw size={32} className="animate-spin text-[#4B5FBF]" />
+            <RefreshCw size={32} className="animate-spin text-[var(--brand-primary)]" />
           </div>
         ) : stats ? (
           <>
             {/* Cards de resumo */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-7">
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+              <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] p-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-xl bg-[#eff6ff] border border-[#bfdbfe] flex items-center justify-center">
                     <Activity className="text-[#2563eb]" size={20} />
@@ -132,7 +132,7 @@ export default function TokenMonitorPage() {
                 </p>
               </div>
 
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+              <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] p-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-xl bg-[#f0fdf4] border border-[#bbf7d0] flex items-center justify-center">
                     <Database className="text-[#16a34a]" size={20} />
@@ -143,7 +143,7 @@ export default function TokenMonitorPage() {
                 <p className="text-xs text-[#64748b] mt-1">Relatórios ativos</p>
               </div>
 
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+              <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] p-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-xl bg-[#fef3cd] border border-[#fde68a] flex items-center justify-center">
                     <Users className="text-[#d97706]" size={20} />
@@ -154,7 +154,7 @@ export default function TokenMonitorPage() {
                 <p className="text-xs text-[#64748b] mt-1">Únicos neste período</p>
               </div>
 
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5">
+              <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] p-5">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-xl bg-[#fef2f2] border border-[#fecaca] flex items-center justify-center">
                     <KeyRound className="text-[#dc2626]" size={20} />
@@ -176,7 +176,7 @@ export default function TokenMonitorPage() {
 
             {/* Barra de progresso do limite (apenas para hoje) */}
             {period === "today" && stats.tokensRemaining !== null && (
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5 mb-7">
+              <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] p-5 mb-7">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-semibold text-[#64748b]">Uso do limite diário (Power BI Pro)</span>
                   <span className="text-sm font-bold text-[#0f172a]">
@@ -186,7 +186,7 @@ export default function TokenMonitorPage() {
                 <div className="w-full bg-[#f1f5f9] rounded-full h-3 overflow-hidden">
                   <div
                     className={`h-full transition-all duration-500 ${
-                      stats.limitReached ? "bg-red-500" : getProgressWidth() > 80 ? "bg-orange-500" : "bg-[#4B5FBF]"
+                      stats.limitReached ? "bg-red-500" : getProgressWidth() > 80 ? "bg-orange-500" : "bg-[var(--brand-primary)]"
                     }`}
                     style={{ width: `${getProgressWidth()}%` }}
                   />
@@ -200,9 +200,9 @@ export default function TokenMonitorPage() {
             {/* Tabelas */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Tokens por Dashboard */}
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden">
+              <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] overflow-hidden">
                 <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center gap-2">
-                  <BarChart3 size={18} className="text-[#4B5FBF]" />
+                  <BarChart3 size={18} className="text-[var(--brand-primary)]" />
                   <h3 className="font-bold text-[#0f172a]">Tokens por Dashboard</h3>
                 </div>
                 <div className="p-5">
@@ -216,7 +216,7 @@ export default function TokenMonitorPage() {
                             <p className="text-sm font-medium text-[#0f172a] truncate">{dash.nome}</p>
                             <div className="w-full bg-[#f1f5f9] rounded-full h-2 mt-1 overflow-hidden">
                               <div
-                                className="bg-[#4B5FBF] h-full"
+                                className="bg-[var(--brand-primary)] h-full"
                                 style={{ width: `${(dash.count / stats.totalTokens) * 100}%` }}
                               />
                             </div>
@@ -230,9 +230,9 @@ export default function TokenMonitorPage() {
               </div>
 
               {/* Tokens por Usuário */}
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden">
+              <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] overflow-hidden">
                 <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center gap-2">
-                  <Users size={18} className="text-[#4B5FBF]" />
+                  <Users size={18} className="text-[var(--brand-primary)]" />
                   <h3 className="font-bold text-[#0f172a]">Tokens por Usuário</h3>
                 </div>
                 <div className="p-5">
@@ -260,9 +260,9 @@ export default function TokenMonitorPage() {
               </div>
 
               {/* Tokens por Credencial */}
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden">
+              <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] overflow-hidden">
                 <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center gap-2">
-                  <KeyRound size={18} className="text-[#4B5FBF]" />
+                  <KeyRound size={18} className="text-[var(--brand-primary)]" />
                   <h3 className="font-bold text-[#0f172a]">Tokens por Credencial</h3>
                 </div>
                 <div className="p-5">
@@ -290,9 +290,9 @@ export default function TokenMonitorPage() {
               </div>
 
               {/* Informações técnicas */}
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden">
+              <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] overflow-hidden">
                 <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center gap-2">
-                  <TrendingUp size={18} className="text-[#4B5FBF]" />
+                  <TrendingUp size={18} className="text-[var(--brand-primary)]" />
                   <h3 className="font-bold text-[#0f172a]">Informações</h3>
                 </div>
                 <div className="p-5 space-y-4">
@@ -330,7 +330,7 @@ export default function TokenMonitorPage() {
             </div>
           </>
         ) : (
-          <div className="bg-white rounded-2xl border border-[#e2e8f0] p-10 text-center">
+          <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] p-10 text-center">
             <BarChart3 size={48} className="mx-auto text-[#cbd5e1] mb-3" />
             <p className="text-[#64748b]">Nenhuma estatística disponível</p>
           </div>

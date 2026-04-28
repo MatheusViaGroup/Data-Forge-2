@@ -75,9 +75,9 @@ export default function Header({ title, subtitle }: HeaderProps) {
     <header
       className="h-[64px] flex items-center justify-between px-6 flex-shrink-0 z-30"
       style={{
-        background: "#ffffff",
-        borderBottom: "1px solid #F1F5F9",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+        background: "var(--bg-panel)",
+        borderBottom: "1px solid var(--border-soft)",
+        boxShadow: "var(--shadow-soft)",
       }}
     >
       <div className="flex items-center gap-4">
@@ -88,7 +88,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
             style={{
               fontSize: "15px",
               fontWeight: 700,
-              color: "#0F172A",
+              color: "var(--text-strong)",
               lineHeight: 1.2,
               letterSpacing: "-0.01em",
             }}
@@ -96,7 +96,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
             {title}
           </h1>
           {subtitle && (
-            <span style={{ fontSize: "11px", color: "#94A3B8", fontWeight: 400 }}>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 400 }}>
               {subtitle}
             </span>
           )}
@@ -113,31 +113,31 @@ export default function Header({ title, subtitle }: HeaderProps) {
         >
           <div
             className="w-4 h-4 rounded flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #6366F1 0%, #818CF8 100%)" }}
+            style={{ background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-cyan) 100%)" }}
           >
             <svg width="8" height="8" viewBox="0 0 24 24" fill="none">
               <polygon points="12,2 22,7 22,17 12,22 2,17 2,7" stroke="white" strokeWidth="2.5" strokeLinejoin="round" />
             </svg>
           </div>
-          <span style={{ fontSize: "11px", fontWeight: 700, color: "#6366F1", letterSpacing: "0.03em" }}>
+          <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--brand-primary)", letterSpacing: "0.03em" }}>
             Via Core
           </span>
         </div>
 
-        <div className="w-px h-8 hidden sm:block" style={{ background: "#F1F5F9" }} />
+        <div className="w-px h-8 hidden sm:block" style={{ background: "var(--border-soft)" }} />
 
         <div ref={userButtonRef} className="relative">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-all duration-150"
-            style={{ background: dropdownOpen ? "#F8FAFC" : "transparent" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#F8FAFC")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = dropdownOpen ? "#F8FAFC" : "transparent")}
+            style={{ background: dropdownOpen ? "var(--bg-panel-soft)" : "transparent" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-panel-soft)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = dropdownOpen ? "var(--bg-panel-soft)" : "transparent")}
           >
             <div
               className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0"
               style={{
-                background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",
+                background: "linear-gradient(135deg, var(--text-strong) 0%, #1E293B 100%)",
                 boxShadow: "0 2px 6px rgba(15,23,42,0.25)",
               }}
             >
@@ -145,10 +145,10 @@ export default function Header({ title, subtitle }: HeaderProps) {
             </div>
 
             <div className="hidden sm:block text-left">
-              <p style={{ fontSize: "12px", fontWeight: 600, color: "#0F172A", lineHeight: 1.3 }}>
+              <p style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-strong)", lineHeight: 1.3 }}>
                 {session?.user?.name ?? "Usuário"}
               </p>
-              <p style={{ fontSize: "10px", color: "#94A3B8", lineHeight: 1.3 }}>
+              <p style={{ fontSize: "10px", color: "var(--text-muted)", lineHeight: 1.3 }}>
                 Via Group
               </p>
             </div>
@@ -156,7 +156,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
             <ChevronDown
               size={14}
               style={{
-                color: "#94A3B8",
+                color: "var(--text-muted)",
                 transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
                 transition: "transform 0.2s",
               }}
@@ -174,17 +174,17 @@ export default function Header({ title, subtitle }: HeaderProps) {
                 >
                   <div
                     style={{
-                      background: "#ffffff",
-                      border: "1px solid #F1F5F9",
+                      background: "var(--bg-panel)",
+                      border: "1px solid var(--border-soft)",
                       borderRadius: "16px",
-                      boxShadow: "0 8px 24px rgba(15,23,42,0.10), 0 2px 8px rgba(15,23,42,0.06)",
+                      boxShadow: "var(--shadow-card)",
                     }}
                   >
-                    <div className="px-4 py-3" style={{ borderBottom: "1px solid #F1F5F9", background: "#FAFAFA" }}>
-                      <p style={{ fontSize: "12px", fontWeight: 600, color: "#0F172A" }}>
+                    <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--border-soft)", background: "var(--bg-panel-soft)" }}>
+                      <p style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-strong)" }}>
                         {session?.user?.name ?? "Usuário"}
                       </p>
-                      <p style={{ fontSize: "11px", color: "#94A3B8" }} className="truncate">
+                      <p style={{ fontSize: "11px", color: "var(--text-muted)" }} className="truncate">
                         {session?.user?.email ?? ""}
                       </p>
                     </div>
@@ -193,7 +193,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-2.5 transition-colors"
-                        style={{ fontSize: "13px", color: "#EF4444" }}
+                        style={{ fontSize: "13px", color: "var(--status-danger)" }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = "#FEF2F2")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                       >
@@ -212,3 +212,5 @@ export default function Header({ title, subtitle }: HeaderProps) {
     </header>
   );
 }
+
+

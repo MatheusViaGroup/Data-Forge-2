@@ -12,9 +12,12 @@ import {
   UserCheck,
   EyeOff,
   Eye,
+  Moon,
+  Sun,
   Power,
 } from "lucide-react";
 import { useSidebar } from "@/contexts/SidebarContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const navItems = [
   { label: "Início", href: "/dashboard", icon: Home, roles: ["admin", "user"] },
@@ -29,6 +32,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { collapsed, toggleCollapsed, mobileOpen, closeMobile } = useSidebar();
+  const { isDark, toggleTheme } = useTheme();
   const userRole = session?.user?.role ?? "user";
   const userName = session?.user?.name ?? "Usuário";
   const initials = userName
@@ -47,7 +51,7 @@ export default function Sidebar() {
       {/* Sidebar Mobile Overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-[var(--overlay)] backdrop-blur-sm z-40 md:hidden"
           onClick={closeMobile}
         />
       )}
@@ -57,8 +61,8 @@ export default function Sidebar() {
         className="fixed top-0 left-0 h-screen flex md:hidden flex-col z-50 transition-transform duration-300"
         style={{
           width: "260px",
-          background: "#FFFFFF",
-          borderRight: "1px solid #EBEBEC",
+          background: "var(--bg-panel)",
+          borderRight: "1px solid var(--border-soft)",
           transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
         }}
       >
@@ -70,6 +74,7 @@ export default function Sidebar() {
           <img
             src="https://viagroup.com.br/assets/via_group-22fac685.png"
             alt="Via Group"
+            className="logo-dark"
             style={{ width: "110px", height: "auto", objectFit: "contain" }}
           />
         </div>
@@ -78,17 +83,17 @@ export default function Sidebar() {
         <div className="mb-4" style={{ paddingLeft: "16px", paddingRight: "16px" }}>
           <div
             className="flex items-center rounded-xl"
-            style={{ background: "#F7F8FA", padding: "12px", gap: "12px" }}
+            style={{ background: "var(--bg-panel-soft)", padding: "12px", gap: "12px" }}
           >
             <div
               className="flex items-center justify-center w-9 h-9 rounded-full text-white text-sm font-bold flex-shrink-0"
-              style={{ background: "linear-gradient(135deg, #4B5FBF 0%, #6875D8 100%)" }}
+              style={{ background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-cyan) 100%)" }}
             >
               {initials}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold truncate" style={{ color: "#1A1A2E" }}>{userName}</p>
-              <p className="text-xs" style={{ color: "#9CA3AF" }}>
+              <p className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>{userName}</p>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                 {userRole === "admin" ? "Administrador" : "Usuário"}
               </p>
             </div>
@@ -97,7 +102,7 @@ export default function Sidebar() {
 
         {/* Navegação */}
         <nav className="flex-1 overflow-y-auto" style={{ paddingLeft: "12px", paddingRight: "12px" }}>
-          <p className="px-3 mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: "#C4C6CC" }}>
+          <p className="px-3 mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-subtle)" }}>
             Menu
           </p>
           <ul className="space-y-0.5">
@@ -116,8 +121,8 @@ export default function Sidebar() {
                     onClick={closeMobile}
                     className="flex items-center rounded-xl transition-all duration-150"
                     style={{
-                      background: isActive ? "#EEF1FB" : "transparent",
-                      color: isActive ? "#4B5FBF" : "#6B7280",
+                      background: isActive ? "var(--bg-hover)" : "transparent",
+                      color: isActive ? "var(--brand-primary)" : "var(--text-secondary)",
                       fontWeight: isActive ? 600 : 400,
                       fontSize: "14px",
                       padding: "10px 12px",
@@ -136,18 +141,18 @@ export default function Sidebar() {
         {/* Rodapé */}
         <div
           className="pb-6 space-y-0.5"
-          style={{ borderTop: "1px solid #F2F2F3", paddingTop: "12px", paddingLeft: "12px", paddingRight: "12px" }}
+          style={{ borderTop: "1px solid var(--border-default)", paddingTop: "12px", paddingLeft: "12px", paddingRight: "12px" }}
         >
           <button
             onClick={handleLogout}
             title="Sair"
             className="flex items-center w-full rounded-xl transition-all duration-150"
             style={{
-              color: "#6B7280", fontSize: "14px",
+              color: "var(--text-secondary)", fontSize: "14px",
               padding: "10px 12px",
               gap: "12px",
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#FEF2F2")}
+            onMouseEnter={e => (e.currentTarget.style.background = "color-mix(in srgb, var(--status-danger) 12%, transparent)")}
             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
           >
             <Power size={18} strokeWidth={1.8} />
@@ -161,8 +166,8 @@ export default function Sidebar() {
         className="fixed top-0 left-0 h-screen hidden md:flex flex-col z-30 transition-all duration-300"
         style={{
           width: collapsed ? "68px" : "230px",
-          background: "#FFFFFF",
-          borderRight: "1px solid #EBEBEC",
+          background: "var(--bg-panel)",
+          borderRight: "1px solid var(--border-soft)",
           overflow: "hidden",
         }}
       >
@@ -176,12 +181,14 @@ export default function Sidebar() {
             <img
               src="https://auth.viagroup.com.br/_nuxt/via-group-icon-colorful.fd863302.png"
               alt="Via Group"
+              className="logo-dark"
               style={{ width: "36px", height: "36px", objectFit: "contain", transition: "opacity 0.3s" }}
             />
           ) : (
             <img
               src="https://viagroup.com.br/assets/via_group-22fac685.png"
               alt="Via Group"
+              className="logo-dark"
               style={{ width: "110px", height: "auto", objectFit: "contain", transition: "opacity 0.3s" }}
             />
           )}
@@ -191,18 +198,18 @@ export default function Sidebar() {
         <div className="mb-4 transition-all duration-300" style={{ paddingLeft: collapsed ? "14px" : "16px", paddingRight: collapsed ? "14px" : "16px" }}>
           <div
             className="flex items-center rounded-xl transition-all duration-300"
-            style={{ background: "#F7F8FA", padding: collapsed ? "8px" : "12px", gap: collapsed ? 0 : "12px", justifyContent: collapsed ? "center" : "flex-start" }}
+            style={{ background: "var(--bg-panel-soft)", padding: collapsed ? "8px" : "12px", gap: collapsed ? 0 : "12px", justifyContent: collapsed ? "center" : "flex-start" }}
           >
             <div
               className="flex items-center justify-center w-9 h-9 rounded-full text-white text-sm font-bold flex-shrink-0"
-              style={{ background: "linear-gradient(135deg, #4B5FBF 0%, #6875D8 100%)" }}
+              style={{ background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-cyan) 100%)" }}
             >
               {initials}
             </div>
             {!collapsed && (
               <div className="min-w-0">
-                <p className="text-sm font-semibold truncate" style={{ color: "#1A1A2E" }}>{userName}</p>
-                <p className="text-xs" style={{ color: "#9CA3AF" }}>
+                <p className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>{userName}</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                   {userRole === "admin" ? "Administrador" : "Usuário"}
                 </p>
               </div>
@@ -213,7 +220,7 @@ export default function Sidebar() {
         {/* Navegação */}
         <nav className="flex-1 overflow-y-auto transition-all duration-300" style={{ paddingLeft: collapsed ? "8px" : "12px", paddingRight: collapsed ? "8px" : "12px" }}>
           {!collapsed && (
-            <p className="px-3 mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: "#C4C6CC" }}>
+            <p className="px-3 mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-subtle)" }}>
               Menu
             </p>
           )}
@@ -233,8 +240,8 @@ export default function Sidebar() {
                     title={collapsed ? item.label : undefined}
                     className="flex items-center rounded-xl transition-all duration-150"
                     style={{
-                      background: isActive ? "#EEF1FB" : "transparent",
-                      color: isActive ? "#4B5FBF" : "#6B7280",
+                      background: isActive ? "var(--bg-hover)" : "transparent",
+                      color: isActive ? "var(--brand-primary)" : "var(--text-secondary)",
                       fontWeight: isActive ? 600 : 400,
                       fontSize: "14px",
                       padding: collapsed ? "10px" : "10px 12px",
@@ -254,19 +261,19 @@ export default function Sidebar() {
         {/* Rodapé: Esconder Menu + Sair */}
         <div
           className="pb-6 space-y-0.5 transition-all duration-300"
-          style={{ borderTop: "1px solid #F2F2F3", paddingTop: "12px", paddingLeft: collapsed ? "8px" : "12px", paddingRight: collapsed ? "8px" : "12px" }}
+          style={{ borderTop: "1px solid var(--border-default)", paddingTop: "12px", paddingLeft: collapsed ? "8px" : "12px", paddingRight: collapsed ? "8px" : "12px" }}
         >
           <button
             onClick={toggleCollapsed}
             title={collapsed ? "Mostrar menu" : "Esconder menu"}
             className="flex items-center w-full rounded-xl transition-all duration-150"
             style={{
-              color: "#6B7280", fontSize: "14px",
+              color: "var(--text-secondary)", fontSize: "14px",
               padding: collapsed ? "10px" : "10px 12px",
               gap: collapsed ? 0 : "12px",
               justifyContent: collapsed ? "center" : "flex-start",
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#F7F8FA")}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--bg-panel-soft)")}
             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
           >
             {collapsed ? <Eye size={18} strokeWidth={1.8} /> : <EyeOff size={18} strokeWidth={1.8} />}
@@ -274,16 +281,33 @@ export default function Sidebar() {
           </button>
 
           <button
-            onClick={handleLogout}
-            title="Sair"
+            onClick={toggleTheme}
+            title={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
             className="flex items-center w-full rounded-xl transition-all duration-150"
             style={{
-              color: "#6B7280", fontSize: "14px",
+              color: "var(--text-secondary)", fontSize: "14px",
               padding: collapsed ? "10px" : "10px 12px",
               gap: collapsed ? 0 : "12px",
               justifyContent: collapsed ? "center" : "flex-start",
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#FEF2F2")}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--bg-panel-soft)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+          >
+            {isDark ? <Sun size={18} strokeWidth={1.8} /> : <Moon size={18} strokeWidth={1.8} />}
+            {!collapsed && (isDark ? "Tema Claro" : "Tema Escuro")}
+          </button>
+
+          <button
+            onClick={handleLogout}
+            title="Sair"
+            className="flex items-center w-full rounded-xl transition-all duration-150"
+            style={{
+              color: "var(--text-secondary)", fontSize: "14px",
+              padding: collapsed ? "10px" : "10px 12px",
+              gap: collapsed ? 0 : "12px",
+              justifyContent: collapsed ? "center" : "flex-start",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = "color-mix(in srgb, var(--status-danger) 12%, transparent)")}
             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
           >
             <Power size={18} strokeWidth={1.8} />
@@ -302,9 +326,11 @@ export function MobileMenuButton() {
     <button
       onClick={toggleMobile}
       className="md:hidden flex items-center justify-center w-9 h-9 rounded-xl text-white"
-      style={{ background: "#4B5FBF" }}
+      style={{ background: "var(--brand-primary)" }}
     >
       <LayoutGrid size={18} />
     </button>
   );
 }
+
+

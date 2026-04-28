@@ -120,13 +120,13 @@ export function ImportExportXlsx({ cols, nomeTemplate, onImport }: Props) {
         onClick={downloadTemplate}
         className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all"
         style={{
-          background: "#F4F5F7",
-          border: "1px solid #EBEBEC",
-          color: "#4B5FBF",
+          background: "var(--bg-app)",
+          border: "1px solid var(--border-soft)",
+          color: "var(--brand-primary)",
           whiteSpace: "nowrap",
         }}
-        onMouseEnter={e => (e.currentTarget.style.background = "#EEF1FB")}
-        onMouseLeave={e => (e.currentTarget.style.background = "#F4F5F7")}
+        onMouseEnter={e => (e.currentTarget.style.background = "var(--bg-hover)")}
+        onMouseLeave={e => (e.currentTarget.style.background = "var(--bg-app)")}
         title="Baixar planilha modelo com as colunas corretas"
       >
         <Download size={14} />
@@ -139,15 +139,15 @@ export function ImportExportXlsx({ cols, nomeTemplate, onImport }: Props) {
         disabled={importing}
         className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all"
         style={{
-          background: "#EEF1FB",
+          background: "var(--bg-hover)",
           border: "1px solid #C7CEED",
-          color: "#4B5FBF",
+          color: "var(--brand-primary)",
           whiteSpace: "nowrap",
           opacity: importing ? 0.7 : 1,
           cursor: importing ? "not-allowed" : "pointer",
         }}
         onMouseEnter={e => { if (!importing) (e.currentTarget.style.background = "#E0E5F8"); }}
-        onMouseLeave={e => { if (!importing) (e.currentTarget.style.background = "#EEF1FB"); }}
+        onMouseLeave={e => { if (!importing) (e.currentTarget.style.background = "var(--bg-hover)"); }}
         title="Importar dados a partir de uma planilha Excel"
       >
         {importing
@@ -171,7 +171,7 @@ export function ImportExportXlsx({ cols, nomeTemplate, onImport }: Props) {
           style={{
             background: isOk ? "#DCFCE7" : "#FEE2E2",
             border: `1px solid ${isOk ? "#86EFAC" : "#FCA5A5"}`,
-            color: isOk ? "#166534" : "#DC2626",
+            color: isOk ? "#166534" : "var(--status-danger)",
             maxWidth: 320,
           }}
         >

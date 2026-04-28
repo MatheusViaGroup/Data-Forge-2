@@ -57,15 +57,15 @@ export default function UsuariosPage() {
   const [filtroNome, setFiltroNome] = useState("");
   const [filtroEmail, setFiltroEmail] = useState("");
   const [filtroDepartamento, setFiltroDepartamento] = useState("");
-  const [filtroStatus, setFiltroStatus] = useState<"Todos" | "Ativo" | "Excluído">("Todos");
+  const [filtroStatus, setFiltroStatus] = useState<"Todos" | "Ativo" | "Exclu\u00EDdo">("Todos");
 
-  // Paginação
+  // PaginaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o
   const [itensPorPagina, setItensPorPagina] = useState(10);
   const [paginaAtual, setPaginaAtual] = useState(1);
 
-  // Formulário
+  // FormulÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
   const [form, setForm] = useState<Omit<Usuario, "id"> & { id: string }>({
-    id: "", nome: "", email: "", departamento: "", acesso: "Usuário", status: "Ativo", filiais: [], dashboards: [],
+    id: "", nome: "", email: "", departamento: "", acesso: "Usu\u00E1rio", status: "Ativo", filiais: [], dashboards: [],
   });
   const [senhaEdicao, setSenhaEdicao] = useState("");
   const [showSenhaEdicao, setShowSenhaEdicao] = useState(false);
@@ -76,7 +76,7 @@ export default function UsuariosPage() {
     if (authStatus === "authenticated" && session?.user?.role !== "admin") router.push("/dashboard");
   }, [session, authStatus, router]);
 
-  // Carrega filiais quando abre o modal (uma vez só)
+  // Carrega filiais quando abre o modal (uma vez sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³)
   useEffect(() => {
     if (!modalOpen) return;
     if (filiais.length > 0) return;
@@ -88,7 +88,7 @@ export default function UsuariosPage() {
       .finally(() => setLoadingFiliais(false));
   }, [modalOpen, filiais.length]);
 
-  // Carrega dados admin quando a página monta
+  // Carrega dados admin quando a pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡gina monta
   useEffect(() => {
     if (authStatus === "authenticated") {
       loadAdminData();
@@ -125,7 +125,7 @@ export default function UsuariosPage() {
     
     const acesso = acessosEspeciais.find((a) => a.id === acessoId);
     if (acesso && acesso.filiais) {
-      // Adiciona as filiais do acesso especial (sem remover as já selecionadas)
+      // Adiciona as filiais do acesso especial (sem remover as jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ selecionadas)
       setForm((prev) => {
         const filiaisAtuais = new Set(prev.filiais);
         acesso.filiais.forEach((f) => filiaisAtuais.add(f));
@@ -156,7 +156,7 @@ export default function UsuariosPage() {
   const paginated = filtered.slice(inicio, fim);
 
   const openCreate = () => {
-    setForm({ id: "", nome: "", email: "", departamento: "", acesso: "Usuário", status: "Ativo", filiais: [], dashboards: [] });
+    setForm({ id: "", nome: "", email: "", departamento: "", acesso: "Usu\u00E1rio", status: "Ativo", filiais: [], dashboards: [] });
     setErros({});
     setSenhaEdicao("");
     setShowSenhaEdicao(false);
@@ -180,11 +180,11 @@ export default function UsuariosPage() {
 
   const validateForm = () => {
     const novosErros: Record<string, string> = {};
-    if (!form.nome.trim()) novosErros.nome = "Nome é obrigatório";
-    if (!form.email.trim()) novosErros.email = "Email é obrigatório";
-    else if (!/\S+@\S+\.\S+/.test(form.email)) novosErros.email = "Email inválido";
-    if (!form.departamento.trim()) novosErros.departamento = "Departamento é obrigatório";
-    if (!isEdit && !senhaEdicao) novosErros.senhaEdicao = "Senha é obrigatória para novo usuário";
+    if (!form.nome.trim()) novosErros.nome = "Nome ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio";
+    if (!form.email.trim()) novosErros.email = "Email ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio";
+    else if (!/\S+@\S+\.\S+/.test(form.email)) novosErros.email = "Email invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido";
+    if (!form.departamento.trim()) novosErros.departamento = "Departamento ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio";
+    if (!isEdit && !senhaEdicao) novosErros.senhaEdicao = "Senha ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ria para novo usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio";
     if (senhaEdicao && senhaEdicao.length < 6) novosErros.senhaEdicao = "A senha deve ter pelo menos 6 caracteres";
     setErros(novosErros);
     return Object.keys(novosErros).length === 0;
@@ -206,7 +206,7 @@ export default function UsuariosPage() {
           dashboards: form.dashboards,
           ...(senhaEdicao ? { senha: senhaEdicao, must_change_password: false } : {}),
         });
-        setFeedback({ type: "success", msg: "Usuário atualizado com sucesso!" });
+        setFeedback({ type: "success", msg: "UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio atualizado com sucesso!" });
       } else {
         await addUsuario({
           nome: form.nome,
@@ -218,11 +218,11 @@ export default function UsuariosPage() {
           dashboards: form.dashboards,
           senha: senhaEdicao || "1234",
         });
-        setFeedback({ type: "success", msg: "Usuário criado com sucesso!" });
+        setFeedback({ type: "success", msg: "UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio criado com sucesso!" });
       }
       setModalOpen(false);
     } catch {
-      setFeedback({ type: "error", msg: "Erro ao salvar. Verifique sua conexão." });
+      setFeedback({ type: "error", msg: "Erro ao salvar. Verifique sua conexÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o." });
     } finally {
       setSaving(false);
     }
@@ -230,14 +230,14 @@ export default function UsuariosPage() {
 
   const handleDelete = async (id: string) => {
     const usuario = usuarios.find(u => u.id === id);
-    if (!confirm(`Tem certeza que deseja excluir o usuário "${usuario?.nome}"? Esta ação não pode ser desfeita.`)) return;
+    if (!confirm(`Tem certeza que deseja excluir o usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio "${usuario?.nome}"? Esta aÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o pode ser desfeita.`)) return;
     
     setDeleting(id);
     try {
       await deleteUsuario(id);
-      setFeedback({ type: "success", msg: "Usuário excluído com sucesso!" });
+      setFeedback({ type: "success", msg: "UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio excluÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­do com sucesso!" });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erro ao excluir usuário.";
+      const msg = err instanceof Error ? err.message : "Erro ao excluir usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio.";
       setFeedback({ type: "error", msg });
     } finally {
       setDeleting(null);
@@ -257,13 +257,13 @@ export default function UsuariosPage() {
   const handleResetPassword = async () => {
     setSenhaError("");
     
-    // Validações
+    // ValidaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes
     if (!novaSenha || novaSenha.length < 6) {
       setSenhaError("A senha deve ter pelo menos 6 caracteres");
       return;
     }
     if (novaSenha !== confirmarSenha) {
-      setSenhaError("As senhas não coincidem");
+      setSenhaError("As senhas nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o coincidem");
       return;
     }
 
@@ -288,49 +288,49 @@ export default function UsuariosPage() {
   const handleReativar = async (u: Usuario) => {
     try {
       await updateUsuario(u.id, { status: "Ativo" });
-      setFeedback({ type: "success", msg: "Usuário reativado com sucesso!" });
+      setFeedback({ type: "success", msg: "UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio reativado com sucesso!" });
     } catch {
-      setFeedback({ type: "error", msg: "Erro ao reativar usuário." });
+      setFeedback({ type: "error", msg: "Erro ao reativar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio." });
     }
   };
 
 
   if (authStatus === "authenticated" && session?.user?.role !== "admin") {
     return (
-      <AppShell title="Usuários">
+      <AppShell title="UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios">
         <div className="flex items-center justify-center h-full">
-          <Loader2 size={28} className="animate-spin text-[#4B5FBF]" />
+          <Loader2 size={28} className="animate-spin text-[var(--brand-primary)]" />
         </div>
       </AppShell>
     );
   }
 
   return (
-    <AppShell title="Usuários" subtitle="Gerencie os usuários e permissões de acesso">
+    <AppShell title="UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios" subtitle="Gerencie os usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios e permissÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de acesso">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-[#4B5FBF] font-bold text-2xl tracking-tight">Usuários</h2>
-            <p className="text-[#6C757D] text-sm mt-0.5">Gerencie os usuários e permissões de acesso</p>
+            <h2 className="text-[var(--brand-primary)] font-bold text-2xl tracking-tight">UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios</h2>
+            <p className="text-[var(--text-secondary)] text-sm mt-0.5">Gerencie os usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios e permissÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de acesso</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
             <ImportExportXlsx
               nomeTemplate="template_usuarios"
               cols={[
-                { key: "nome",        header: "nome",        instrucao: "Nome completo do usuário",              exemplo: "João Silva" },
+                { key: "nome",        header: "nome",        instrucao: "Nome completo do usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio",              exemplo: "JoÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o Silva" },
                 { key: "email",       header: "email",       instrucao: "E-mail corporativo",                    exemplo: "joao.silva@viagroup.com" },
-                { key: "senha",       header: "senha",       instrucao: "Senha inicial (mín. 6 caracteres)",     exemplo: "Senha@123" },
-                { key: "departamento",header: "departamento",instrucao: "Departamento do usuário",               exemplo: "TI" },
-                { key: "acesso",      header: "acesso",      instrucao: "Usuário  ou  Administrador do Locatário",exemplo: "Usuário" },
-                { key: "filiais",     header: "filiais",     instrucao: "Códigos de filiais separados por vírgula",exemplo: "AB01,AB02" },
+                { key: "senha",       header: "senha",       instrucao: "Senha inicial (mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­n. 6 caracteres)",     exemplo: "Senha@123" },
+                { key: "departamento",header: "departamento",instrucao: "Departamento do usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio",               exemplo: "TI" },
+                { key: "acesso",      header: "acesso",      instrucao: "Usu\u00E1rio",exemplo: "Usu\u00E1rio" },
+                { key: "filiais",     header: "filiais",     instrucao: "CÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³digos de filiais separados por vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­rgula",exemplo: "AB01,AB02" },
               ]}
               onImport={async (rows): Promise<ImportResult> => {
                 let success = 0;
                 const errors: string[] = [];
                 for (const row of rows) {
                   if (!row.nome || !row.email || !row.senha) {
-                    errors.push(`Linha ignorada: nome, email e senha são obrigatórios (email: ${row.email || "?"}).`);
+                    errors.push(`Linha ignorada: nome, email e senha sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios (email: ${row.email || "?"}).`);
                     continue;
                   }
                   try {
@@ -339,7 +339,7 @@ export default function UsuariosPage() {
                       email: row.email,
                       senha: row.senha,
                       departamento: (row.departamento || "").toUpperCase(),
-                      acesso: (row.acesso === "Administrador do Locatário" ? "Administrador do Locatário" : "Usuário") as Usuario["acesso"],
+                      acesso: (row.acesso === "Administrador do Locat\u00E1rio" ? "Administrador do Locat\u00E1rio" : "Usu\u00E1rio") as Usuario["acesso"],
                       status: "Ativo",
                       filiais: row.filiais ? row.filiais.split(",").map(s => s.trim()).filter(Boolean) : [],
                       dashboards: [],
@@ -354,8 +354,8 @@ export default function UsuariosPage() {
               }}
             />
             <button onClick={openCreate}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#28A745] hover:bg-[#218838] text-white text-sm font-semibold rounded-full transition-colors shadow-md">
-              <Plus size={16} /> Novo Usuário
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--status-success)] hover:bg-[color-mix(in srgb, var(--status-success) 82%, black)] text-white text-sm font-semibold rounded-full transition-colors shadow-md">
+              <Plus size={16} /> Novo UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
             </button>
           </div>
         </div>
@@ -372,21 +372,21 @@ export default function UsuariosPage() {
         )}
 
         {/* Filtros */}
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-card p-4 mb-6">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card p-4 mb-6">
           <div className="flex flex-wrap gap-3">
             <input type="text" value={filtroNome} onChange={(e) => setFiltroNome(e.target.value)} placeholder="Filtrar por Nome"
-              className="flex-1 min-w-[200px] px-5 py-2.5 bg-[#F0F4F8] border-0 rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all" />
+              className="flex-1 min-w-[200px] px-5 py-2.5 bg-[var(--bg-input)] border-0 rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all" />
             <input type="text" value={filtroEmail} onChange={(e) => setFiltroEmail(e.target.value)} placeholder="Filtrar por Email"
-              className="flex-1 min-w-[200px] px-5 py-2.5 bg-[#F0F4F8] border-0 rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all" />
+              className="flex-1 min-w-[200px] px-5 py-2.5 bg-[var(--bg-input)] border-0 rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all" />
             <input type="text" value={filtroDepartamento} onChange={(e) => setFiltroDepartamento(e.target.value)} placeholder="Filtrar por Departamento"
-              className="flex-1 min-w-[200px] px-5 py-2.5 bg-[#F0F4F8] border-0 rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all" />
+              className="flex-1 min-w-[200px] px-5 py-2.5 bg-[var(--bg-input)] border-0 rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all" />
             <CustomSelect
               value={filtroStatus}
-              onValueChange={(v) => setFiltroStatus(v as "Todos" | "Ativo" | "Excluído")}
+              onValueChange={(v) => setFiltroStatus(v as "Todos" | "Ativo" | "Exclu\u00EDdo")}
               options={[
                 { value: "Todos", label: "Todos" },
                 { value: "Ativo", label: "Ativo" },
-                { value: "Excluído", label: "Excluído" },
+                { value: "Exclu\u00EDdo", label: "Exclu\u00EDdo" },
               ]}
               className="min-w-[160px] w-auto"
             />
@@ -394,59 +394,59 @@ export default function UsuariosPage() {
         </div>
 
         {/* Tabela */}
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-card overflow-hidden">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-[#F0F4F8]">
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Nome</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Email</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Departamento</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Filiais</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Dashboards</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Acesso</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Status</th>
-                  <th className="px-5 py-3 text-center text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Ações</th>
+                <tr className="bg-[var(--bg-input)]">
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Nome</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Email</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Departamento</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Filiais</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Dashboards</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Acesso</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Status</th>
+                  <th className="px-5 py-3 text-center text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">AÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e2e8f0]">
                 {!isLoaded ? (
-                  <tr><td colSpan={8} className="px-5 py-12 text-center"><Loader2 size={24} className="animate-spin text-[#4B5FBF] mx-auto" /></td></tr>
+                  <tr><td colSpan={8} className="px-5 py-12 text-center"><Loader2 size={24} className="animate-spin text-[var(--brand-primary)] mx-auto" /></td></tr>
                 ) : paginated.length === 0 ? (
-                  <tr><td colSpan={8} className="px-5 py-12 text-center text-[#6C757D]">Nenhum usuário encontrado</td></tr>
+                  <tr><td colSpan={8} className="px-5 py-12 text-center text-[var(--text-secondary)]">Nenhum usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio encontrado</td></tr>
                 ) : (
                   paginated.map((u, idx) => (
-                    <tr key={u.id} className={idx % 2 === 0 ? "bg-white" : "bg-[#F8FAFC]"}>
-                      <td className="px-5 py-4 text-sm font-medium text-[#333333]">{u.nome}</td>
-                      <td className="px-5 py-4 text-sm text-[#6C757D]">{u.email}</td>
-                      <td className="px-5 py-4 text-sm text-[#6C757D]">{u.departamento}</td>
+                    <tr key={u.id} className={idx % 2 === 0 ? "bg-white" : "bg-[var(--bg-panel-soft)]"}>
+                      <td className="px-5 py-4 text-sm font-medium text-[var(--text-primary)]">{u.nome}</td>
+                      <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">{u.email}</td>
+                      <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">{u.departamento}</td>
                       <td className="px-5 py-4 text-sm">
                         {u.filiais?.length > 0 ? (
                           <span className="flex items-center gap-1">
-                            <Building2 size={13} className="text-[#4B5FBF]" />
-                            <span className="font-medium text-[#4B5FBF]">{u.filiais.length}</span>
-                            <span className="text-[#6C757D]">filial{u.filiais.length !== 1 ? "is" : ""}</span>
+                            <Building2 size={13} className="text-[var(--brand-primary)]" />
+                            <span className="font-medium text-[var(--brand-primary)]">{u.filiais.length}</span>
+                            <span className="text-[var(--text-secondary)]">filial{u.filiais.length !== 1 ? "is" : ""}</span>
                           </span>
                         ) : (
-                          <span className="text-[#cbd5e1]">—</span>
+                          <span className="text-[#cbd5e1]">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</span>
                         )}
                       </td>
                       <td className="px-5 py-4 text-sm">
                         {u.dashboards?.length > 0 ? (
                           <span className="flex items-center gap-1">
-                            <LayoutDashboard size={13} className="text-[#28A745]" />
-                            <span className="font-medium text-[#28A745]">{u.dashboards.length}</span>
-                            <span className="text-[#6C757D]">dashboard{u.dashboards.length !== 1 ? "s" : ""}</span>
+                            <LayoutDashboard size={13} className="text-[var(--status-success)]" />
+                            <span className="font-medium text-[var(--status-success)]">{u.dashboards.length}</span>
+                            <span className="text-[var(--text-secondary)]">dashboard{u.dashboards.length !== 1 ? "s" : ""}</span>
                           </span>
                         ) : (
-                          <span className="text-[#cbd5e1]">—</span>
+                          <span className="text-[#cbd5e1]">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</span>
                         )}
                       </td>
                       <td className="px-5 py-4 text-sm">
-                        <span className="px-3 py-1 bg-[#4B5FBF]/10 text-[#4B5FBF] rounded-full text-xs font-medium">{u.acesso}</span>
+                        <span className="px-3 py-1 bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] rounded-full text-xs font-medium">{u.acesso}</span>
                       </td>
                       <td className="px-5 py-4 text-sm">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${u.status === "Ativo" ? "bg-[#28A745]/10 text-[#28A745]" : "bg-[#6C757D]/10 text-[#6C757D]"}`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${u.status === "Ativo" ? "bg-[var(--status-success)]/10 text-[var(--status-success)]" : "bg-[var(--text-secondary)]/10 text-[var(--text-secondary)]"}`}>
                           {u.status}
                         </span>
                       </td>
@@ -454,8 +454,8 @@ export default function UsuariosPage() {
                         <div className="flex items-center justify-center gap-1">
                           <button onClick={() => openEdit(u)}
                             title="Editar"
-                            className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#4B5FBF]/10 transition-colors">
-                            <Pencil size={15} className="text-[#4B5FBF]" />
+                            className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[var(--brand-primary)]/10 transition-colors">
+                            <Pencil size={15} className="text-[var(--brand-primary)]" />
                           </button>
                           <button onClick={() => openResetPassword(u)}
                             title="Redefinir senha"
@@ -463,11 +463,11 @@ export default function UsuariosPage() {
                             className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-amber-50 transition-colors disabled:opacity-50">
                             <KeyRound size={15} className="text-amber-500" />
                           </button>
-                          {u.status === "Excluído" && (
+                          {u.status === "Exclu\u00EDdo" && (
                             <button onClick={() => handleReativar(u)}
                               title="Reativar"
-                              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#28A745]/10 transition-colors">
-                              <RotateCcw size={15} className="text-[#28A745]" />
+                              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[var(--status-success)]/10 transition-colors">
+                              <RotateCcw size={15} className="text-[var(--status-success)]" />
                             </button>
                           )}
                           <button onClick={() => handleDelete(u.id)}
@@ -489,11 +489,11 @@ export default function UsuariosPage() {
             </table>
           </div>
 
-          {/* Paginação */}
+          {/* PaginaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o */}
           {isLoaded && filtered.length > itensPorPagina && (
             <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-t border-[#e2e8f0]">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="text-sm text-[#6C757D] whitespace-nowrap shrink-0">Mostrar</span>
+                <span className="text-sm text-[var(--text-secondary)] whitespace-nowrap shrink-0">Mostrar</span>
                 <CustomSelect
                   value={String(itensPorPagina)}
                   onValueChange={(v) => { setItensPorPagina(Number(v)); setPaginaAtual(1); }}
@@ -505,72 +505,72 @@ export default function UsuariosPage() {
                   ]}
                   className="w-[72px] min-w-[72px] shrink-0"
                 />
-                <span className="text-sm text-[#6C757D] whitespace-nowrap">Mostrando {inicio + 1} até {fim} de {filtered.length} itens</span>
+                <span className="text-sm text-[var(--text-secondary)] whitespace-nowrap">Mostrando {inicio + 1} atÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© {fim} de {filtered.length} itens</span>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => setPaginaAtual(1)} disabled={paginaAtual === 1} className="flex items-center justify-center w-8 h-8 rounded-full border border-[#e2e8f0] text-[#6C757D] hover:bg-[#F0F4F8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronsLeft size={16} /></button>
-                <button onClick={() => setPaginaAtual(p => Math.max(1, p - 1))} disabled={paginaAtual === 1} className="flex items-center justify-center w-8 h-8 rounded-full border border-[#e2e8f0] text-[#6C757D] hover:bg-[#F0F4F8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeft size={16} /></button>
-                <span className="px-3 py-1.5 bg-[#4B5FBF] text-white text-sm font-semibold rounded-full">{paginaAtual}</span>
-                <button onClick={() => setPaginaAtual(p => Math.min(totalPaginas, p + 1))} disabled={paginaAtual === totalPaginas} className="flex items-center justify-center w-8 h-8 rounded-full border border-[#e2e8f0] text-[#6C757D] hover:bg-[#F0F4F8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRight size={16} /></button>
-                <button onClick={() => setPaginaAtual(totalPaginas)} disabled={paginaAtual === totalPaginas} className="flex items-center justify-center w-8 h-8 rounded-full border border-[#e2e8f0] text-[#6C757D] hover:bg-[#F0F4F8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronsRight size={16} /></button>
+                <button onClick={() => setPaginaAtual(1)} disabled={paginaAtual === 1} className="flex items-center justify-center w-8 h-8 rounded-full border border-[#e2e8f0] text-[var(--text-secondary)] hover:bg-[var(--bg-input)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronsLeft size={16} /></button>
+                <button onClick={() => setPaginaAtual(p => Math.max(1, p - 1))} disabled={paginaAtual === 1} className="flex items-center justify-center w-8 h-8 rounded-full border border-[#e2e8f0] text-[var(--text-secondary)] hover:bg-[var(--bg-input)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeft size={16} /></button>
+                <span className="px-3 py-1.5 bg-[var(--brand-primary)] text-white text-sm font-semibold rounded-full">{paginaAtual}</span>
+                <button onClick={() => setPaginaAtual(p => Math.min(totalPaginas, p + 1))} disabled={paginaAtual === totalPaginas} className="flex items-center justify-center w-8 h-8 rounded-full border border-[#e2e8f0] text-[var(--text-secondary)] hover:bg-[var(--bg-input)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRight size={16} /></button>
+                <button onClick={() => setPaginaAtual(totalPaginas)} disabled={paginaAtual === totalPaginas} className="flex items-center justify-center w-8 h-8 rounded-full border border-[#e2e8f0] text-[var(--text-secondary)] hover:bg-[var(--bg-input)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronsRight size={16} /></button>
               </div>
             </div>
           )}
         </div>
 
-        <p className="text-center text-[#6C757D] text-xs mt-8">Via Labs</p>
+        <p className="text-center text-[var(--text-secondary)] text-xs mt-8">Via Labs</p>
       </div>
 
       {/* Modal Criar/Editar */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-[#e2e8f0] flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay)] backdrop-blur-sm p-4">
+          <div className="bg-[var(--bg-panel)] rounded-2xl shadow-2xl w-full max-w-2xl border border-[#e2e8f0] flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0] flex-shrink-0">
-              <h3 className="text-[#4B5FBF] font-bold text-lg">{isEdit ? "Editar Usuário" : "Novo Usuário"}</h3>
-              <button onClick={() => setModalOpen(false)} className="flex items-center justify-center w-8 h-8 rounded-full text-[#6C757D] hover:bg-[#F0F4F8] transition-colors">
+              <h3 className="text-[var(--brand-primary)] font-bold text-lg">{isEdit ? "Editar UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio" : "Novo UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio"}</h3>
+              <button onClick={() => setModalOpen(false)} className="flex items-center justify-center w-8 h-8 rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-input)] transition-colors">
                 <X size={18} />
               </button>
             </div>
 
             <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
               <div>
-                <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Nome Completo *</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Nome Completo *</label>
                 <input type="text" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                  className={`w-full px-5 py-2.5 bg-[#F0F4F8] border rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all ${erros.nome ? "border-red-500" : "border-transparent"}`}
+                  className={`w-full px-5 py-2.5 bg-[var(--bg-input)] border rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all ${erros.nome ? "border-red-500" : "border-transparent"}`}
                   placeholder="Digite o nome completo" />
                 {erros.nome && <p className="text-red-500 text-xs mt-1 ml-3">{erros.nome}</p>}
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Email *</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Email *</label>
                 <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className={`w-full px-5 py-2.5 bg-[#F0F4F8] border rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all ${erros.email ? "border-red-500" : "border-transparent"}`}
+                  className={`w-full px-5 py-2.5 bg-[var(--bg-input)] border rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all ${erros.email ? "border-red-500" : "border-transparent"}`}
                   placeholder="usuario@viagroup.com.br" />
                 {erros.email && <p className="text-red-500 text-xs mt-1 ml-3">{erros.email}</p>}
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Departamento *</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Departamento *</label>
                 <input type="text" value={form.departamento} onChange={(e) => setForm({ ...form, departamento: e.target.value.toUpperCase() })}
-                  className={`w-full px-5 py-2.5 bg-[#F0F4F8] border rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all ${erros.departamento ? "border-red-500" : "border-transparent"}`}
+                  className={`w-full px-5 py-2.5 bg-[var(--bg-input)] border rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all ${erros.departamento ? "border-red-500" : "border-transparent"}`}
                   placeholder="ex: TI, RH, Frota" />
                 {erros.departamento && <p className="text-red-500 text-xs mt-1 ml-3">{erros.departamento}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Nível de Acesso *</label>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel de Acesso *</label>
                   <CustomSelect
                     value={form.acesso}
                     onValueChange={(v) => setForm({ ...form, acesso: v as Usuario["acesso"] })}
                     options={[
-                      { value: "Usuário", label: "Usuário" },
+                      { value: "Usu\u00E1rio", label: "Usu\u00E1rio" },
                       { value: "Matriz", label: "Matriz" },
-                      { value: "Administrador do Locatário", label: "Administrador do Locatário" },
+                      { value: "Administrador do Locat\u00E1rio", label: "Administrador do Locat\u00E1rio" },
                     ]}
                   />
                   {form.acesso === "Matriz" && (
-                    <p className="text-xs text-[#4B5FBF] mt-1.5 ml-1 flex items-center gap-1">
+                    <p className="text-xs text-[var(--brand-primary)] mt-1.5 ml-1 flex items-center gap-1">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
                       Acesso a todas as filiais automaticamente. Selecione os B&apos;Is liberados abaixo.
                     </p>
@@ -578,56 +578,56 @@ export default function UsuariosPage() {
                 </div>
                 {isEdit && (
                   <div>
-                    <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Status</label>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Status</label>
                     <CustomSelect
                       value={form.status}
                       onValueChange={(v) => setForm({ ...form, status: v as Usuario["status"] })}
                       options={[
                         { value: "Ativo", label: "Ativo" },
-                        { value: "Excluído", label: "Excluído" },
+                        { value: "Exclu\u00EDdo", label: "Exclu\u00EDdo" },
                       ]}
                     />
                   </div>
                 )}
               </div>
 
-              {/* Senha (apenas criação) ou Nova Senha (edição) */}
+              {/* Senha (apenas criaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o) ou Nova Senha (ediÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o) */}
               {!isEdit && (
                 <div>
-                  <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Senha Inicial *</label>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Senha Inicial *</label>
                   <div className="relative">
                     <input
                       type={showSenhaEdicao ? "text" : "password"}
                       value={senhaEdicao}
                       onChange={(e) => setSenhaEdicao(e.target.value)}
-                      placeholder="Mínimo 6 caracteres"
-                      className={`w-full px-5 py-2.5 bg-[#F0F4F8] border rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all pr-12 ${erros.senhaEdicao ? "border-red-500" : "border-transparent"}`}
+                      placeholder="MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­nimo 6 caracteres"
+                      className={`w-full px-5 py-2.5 bg-[var(--bg-input)] border rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all pr-12 ${erros.senhaEdicao ? "border-red-500" : "border-transparent"}`}
                     />
                     <button type="button" onClick={() => setShowSenhaEdicao(!showSenhaEdicao)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#4B5FBF] transition-colors">
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--brand-primary)] transition-colors">
                       {showSenhaEdicao ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                   {erros.senhaEdicao && <p className="text-red-500 text-xs mt-1 ml-3">{erros.senhaEdicao}</p>}
-                  <p className="text-xs text-[#94a3b8] mt-1 ml-3">O usuário deverá trocar esta senha no primeiro login</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1 ml-3">O usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio deverÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ trocar esta senha no primeiro login</p>
                 </div>
               )}
 
               {isEdit && (
                 <div>
-                  <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">
-                    Nova Senha <span className="text-[#94a3b8] font-normal">(deixe em branco para não alterar)</span>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">
+                    Nova Senha <span className="text-[var(--text-muted)] font-normal">(deixe em branco para nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o alterar)</span>
                   </label>
                   <div className="relative">
                     <input
                       type={showSenhaEdicao ? "text" : "password"}
                       value={senhaEdicao}
                       onChange={(e) => setSenhaEdicao(e.target.value)}
-                      placeholder="Mínimo 6 caracteres"
-                      className={`w-full px-5 py-2.5 bg-[#F0F4F8] border rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all pr-12 ${erros.senhaEdicao ? "border-red-500" : "border-transparent"}`}
+                      placeholder="MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­nimo 6 caracteres"
+                      className={`w-full px-5 py-2.5 bg-[var(--bg-input)] border rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all pr-12 ${erros.senhaEdicao ? "border-red-500" : "border-transparent"}`}
                     />
                     <button type="button" onClick={() => setShowSenhaEdicao(!showSenhaEdicao)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#4B5FBF] transition-colors">
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--brand-primary)] transition-colors">
                       {showSenhaEdicao ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
@@ -635,12 +635,12 @@ export default function UsuariosPage() {
                 </div>
               )}
 
-              {/* Filiais (apenas para não-admins) */}
-              {form.acesso !== "Administrador do Locatário" && form.acesso !== "Matriz" && (
+              {/* Filiais (apenas para nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o-admins) */}
+              {form.acesso !== "Administrador do Locat\u00E1rio" && form.acesso !== "Matriz" && (
                 <div>
                   {/* Acesso Especial */}
                   <div className="mb-4">
-                    <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Acesso Especial</label>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Acesso Especial</label>
                     <CustomSelect
                       value={acessoEspecialSelecionado}
                       onValueChange={aplicarAcessoEspecial}
@@ -652,15 +652,15 @@ export default function UsuariosPage() {
                           label: `${a.nome}${a.filiais?.length > 0 ? ` (${a.filiais.length} filiais)` : ""}`,
                         }))}
                     />
-                    <p className="text-xs text-[#94a3b8] mt-1 ml-1">
-                      Selecione um acesso para pré-selecionar filiais automaticamente
+                    <p className="text-xs text-[var(--text-muted)] mt-1 ml-1">
+                      Selecione um acesso para prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©-selecionar filiais automaticamente
                     </p>
                   </div>
 
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-[#6C757D]">Filiais</label>
+                    <label className="text-xs font-semibold text-[var(--text-secondary)]">Filiais</label>
                     {form.filiais.length > 0 && (
-                      <span className="flex items-center gap-1 px-2.5 py-0.5 bg-[#4B5FBF]/10 text-[#4B5FBF] rounded-full text-xs font-semibold">
+                      <span className="flex items-center gap-1 px-2.5 py-0.5 bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] rounded-full text-xs font-semibold">
                         <Building2 size={11} />
                         {form.filiais.length} selecionada{form.filiais.length !== 1 ? "s" : ""}
                       </span>
@@ -668,31 +668,31 @@ export default function UsuariosPage() {
                   </div>
 
                   <div className="border border-[#e2e8f0] rounded-2xl overflow-hidden">
-                    <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[#e2e8f0] bg-[#F8FAFC]">
-                      <Search size={14} className="text-[#94a3b8] flex-shrink-0" />
+                    <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[#e2e8f0] bg-[var(--bg-panel-soft)]">
+                      <Search size={14} className="text-[var(--text-muted)] flex-shrink-0" />
                       <input type="text" value={buscaFilial} onChange={(e) => setBuscaFilial(e.target.value)}
-                        placeholder="Buscar filial..." className="flex-1 bg-transparent text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none" />
+                        placeholder="Buscar filial..." className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none" />
                       {buscaFilial && (
-                        <button onClick={() => setBuscaFilial("")} className="text-[#94a3b8] hover:text-[#6C757D]"><X size={13} /></button>
+                        <button onClick={() => setBuscaFilial("")} className="text-[var(--text-muted)] hover:text-[var(--text-secondary)]"><X size={13} /></button>
                       )}
                     </div>
 
                     <div className="overflow-y-auto" style={{ maxHeight: 220 }}>
                       {loadingFiliais ? (
                         <div className="flex items-center justify-center py-8">
-                          <Loader2 size={20} className="animate-spin text-[#4B5FBF]" />
+                          <Loader2 size={20} className="animate-spin text-[var(--brand-primary)]" />
                         </div>
                       ) : filiaisFiltradas.length === 0 ? (
-                        <p className="text-center text-[#94a3b8] text-sm py-6">Nenhuma filial encontrada</p>
+                        <p className="text-center text-[var(--text-muted)] text-sm py-6">Nenhuma filial encontrada</p>
                       ) : (
                         filiaisFiltradas.map((f) => {
                           const checked = form.filiais.includes(f.PLANTA);
                           return (
                             <label key={f.PLANTA}
-                              className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors hover:bg-[#F0F4F8] ${checked ? "bg-[#4B5FBF]/5" : ""}`}>
+                              className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors hover:bg-[var(--bg-input)] ${checked ? "bg-[var(--brand-primary)]/5" : ""}`}>
                               <input type="checkbox" checked={checked} onChange={() => toggleFilial(f.PLANTA)}
-                                className="w-4 h-4 rounded border-[#cbd5e1] text-[#4B5FBF] focus:ring-[#4B5FBF] cursor-pointer flex-shrink-0" />
-                              <span className={`text-sm leading-tight ${checked ? "text-[#4B5FBF] font-medium" : "text-[#333333]"}`}>
+                                className="w-4 h-4 rounded border-[#cbd5e1] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)] cursor-pointer flex-shrink-0" />
+                              <span className={`text-sm leading-tight ${checked ? "text-[var(--brand-primary)] font-medium" : "text-[var(--text-primary)]"}`}>
                                 {f.PLANTA}
                               </span>
                             </label>
@@ -702,25 +702,25 @@ export default function UsuariosPage() {
                     </div>
 
                     {form.filiais.length > 0 && !buscaFilial && (
-                      <div className="border-t border-[#e2e8f0] px-4 py-2 bg-[#F8FAFC]">
+                      <div className="border-t border-[#e2e8f0] px-4 py-2 bg-[var(--bg-panel-soft)]">
                         <button onClick={() => setForm({ ...form, filiais: [] })}
                           className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors">
-                          Limpar seleção
+                          Limpar seleÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o
                         </button>
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-[#94a3b8] mt-1 ml-1">Administradores têm acesso a todas as filiais automaticamente</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1 ml-1">Administradores tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªm acesso a todas as filiais automaticamente</p>
                 </div>
               )}
 
-              {/* Dashboards (apenas para não-admins) */}
-              {form.acesso !== "Administrador do Locatário" && (
+              {/* Dashboards (apenas para nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o-admins) */}
+              {form.acesso !== "Administrador do Locat\u00E1rio" && (
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-[#6C757D]">Dashboards</label>
+                    <label className="text-xs font-semibold text-[var(--text-secondary)]">Dashboards</label>
                     {form.dashboards.length > 0 && (
-                      <span className="flex items-center gap-1 px-2.5 py-0.5 bg-[#28A745]/10 text-[#28A745] rounded-full text-xs font-semibold">
+                      <span className="flex items-center gap-1 px-2.5 py-0.5 bg-[var(--status-success)]/10 text-[var(--status-success)] rounded-full text-xs font-semibold">
                         <LayoutDashboard size={11} />
                         {form.dashboards.length} selecionado{form.dashboards.length !== 1 ? "s" : ""}
                       </span>
@@ -728,32 +728,32 @@ export default function UsuariosPage() {
                   </div>
 
                   <div className="border border-[#e2e8f0] rounded-2xl overflow-hidden">
-                    <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[#e2e8f0] bg-[#F8FAFC]">
-                      <Search size={14} className="text-[#94a3b8] flex-shrink-0" />
+                    <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[#e2e8f0] bg-[var(--bg-panel-soft)]">
+                      <Search size={14} className="text-[var(--text-muted)] flex-shrink-0" />
                       <input type="text" value={buscaDashboard} onChange={(e) => setBuscaDashboard(e.target.value)}
-                        placeholder="Buscar dashboard..." className="flex-1 bg-transparent text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none" />
+                        placeholder="Buscar dashboard..." className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none" />
                       {buscaDashboard && (
-                        <button onClick={() => setBuscaDashboard("")} className="text-[#94a3b8] hover:text-[#6C757D]"><X size={13} /></button>
+                        <button onClick={() => setBuscaDashboard("")} className="text-[var(--text-muted)] hover:text-[var(--text-secondary)]"><X size={13} /></button>
                       )}
                     </div>
 
                     <div className="overflow-y-auto" style={{ maxHeight: 180 }}>
                       {dashboardsFiltrados.length === 0 ? (
-                        <p className="text-center text-[#94a3b8] text-sm py-6">Nenhum dashboard encontrado</p>
+                        <p className="text-center text-[var(--text-muted)] text-sm py-6">Nenhum dashboard encontrado</p>
                       ) : (
                         dashboardsFiltrados.map((d) => {
                           const checked = form.dashboards.includes(d.id);
                           return (
                             <label key={d.id}
-                              className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors hover:bg-[#F0F4F8] ${checked ? "bg-[#28A745]/5" : ""}`}>
+                              className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors hover:bg-[var(--bg-input)] ${checked ? "bg-[var(--status-success)]/5" : ""}`}>
                               <input type="checkbox" checked={checked} onChange={() => toggleDashboard(d.id)}
-                                className="w-4 h-4 rounded border-[#cbd5e1] text-[#28A745] focus:ring-[#28A745] cursor-pointer flex-shrink-0" />
+                                className="w-4 h-4 rounded border-[#cbd5e1] text-[var(--status-success)] focus:ring-[var(--status-success)] cursor-pointer flex-shrink-0" />
                               <div className="flex flex-col min-w-0">
-                                <span className={`text-sm leading-tight ${checked ? "text-[#28A745] font-medium" : "text-[#333333]"}`}>
+                                <span className={`text-sm leading-tight ${checked ? "text-[var(--status-success)] font-medium" : "text-[var(--text-primary)]"}`}>
                                   {d.nome}
                                 </span>
                                 {d.setor && (
-                                  <span className="text-xs text-[#94a3b8] leading-tight">{d.setor}</span>
+                                  <span className="text-xs text-[var(--text-muted)] leading-tight">{d.setor}</span>
                                 )}
                               </div>
                             </label>
@@ -763,26 +763,26 @@ export default function UsuariosPage() {
                     </div>
 
                     {form.dashboards.length > 0 && !buscaDashboard && (
-                      <div className="border-t border-[#e2e8f0] px-4 py-2 bg-[#F8FAFC]">
+                      <div className="border-t border-[#e2e8f0] px-4 py-2 bg-[var(--bg-panel-soft)]">
                         <button onClick={() => setForm({ ...form, dashboards: [] })}
                           className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors">
-                          Limpar seleção
+                          Limpar seleÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o
                         </button>
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-[#94a3b8] mt-1 ml-1">Administradores têm acesso a todos os dashboards automaticamente</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1 ml-1">Administradores tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªm acesso a todos os dashboards automaticamente</p>
                 </div>
               )}
             </div>
 
-            <div className="px-6 py-4 bg-[#F8FAFC] flex items-center justify-end gap-3 flex-shrink-0 border-t border-[#e2e8f0]">
+            <div className="px-6 py-4 bg-[var(--bg-panel-soft)] flex items-center justify-end gap-3 flex-shrink-0 border-t border-[#e2e8f0]">
               <button onClick={() => setModalOpen(false)}
-                className="px-6 py-2.5 border border-[#6C757D] text-[#6C757D] text-sm font-semibold rounded-full hover:bg-[#F0F4F8] transition-colors">
+                className="px-6 py-2.5 border border-[var(--text-secondary)] text-[var(--text-secondary)] text-sm font-semibold rounded-full hover:bg-[var(--bg-input)] transition-colors">
                 Cancelar
               </button>
               <button onClick={handleSave} disabled={saving}
-                className="flex items-center gap-2 px-6 py-2.5 bg-[#4B5FBF] hover:bg-[#4040B0] text-white text-sm font-semibold rounded-full transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed">
+                className="flex items-center gap-2 px-6 py-2.5 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white text-sm font-semibold rounded-full transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed">
                 {saving ? <><Loader2 size={14} className="animate-spin" />Salvando...</> : <><Save size={14} />Salvar</>}
               </button>
             </div>
@@ -792,19 +792,19 @@ export default function UsuariosPage() {
 
       {/* Modal Redefinir Senha */}
       {resetPasswordModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-[#e2e8f0] overflow-hidden max-h-[90dvh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay)] backdrop-blur-sm p-4">
+          <div className="bg-[var(--bg-panel)] rounded-2xl shadow-2xl w-full max-w-md border border-[#e2e8f0] overflow-hidden max-h-[90dvh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0] flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center">
                   <KeyRound size={20} className="text-amber-500" />
                 </div>
                 <div>
-                  <h3 className="text-[#4B5FBF] font-bold text-lg">Redefinir Senha</h3>
-                  <p className="text-xs text-[#6C757D]">{resettingUser?.nome}</p>
+                  <h3 className="text-[var(--brand-primary)] font-bold text-lg">Redefinir Senha</h3>
+                  <p className="text-xs text-[var(--text-secondary)]">{resettingUser?.nome}</p>
                 </div>
               </div>
-              <button onClick={() => setResetPasswordModalOpen(false)} className="flex items-center justify-center w-8 h-8 rounded-full text-[#6C757D] hover:bg-[#F0F4F8] transition-colors">
+              <button onClick={() => setResetPasswordModalOpen(false)} className="flex items-center justify-center w-8 h-8 rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-input)] transition-colors">
                 <X size={18} />
               </button>
             </div>
@@ -812,39 +812,39 @@ export default function UsuariosPage() {
             <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
               <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
                 <p className="text-xs text-amber-800 leading-relaxed">
-                  <strong className="font-semibold">Importante:</strong> O usuário será obrigado a trocar a senha no próximo login.
+                  <strong className="font-semibold">Importante:</strong> O usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio serÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ obrigado a trocar a senha no prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ximo login.
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Nova Senha *</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Nova Senha *</label>
                 <div className="relative">
                   <input
                     type={showNovaSenha ? "text" : "password"}
                     value={novaSenha}
                     onChange={(e) => setNovaSenha(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
-                    className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all pr-12"
+                    placeholder="MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­nimo 6 caracteres"
+                    className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all pr-12"
                   />
                   <button type="button" onClick={() => setShowNovaSenha(!showNovaSenha)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#4B5FBF] transition-colors">
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--brand-primary)] transition-colors">
                     {showNovaSenha ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Confirmar Senha *</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Confirmar Senha *</label>
                 <div className="relative">
                   <input
                     type={showConfirmarSenha ? "text" : "password"}
                     value={confirmarSenha}
                     onChange={(e) => setConfirmarSenha(e.target.value)}
                     placeholder="Repita a senha"
-                    className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all pr-12"
+                    className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all pr-12"
                   />
                   <button type="button" onClick={() => setShowConfirmarSenha(!showConfirmarSenha)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#4B5FBF] transition-colors">
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--brand-primary)] transition-colors">
                     {showConfirmarSenha ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
@@ -858,13 +858,13 @@ export default function UsuariosPage() {
               )}
             </div>
 
-            <div className="px-6 py-4 bg-[#F8FAFC] flex items-center justify-end gap-3 border-t border-[#e2e8f0] flex-shrink-0">
+            <div className="px-6 py-4 bg-[var(--bg-panel-soft)] flex items-center justify-end gap-3 border-t border-[#e2e8f0] flex-shrink-0">
               <button onClick={() => setResetPasswordModalOpen(false)}
-                className="px-6 py-2.5 border border-[#6C757D] text-[#6C757D] text-sm font-semibold rounded-full hover:bg-[#F0F4F8] transition-colors">
+                className="px-6 py-2.5 border border-[var(--text-secondary)] text-[var(--text-secondary)] text-sm font-semibold rounded-full hover:bg-[var(--bg-input)] transition-colors">
                 Cancelar
               </button>
               <button onClick={handleResetPassword} disabled={resettingPassword}
-                className="flex items-center gap-2 px-6 py-2.5 bg-[#4B5FBF] hover:bg-[#4040B0] text-white text-sm font-semibold rounded-full transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed">
+                className="flex items-center gap-2 px-6 py-2.5 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white text-sm font-semibold rounded-full transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed">
                 {resettingPassword ? (
                   <><Loader2 size={14} className="animate-spin" />Redefinindo...</>
                 ) : (

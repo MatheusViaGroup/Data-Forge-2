@@ -16,7 +16,7 @@ const REPORT_ID    = "a0f8c4b4-5af5-4093-9c5e-1baf95375b59";
 
 function InfoCard({ icon, label, value, mono = false }: { icon: React.ReactNode; label: string; value: string; mono?: boolean }) {
   return (
-    <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm p-5">
+    <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-sm p-5">
       <div className="flex items-center gap-3 mb-3">
         <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#f8fafc] border border-[#e2e8f0] text-[#2563eb]">{icon}</div>
         <p className="text-[#64748b] text-[10px] font-bold uppercase tracking-widest">{label}</p>
@@ -68,7 +68,7 @@ export default function AdminPage() {
           </div>
           <div>
             <h2 className="text-[#0f172a] font-bold text-xl tracking-tight">Painel Administrativo</h2>
-            <p className="text-[#94a3b8] text-sm">Informações de configuração e ambiente</p>
+            <p className="text-[var(--text-muted)] text-sm">Informações de configuração e ambiente</p>
           </div>
         </div>
 
@@ -99,9 +99,9 @@ export default function AdminPage() {
         {/* Alertas de Expiração de Credenciais */}
         {session?.user?.role === "admin" && (
           <div className="mb-6">
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#6C757D] mb-3">Alertas de Expiração</h3>
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] mb-3">Alertas de Expiração</h3>
             {alertasLoading ? (
-              <div className="bg-white rounded-2xl border border-[#e2e8f0] p-5 text-sm text-[#64748b]">
+              <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] p-5 text-sm text-[#64748b]">
                 Carregando alertas...
               </div>
             ) : alertas.length === 0 ? (
@@ -140,7 +140,7 @@ export default function AdminPage() {
                           Credencial expira em <strong>{credencial.diasRestantes} dias</strong> ({credencial.dataExpiracao})
                         </p>
                         <p className="text-xs opacity-80 mt-1">
-                          Usuário Power BI: <code className="bg-white/50 px-1 rounded text-[10px]">{credencial.masterUser}</code>
+                          Usuário Power BI: <code className="bg-[var(--bg-panel)]/50 px-1 rounded text-[10px]">{credencial.masterUser}</code>
                         </p>
                       </div>
                       <a
@@ -169,14 +169,14 @@ export default function AdminPage() {
             { icon: <Users size={14} />, label: "Sessão Atual", status: "Ativa", detail: `${session?.user?.name} · ${session?.user?.role}` },
             { icon: <Settings size={14} />, label: "Ambiente", status: "Next.js 14", detail: "App Router + CredentialsProvider" },
           ].map(card => (
-            <div key={card.label} className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm p-5">
+            <div key={card.label} className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-sm p-5">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5 text-[#64748b] text-[10px] font-bold uppercase tracking-widest">{card.icon}{card.label}</div>
                 <span className="flex items-center gap-1 text-emerald-600 text-[10px] font-semibold bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
                   <CheckCircle2 size={10} />{card.status}
                 </span>
               </div>
-              <p className="text-[#94a3b8] text-xs">{card.detail}</p>
+              <p className="text-[var(--text-muted)] text-xs">{card.detail}</p>
             </div>
           ))}
         </div>

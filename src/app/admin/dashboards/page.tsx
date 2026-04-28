@@ -206,7 +206,7 @@ export default function AdminDashboardsPage() {
     return (
       <AppShell title="Dashboards">
         <div className="flex items-center justify-center h-full">
-          <Loader2 size={28} className="animate-spin text-[#4B5FBF]" />
+          <Loader2 size={28} className="animate-spin text-[var(--brand-primary)]" />
         </div>
       </AppShell>
     );
@@ -218,8 +218,8 @@ export default function AdminDashboardsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-[#4B5FBF] font-bold text-2xl tracking-tight">Dashboards</h2>
-            <p className="text-[#6C757D] text-sm mt-0.5">{dashboards.length} dashboards cadastrados</p>
+            <h2 className="text-[var(--brand-primary)] font-bold text-2xl tracking-tight">Dashboards</h2>
+            <p className="text-[var(--text-secondary)] text-sm mt-0.5">{dashboards.length} dashboards cadastrados</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap sm:justify-end">
             <ImportExportXlsx
@@ -269,7 +269,7 @@ export default function AdminDashboardsPage() {
             />
             <button
               onClick={openCreate}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#28A745] hover:bg-[#218838] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--status-success)] hover:bg-[color-mix(in srgb, var(--status-success) 82%, black)] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
             >
               <Plus size={16} /> Novo Dashboard
             </button>
@@ -288,56 +288,56 @@ export default function AdminDashboardsPage() {
         )}
 
         {/* Filtros */}
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-card p-4 mb-6">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card p-4 mb-6">
           <div className="flex flex-wrap gap-3">
             <input
               type="text"
               value={filtroNome}
               onChange={(e) => setFiltroNome(e.target.value)}
               placeholder="Pesquisar por Nome"
-              className="w-full sm:min-w-[280px] sm:w-auto flex-1 px-5 py-2.5 bg-[#F0F4F8] border-0 rounded-full text-sm text-[#333333] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
+              className="w-full sm:min-w-[280px] sm:w-auto flex-1 px-5 py-2.5 bg-[var(--bg-input)] border-0 rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
             />
           </div>
         </div>
 
         {/* Tabela */}
-        <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-card overflow-hidden">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-[#F0F4F8]">
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Nome</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Descrição</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">RLS</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Status</th>
-                  <th className="px-5 py-3 text-right text-xs font-semibold text-[#6C757D] uppercase tracking-wider whitespace-nowrap">Ações</th>
+                <tr className="bg-[var(--bg-input)]">
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Nome</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Descrição</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">RLS</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Status</th>
+                  <th className="px-5 py-3 text-right text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e2e8f0]">
                 {!isLoaded ? (
                   <tr>
                     <td colSpan={5} className="px-5 py-12 text-center">
-                      <Loader2 size={24} className="animate-spin text-[#4B5FBF] mx-auto" />
+                      <Loader2 size={24} className="animate-spin text-[var(--brand-primary)] mx-auto" />
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-5 py-12 text-center text-[#6C757D]">
+                    <td colSpan={5} className="px-5 py-12 text-center text-[var(--text-secondary)]">
                       Nenhum dashboard encontrado
                     </td>
                   </tr>
                 ) : (
                   filtered.map((d, idx) => (
-                    <tr key={d.id} className={idx % 2 === 0 ? "bg-white" : "bg-[#F8FAFC]"}>
-                      <td className="px-5 py-4 text-sm font-medium text-[#333333] max-w-[200px] truncate">{d.nome}</td>
-                      <td className="px-5 py-4 text-sm text-[#6C757D] max-w-[250px] truncate">{d.descricao}</td>
+                    <tr key={d.id} className={idx % 2 === 0 ? "bg-white" : "bg-[var(--bg-panel-soft)]"}>
+                      <td className="px-5 py-4 text-sm font-medium text-[var(--text-primary)] max-w-[200px] truncate">{d.nome}</td>
+                      <td className="px-5 py-4 text-sm text-[var(--text-secondary)] max-w-[250px] truncate">{d.descricao}</td>
                       <td className="px-5 py-4 text-sm">
-                        <span className={d.rls ? "text-[#4B5FBF] font-medium" : "text-[#6C757D]"}>
+                        <span className={d.rls ? "text-[var(--brand-primary)] font-medium" : "text-[var(--text-secondary)]"}>
                           {d.rls ? "Sim" : "Não"}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-sm">
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#28A745]/10 text-[#28A745]">
+                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-[var(--status-success)]/10 text-[var(--status-success)]">
                           {d.status}
                         </span>
                       </td>
@@ -345,9 +345,9 @@ export default function AdminDashboardsPage() {
                         <div className="relative inline-block">
                           <button
                             onClick={(e) => toggleMenu(d.id, e)}
-                            className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#F0F4F8] transition-colors"
+                            className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[var(--bg-input)] transition-colors"
                           >
-                            <MoreVertical size={16} className="text-[#6C757D]" />
+                            <MoreVertical size={16} className="text-[var(--text-secondary)]" />
                           </button>
 
                           {menuOpenId === d.id && (
@@ -360,9 +360,9 @@ export default function AdminDashboardsPage() {
                             >
                               <button
                                 onClick={() => { setMenuOpenId(null); openEdit(d); }}
-                                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-[#333333] hover:bg-[#F0F4F8] transition-colors text-left"
+                                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-input)] transition-colors text-left"
                               >
-                                <Pencil size={14} className="text-[#4B5FBF]" /> Editar
+                                <Pencil size={14} className="text-[var(--brand-primary)]" /> Editar
                               </button>
                               <button
                                 onClick={() => { setMenuOpenId(null); handleDelete(d.id); }}
@@ -392,18 +392,18 @@ export default function AdminDashboardsPage() {
         </div>
 
         {/* Rodapé */}
-        <p className="text-center text-[#6C757D] text-xs mt-8">
+        <p className="text-center text-[var(--text-secondary)] text-xs mt-8">
           Via Labs
         </p>
       </div>
 
       {/* Modal Criar/Editar */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-[#e2e8f0] overflow-hidden max-h-[90dvh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay)] backdrop-blur-sm p-4">
+          <div className="bg-[var(--bg-panel)] rounded-2xl shadow-2xl w-full max-w-2xl border border-[#e2e8f0] overflow-hidden max-h-[90dvh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0] flex-shrink-0">
-              <h3 className="text-[#4B5FBF] font-bold text-lg">{isEdit ? "Editar Dashboard" : "Novo Dashboard"}</h3>
-              <button onClick={() => setModalOpen(false)} className="flex items-center justify-center w-8 h-8 rounded-full text-[#6C757D] hover:bg-[#F0F4F8] transition-colors">
+              <h3 className="text-[var(--brand-primary)] font-bold text-lg">{isEdit ? "Editar Dashboard" : "Novo Dashboard"}</h3>
+              <button onClick={() => setModalOpen(false)} className="flex items-center justify-center w-8 h-8 rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-input)] transition-colors">
                 <X size={18} />
               </button>
             </div>
@@ -411,40 +411,40 @@ export default function AdminDashboardsPage() {
             <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Nome *</label>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Nome *</label>
                   <input
                     type="text"
                     value={form.nome}
                     onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                    className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
+                    className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
                     placeholder="ex: Custo Por KM"
                   />
                 </div>
 
                 <div className="col-span-2">
-                  <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Descrição</label>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Descrição</label>
                   <input
                     type="text"
                     value={form.descricao}
                     onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-                    className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
+                    className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
                     placeholder="Descrição do dashboard"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Setor</label>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Setor</label>
                   <input
                     type="text"
                     value={form.setor}
                     onChange={(e) => setForm({ ...form, setor: e.target.value })}
-                    className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
+                    className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
                     placeholder="ex: Frota, RH"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Status</label>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Status</label>
                   <CustomSelect
                     value={form.status}
                     onValueChange={(v) => setForm({ ...form, status: v as any })}
@@ -457,35 +457,35 @@ export default function AdminDashboardsPage() {
               </div>
 
               <div className="border-t border-[#e2e8f0] pt-4">
-                <p className="text-xs font-semibold text-[#6C757D] mb-3">Dados de Segurança</p>
+                <p className="text-xs font-semibold text-[var(--text-secondary)] mb-3">Dados de Segurança</p>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Workspace ID *</label>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Workspace ID *</label>
                     <input
                       type="text"
                       value={form.workspaceId}
                       onChange={(e) => setForm({ ...form, workspaceId: e.target.value })}
-                      className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] font-mono focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
+                      className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
                       placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Report ID *</label>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Report ID *</label>
                     <input
                       type="text"
                       value={form.reportId}
                       onChange={(e) => setForm({ ...form, reportId: e.target.value })}
-                      className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] font-mono focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
+                      className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
                       placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#6C757D] mb-1.5">Dataset ID</label>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Dataset ID</label>
                     <input
                       type="text"
                       value={form.datasetId}
                       onChange={(e) => setForm({ ...form, datasetId: e.target.value })}
-                      className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] font-mono focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
+                      className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
                       placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                     />
                   </div>
@@ -494,12 +494,12 @@ export default function AdminDashboardsPage() {
 
               {/* URL Capa SharePoint */}
               <div className="border-t border-[#e2e8f0] pt-4">
-                <p className="text-xs font-semibold text-[#6C757D] mb-3">Capa do Dashboard</p>
+                <p className="text-xs font-semibold text-[var(--text-secondary)] mb-3">Capa do Dashboard</p>
                 <div className="flex items-start gap-4">
                   {/* Preview */}
                   <div
                     className="flex-shrink-0 rounded-xl overflow-hidden flex items-center justify-center"
-                    style={{ width: 72, height: 72, background: "#EEF1FB", border: "1px solid #e2e8f0" }}
+                    style={{ width: 72, height: 72, background: "var(--bg-hover)", border: "1px solid #e2e8f0" }}
                   >
                     {form.urlCapa ? (
                       <img
@@ -509,7 +509,7 @@ export default function AdminDashboardsPage() {
                         onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                       />
                     ) : (
-                      <Link2 size={22} style={{ color: "#C4C6CC" }} />
+                      <Link2 size={22} style={{ color: "var(--text-subtle)" }} />
                     )}
                   </div>
                   {/* Campo URL */}
@@ -519,9 +519,9 @@ export default function AdminDashboardsPage() {
                       value={form.urlCapa ?? ""}
                       onChange={(e) => setForm({ ...form, urlCapa: e.target.value })}
                       placeholder="Cole o link compartilhado do SharePoint..."
-                      className="w-full px-4 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
+                      className="w-full px-4 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
                     />
-                    <p className="text-xs text-[#94a3b8] mt-1.5 pl-1">
+                    <p className="text-xs text-[var(--text-muted)] mt-1.5 pl-1">
                       Cole o link de compartilhamento da imagem da pasta <strong>Fotos b&apos;i</strong> no SharePoint.
                     </p>
                     {form.urlCapa && (
@@ -544,9 +544,9 @@ export default function AdminDashboardsPage() {
                     id="rls"
                     checked={form.rls}
                     onChange={(e) => setForm({ ...form, rls: e.target.checked })}
-                    className="w-4 h-4 rounded border-[#e2e8f0] text-[#4B5FBF] focus:ring-[#4B5FBF]"
+                    className="w-4 h-4 rounded border-[#e2e8f0] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
                   />
-                  <label htmlFor="rls" className="text-sm text-[#333333] font-medium">
+                  <label htmlFor="rls" className="text-sm text-[var(--text-primary)] font-medium">
                     Possui RLS?
                   </label>
                 </div>
@@ -556,10 +556,10 @@ export default function AdminDashboardsPage() {
                       type="text"
                       value={form.rlsRole ?? ""}
                       onChange={(e) => setForm({ ...form, rlsRole: e.target.value })}
-                      className="w-full px-5 py-2.5 bg-[#F0F4F8] border border-transparent rounded-full text-sm text-[#333333] font-mono focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
+                      className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
                       placeholder="Nome do Parametro"
                     />
-                    <p className="text-xs text-[#94a3b8] mt-1 pl-2">
+                    <p className="text-xs text-[var(--text-muted)] mt-1 pl-2">
                       O nome do parametro acima deve estar igual ao do B'i, a formalua que deve ser inserida no parametro é: <code className="bg-[#f1f5f9] px-1 rounded">CONTAINSSTRING(CUSTOMDATA(), [NOME_EXIBICAO])()</code>
                     </p>
                   </div>
@@ -567,17 +567,17 @@ export default function AdminDashboardsPage() {
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-[#F8FAFC] flex items-center justify-end gap-3 flex-shrink-0">
+            <div className="px-6 py-4 bg-[var(--bg-panel-soft)] flex items-center justify-end gap-3 flex-shrink-0">
               <button
                 onClick={() => setModalOpen(false)}
-                className="px-6 py-2.5 border border-[#6C757D] text-[#6C757D] text-sm font-semibold rounded-full hover:bg-[#F0F4F8] transition-colors"
+                className="px-6 py-2.5 border border-[var(--text-secondary)] text-[var(--text-secondary)] text-sm font-semibold rounded-full hover:bg-[var(--bg-input)] transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-6 py-2.5 bg-[#4B5FBF] hover:bg-[#4040B0] text-white text-sm font-semibold rounded-full transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-6 py-2.5 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white text-sm font-semibold rounded-full transition-colors shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {saving ? <><Loader2 size={14} className="animate-spin" />Salvando...</> : <><Save size={14} />Salvar</>}
               </button>

@@ -58,16 +58,16 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center"
-      style={{ background: "#FFFFFF" }}
+      style={{ background: "var(--bg-panel)" }}
     >
       {/* Card central */}
       <div
         className="w-full mx-4"
         style={{
           maxWidth: "480px",
-          background: "#F2F3F5",
+          background: "var(--bg-panel-soft)",
           borderRadius: "16px",
-          border: "1px solid #E4E5E9",
+          border: "1px solid var(--border-soft)",
           padding: "48px 44px",
         }}
       >
@@ -76,6 +76,7 @@ export default function LoginPage() {
           <img
             src="https://viagroup.com.br/assets/via_group-22fac685.png"
             alt="Via Group"
+            className="logo-dark"
             style={{ width: "160px", height: "auto", objectFit: "contain" }}
           />
         </div>
@@ -83,7 +84,7 @@ export default function LoginPage() {
         {/* Subtítulo */}
         <p
           className="text-center mb-8"
-          style={{ color: "#6B7280", fontSize: "14px" }}
+          style={{ color: "var(--text-secondary)", fontSize: "14px" }}
         >
           Insira suas credenciais para acessar o sistema
         </p>
@@ -92,7 +93,7 @@ export default function LoginPage() {
         {error && (
           <div
             className="flex items-center gap-2 mb-5 px-4 py-3 rounded-lg"
-            style={{ background: "#FEE2E2", border: "1px solid #FCA5A5", color: "#DC2626", fontSize: "13px" }}
+            style={{ background: "#FEE2E2", border: "1px solid #FCA5A5", color: "var(--status-danger)", fontSize: "13px" }}
           >
             <AlertCircle size={15} className="flex-shrink-0" />
             {error}
@@ -104,7 +105,7 @@ export default function LoginPage() {
           <div>
             <label
               htmlFor="email"
-              style={{ display: "block", fontSize: "14px", fontWeight: 600, color: "#1A1A2E", marginBottom: "6px" }}
+              style={{ display: "block", fontSize: "14px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "6px" }}
             >
               E-mail
             </label>
@@ -118,16 +119,16 @@ export default function LoginPage() {
               style={{
                 width: "100%",
                 padding: "10px 14px",
-                background: "#FFFFFF",
-                border: "1px solid #E4E5E9",
+                background: "var(--bg-panel)",
+                border: "1px solid var(--border-soft)",
                 borderRadius: "8px",
                 fontSize: "14px",
-                color: "#1A1A2E",
+                color: "var(--text-primary)",
                 outline: "none",
                 transition: "border-color 0.15s",
               }}
-              onFocus={e => (e.currentTarget.style.borderColor = "#2454A4")}
-              onBlur={e => (e.currentTarget.style.borderColor = "#E4E5E9")}
+              onFocus={e => (e.currentTarget.style.borderColor = "var(--brand-primary)")}
+              onBlur={e => (e.currentTarget.style.borderColor = "var(--border-soft)")}
             />
           </div>
 
@@ -135,7 +136,7 @@ export default function LoginPage() {
           <div>
             <label
               htmlFor="password"
-              style={{ display: "block", fontSize: "14px", fontWeight: 600, color: "#1A1A2E", marginBottom: "6px" }}
+              style={{ display: "block", fontSize: "14px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "6px" }}
             >
               Senha
             </label>
@@ -150,24 +151,24 @@ export default function LoginPage() {
                 style={{
                   width: "100%",
                   padding: "10px 42px 10px 14px",
-                  background: "#FFFFFF",
-                  border: "1px solid #E4E5E9",
+                  background: "var(--bg-panel)",
+                  border: "1px solid var(--border-soft)",
                   borderRadius: "8px",
                   fontSize: "14px",
-                  color: "#1A1A2E",
+                  color: "var(--text-primary)",
                   outline: "none",
                   transition: "border-color 0.15s",
                 }}
-                onFocus={e => (e.currentTarget.style.borderColor = "#2454A4")}
-                onBlur={e => (e.currentTarget.style.borderColor = "#E4E5E9")}
+                onFocus={e => (e.currentTarget.style.borderColor = "var(--brand-primary)")}
+                onBlur={e => (e.currentTarget.style.borderColor = "var(--border-soft)")}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                style={{ color: "#9CA3AF" }}
-                onMouseEnter={e => (e.currentTarget.style.color = "#2454A4")}
-                onMouseLeave={e => (e.currentTarget.style.color = "#9CA3AF")}
+                style={{ color: "var(--text-muted)" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "var(--brand-primary)")}
+                onMouseLeave={e => (e.currentTarget.style.color = "var(--text-muted)")}
               >
                 {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
               </button>
@@ -181,8 +182,8 @@ export default function LoginPage() {
             className="w-full flex items-center justify-center gap-2 transition-all duration-150"
             style={{
               padding: "12px",
-              background: loading ? "#3A6BC4" : "#2454A4",
-              color: "#FFFFFF",
+              background: loading ? "var(--brand-primary-hover)" : "var(--brand-primary)",
+              color: "var(--bg-panel)",
               fontWeight: 600,
               fontSize: "15px",
               borderRadius: "8px",
@@ -190,8 +191,8 @@ export default function LoginPage() {
               cursor: loading ? "not-allowed" : "pointer",
               marginTop: "8px",
             }}
-            onMouseEnter={e => { if (!loading) (e.currentTarget.style.background = "#1B3D7B"); }}
-            onMouseLeave={e => { if (!loading) (e.currentTarget.style.background = "#2454A4"); }}
+            onMouseEnter={e => { if (!loading) (e.currentTarget.style.background = "var(--brand-primary-hover)"); }}
+            onMouseLeave={e => { if (!loading) (e.currentTarget.style.background = "var(--brand-primary)"); }}
           >
             {loading ? (
               <>

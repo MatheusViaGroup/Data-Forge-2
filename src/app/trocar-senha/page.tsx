@@ -60,7 +60,7 @@ export default function TrocarSenhaPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      style={{ background: "linear-gradient(135deg, #5A6FD6 0%, #4040B0 100%)" }}
+      style={{ background: "linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%)" }}
     >
       {/* Decoração de fundo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
@@ -69,17 +69,17 @@ export default function TrocarSenhaPage() {
       </div>
 
       <div className="relative w-full max-w-[480px] mx-4">
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-[var(--bg-panel)] rounded-2xl shadow-2xl overflow-hidden">
           <div className="px-10 py-10">
             {/* Ícone + Título */}
             <div className="flex flex-col items-center mb-8">
-              <div className="flex items-center justify-center w-14 h-14 rounded-full bg-[#4B5FBF]/10 mb-4">
-                <ShieldCheck size={28} className="text-[#4B5FBF]" />
+              <div className="flex items-center justify-center w-14 h-14 rounded-full bg-[var(--brand-primary)]/10 mb-4">
+                <ShieldCheck size={28} className="text-[var(--brand-primary)]" />
               </div>
-              <h1 className="text-xl font-bold text-[#333333] text-center">
+              <h1 className="text-xl font-bold text-[var(--text-primary)] text-center">
                 Defina sua nova senha
               </h1>
-              <p className="text-sm text-[#6C757D] text-center mt-2">
+              <p className="text-sm text-[var(--text-secondary)] text-center mt-2">
                 {session?.user?.name
                   ? `Olá, ${session.user.name.split(" ")[0]}! `
                   : ""}
@@ -90,11 +90,11 @@ export default function TrocarSenhaPage() {
             {/* Sucesso */}
             {sucesso ? (
               <div className="flex flex-col items-center gap-3 py-4">
-                <CheckCircle2 size={40} className="text-[#28A745]" />
-                <p className="text-[#28A745] font-semibold text-center">
+                <CheckCircle2 size={40} className="text-[var(--status-success)]" />
+                <p className="text-[var(--status-success)] font-semibold text-center">
                   Senha alterada com sucesso!
                 </p>
-                <p className="text-[#6C757D] text-sm text-center">
+                <p className="text-[var(--text-secondary)] text-sm text-center">
                   Redirecionando para o login...
                 </p>
               </div>
@@ -110,7 +110,7 @@ export default function TrocarSenhaPage() {
 
                 {/* Nova senha */}
                 <div>
-                  <label className="block text-xs font-semibold text-[#6C757D] mb-1.5 ml-1">
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
                     Nova Senha
                   </label>
                   <div className="relative">
@@ -120,12 +120,12 @@ export default function TrocarSenhaPage() {
                       onChange={(e) => setNovaSenha(e.target.value)}
                       placeholder="Mínimo 6 caracteres"
                       required
-                      className="w-full px-6 py-3.5 bg-[#F0F4F8] border-0 rounded-full text-[#333333] placeholder-[#94a3b8] text-sm focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all pr-12"
+                      className="w-full px-6 py-3.5 bg-[var(--bg-input)] border-0 rounded-full text-[var(--text-primary)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all pr-12"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNova(!showNova)}
-                      className="absolute right-5 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#4B5FBF] transition-colors"
+                      className="absolute right-5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--brand-primary)] transition-colors"
                     >
                       {showNova ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -134,7 +134,7 @@ export default function TrocarSenhaPage() {
 
                 {/* Confirmar senha */}
                 <div>
-                  <label className="block text-xs font-semibold text-[#6C757D] mb-1.5 ml-1">
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5 ml-1">
                     Confirmar Nova Senha
                   </label>
                   <div className="relative">
@@ -144,19 +144,19 @@ export default function TrocarSenhaPage() {
                       onChange={(e) => setConfirmarSenha(e.target.value)}
                       placeholder="Repita a nova senha"
                       required
-                      className="w-full px-6 py-3.5 bg-[#F0F4F8] border-0 rounded-full text-[#333333] placeholder-[#94a3b8] text-sm focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all pr-12"
+                      className="w-full px-6 py-3.5 bg-[var(--bg-input)] border-0 rounded-full text-[var(--text-primary)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all pr-12"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmar(!showConfirmar)}
-                      className="absolute right-5 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#4B5FBF] transition-colors"
+                      className="absolute right-5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--brand-primary)] transition-colors"
                     >
                       {showConfirmar ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                   {/* Indicador de match */}
                   {confirmarSenha && (
-                    <p className={`text-xs mt-1 ml-3 ${novaSenha === confirmarSenha ? "text-[#28A745]" : "text-red-500"}`}>
+                    <p className={`text-xs mt-1 ml-3 ${novaSenha === confirmarSenha ? "text-[var(--status-success)]" : "text-red-500"}`}>
                       {novaSenha === confirmarSenha ? "✓ As senhas coincidem" : "As senhas não coincidem"}
                     </p>
                   )}
@@ -165,7 +165,7 @@ export default function TrocarSenhaPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 bg-[#4B5FBF] hover:bg-[#4040B0] text-white font-semibold text-sm rounded-full transition-all duration-200 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+                  className="w-full py-3.5 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white font-semibold text-sm rounded-full transition-all duration-200 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed mt-2"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
