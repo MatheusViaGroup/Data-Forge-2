@@ -163,7 +163,7 @@ export default function Sidebar() {
 
       {/* Sidebar Desktop */}
       <aside
-        className="fixed top-0 left-0 h-screen hidden md:flex flex-col z-30 transition-all duration-300"
+        className="fixed top-0 left-0 h-screen hidden md:flex flex-col z-30 transition-[width] duration-200"
         style={{
           width: collapsed ? "68px" : "230px",
           background: "var(--bg-panel)",
@@ -173,7 +173,7 @@ export default function Sidebar() {
       >
         {/* Logo VIA GROUP + CORE */}
         <div
-          className="flex flex-col items-center pt-6 pb-5 transition-all duration-300"
+          className="flex flex-col items-center pt-6 pb-5"
           style={{ paddingLeft: collapsed ? "12px" : "20px", paddingRight: collapsed ? "12px" : "20px" }}
         >
           {/* Logo oficial Via Group */}
@@ -195,9 +195,9 @@ export default function Sidebar() {
         </div>
 
         {/* Avatar do usuário */}
-        <div className="mb-4 transition-all duration-300" style={{ paddingLeft: collapsed ? "14px" : "16px", paddingRight: collapsed ? "14px" : "16px" }}>
+        <div className="mb-4" style={{ paddingLeft: collapsed ? "14px" : "16px", paddingRight: collapsed ? "14px" : "16px" }}>
           <div
-            className="flex items-center rounded-xl transition-all duration-300"
+            className="flex items-center rounded-xl"
             style={{ background: "var(--bg-panel-soft)", padding: collapsed ? "8px" : "12px", gap: collapsed ? 0 : "12px", justifyContent: collapsed ? "center" : "flex-start" }}
           >
             <div
@@ -218,7 +218,7 @@ export default function Sidebar() {
         </div>
 
         {/* Navegação */}
-        <nav className="flex-1 overflow-y-auto transition-all duration-300" style={{ paddingLeft: collapsed ? "8px" : "12px", paddingRight: collapsed ? "8px" : "12px" }}>
+        <nav className="flex-1 overflow-y-auto" style={{ paddingLeft: collapsed ? "8px" : "12px", paddingRight: collapsed ? "8px" : "12px" }}>
           {!collapsed && (
             <p className="px-3 mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-subtle)" }}>
               Menu
@@ -260,7 +260,7 @@ export default function Sidebar() {
 
         {/* Rodapé: Esconder Menu + Sair */}
         <div
-          className="pb-6 space-y-0.5 transition-all duration-300"
+          className="pb-6 space-y-0.5"
           style={{ borderTop: "1px solid var(--border-default)", paddingTop: "12px", paddingLeft: collapsed ? "8px" : "12px", paddingRight: collapsed ? "8px" : "12px" }}
         >
           <button

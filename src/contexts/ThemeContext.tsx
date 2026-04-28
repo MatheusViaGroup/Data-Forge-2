@@ -16,7 +16,7 @@ const THEME_SESSION_KEY = "via-core-theme";
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>("light");
+  const [theme, setThemeState] = useState<ThemeMode>("dark");
 
   useEffect(() => {
     const saved = sessionStorage.getItem(THEME_SESSION_KEY);
@@ -47,8 +47,8 @@ export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {
     return {
-      theme: "light" as ThemeMode,
-      isDark: false,
+      theme: "dark" as ThemeMode,
+      isDark: true,
       setTheme: () => {},
       toggleTheme: () => {},
     };

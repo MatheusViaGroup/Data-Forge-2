@@ -20,7 +20,7 @@ function Shell({ title, subtitle, children, fullHeight, topBar }: AppShellProps)
 
       {/* Conteúdo principal �?" empurra pela largura da sidebar (desktop) */}
       <div
-        className="flex flex-col flex-1 min-w-0 transition-all duration-300"
+        className="flex flex-col flex-1 min-w-0"
         style={{ marginLeft: collapsed ? "68px" : "230px" }}
       >
         {/* Topbar opcional (filtros, ações) */}
