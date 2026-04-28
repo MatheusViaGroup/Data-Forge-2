@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -14,7 +14,7 @@ import { CustomSelect } from "@/components/ui/CustomSelect";
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
-const TIPOS = ["Filial", "UsuÃ¡rio", "Departamento", "Personalizado"];
+const TIPOS = ["Filial", "Usuário", "Departamento", "Personalizado"];
 
 const emptyForm = (): Omit<ParametroRLS, "id"> & { id: string } => ({
   id: "",
@@ -47,7 +47,7 @@ export default function ParametrosRLSPage() {
   const [form, setForm] = useState(emptyForm());
   const [erros, setErros] = useState<Record<string, string>>({});
 
-  // Carrega dados admin quando a pÃ¡gina monta
+  // Carrega dados admin quando a página monta
   useEffect(() => {
     if (authStatus === "authenticated") {
       loadAdminData();
@@ -79,8 +79,8 @@ export default function ParametrosRLSPage() {
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!form.nome.trim()) e.nome = "Nome Ã© obrigatÃ³rio";
-    if (!form.nomeParametroPowerBI.trim()) e.nomeParametroPowerBI = "Nome do parÃ¢metro no Power BI Ã© obrigatÃ³rio";
+    if (!form.nome.trim()) e.nome = "Nome é obrigatório";
+    if (!form.nomeParametroPowerBI.trim()) e.nomeParametroPowerBI = "Nome do parâmetro no Power BI é obrigatório";
     setErros(e);
     return Object.keys(e).length === 0;
   };
@@ -99,35 +99,35 @@ export default function ParametrosRLSPage() {
       };
       if (isEdit) {
         await updateParametroRLS(form.id, payload);
-        setFeedback({ type: "success", msg: "ParÃ¢metro atualizado com sucesso!" });
+        setFeedback({ type: "success", msg: "Parâmetro atualizado com sucesso!" });
       } else {
         await addParametroRLS(payload);
-        setFeedback({ type: "success", msg: "ParÃ¢metro criado com sucesso!" });
+        setFeedback({ type: "success", msg: "Parâmetro criado com sucesso!" });
       }
       setModalOpen(false);
     } catch {
-      setFeedback({ type: "error", msg: "Erro ao salvar. Verifique sua conexÃ£o." });
+      setFeedback({ type: "error", msg: "Erro ao salvar. Verifique sua conexão." });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Excluir este parÃ¢metro RLS?")) return;
+    if (!confirm("Excluir este parâmetro RLS?")) return;
     try {
       await deleteParametroRLS(id);
-      setFeedback({ type: "success", msg: "ParÃ¢metro excluÃ­do com sucesso!" });
+      setFeedback({ type: "success", msg: "Parâmetro excluído com sucesso!" });
     } catch {
-      setFeedback({ type: "error", msg: "Erro ao excluir parÃ¢metro." });
+      setFeedback({ type: "error", msg: "Erro ao excluir parâmetro." });
     }
   };
 
   const getDashboardNome = (id: string) =>
-    dashboards.find((d) => d.id === id)?.nome ?? "-";
+    dashboards.find((d) => d.id === id)?.nome ?? "—";
 
   if (authStatus === "authenticated" && session?.user?.role !== "admin") {
     return (
-      <AppShell title="ParÃ¢metros RLS">
+      <AppShell title="Parâmetros RLS">
         <div className="flex items-center justify-center h-full">
           <Loader2 size={28} className="animate-spin text-[var(--brand-primary)]" />
         </div>
@@ -136,32 +136,32 @@ export default function ParametrosRLSPage() {
   }
 
   return (
-    <AppShell title="ParÃ¢metros RLS" subtitle="Configure os parÃ¢metros de Row Level Security">
+    <AppShell title="Parâmetros RLS" subtitle="Configure os parâmetros de Row Level Security">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-[var(--brand-primary)] font-bold text-2xl tracking-tight">ParÃ¢metros RLS</h2>
+            <h2 className="text-[var(--brand-primary)] font-bold text-2xl tracking-tight">Parâmetros RLS</h2>
             <p className="text-[var(--text-secondary)] text-sm mt-0.5">
-              Configure os parÃ¢metros de seguranÃ§a por linha do Power BI
+              Configure os parâmetros de segurança por linha do Power BI
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
             <ImportExportXlsx
               nomeTemplate="template_rls"
               cols={[
-                { key: "nome",                 header: "nome",                 instrucao: "Nome do parÃ¢metro RLS",                                  exemplo: "Filial do UsuÃ¡rio" },
-                { key: "nomeParametroPowerBI",  header: "nomeParametroPowerBI", instrucao: "Nome exato do parÃ¢metro no Power BI",                    exemplo: "UserFilial" },
-                { key: "tipo",                 header: "tipo",                 instrucao: "Filial  /  UsuÃ¡rio  /  Departamento  /  Personalizado",   exemplo: "Filial" },
+                { key: "nome",                 header: "nome",                 instrucao: "Nome do parâmetro RLS",                                  exemplo: "Filial do Usuário" },
+                { key: "nomeParametroPowerBI",  header: "nomeParametroPowerBI", instrucao: "Nome exato do parâmetro no Power BI",                    exemplo: "UserFilial" },
+                { key: "tipo",                 header: "tipo",                 instrucao: "Filial  /  Usuário  /  Departamento  /  Personalizado",   exemplo: "Filial" },
                 { key: "dashboardId",          header: "dashboardId",          instrucao: "ID do Dashboard (UUID do banco de dados)",                exemplo: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
-                { key: "tenant",               header: "tenant",               instrucao: "Tenant / domÃ­nio da organizaÃ§Ã£o",                        exemplo: "viagroup.com" },
+                { key: "tenant",               header: "tenant",               instrucao: "Tenant / domínio da organização",                        exemplo: "viagroup.com" },
               ]}
               onImport={async (rows): Promise<ImportResult> => {
                 let success = 0;
                 const errors: string[] = [];
                 for (const row of rows) {
                   if (!row.nome || !row.nomeParametroPowerBI || !row.dashboardId) {
-                    errors.push(`Linha ignorada: nome, nomeParametroPowerBI e dashboardId sÃ£o obrigatÃ³rios (nome: ${row.nome || "?"}).`);
+                    errors.push(`Linha ignorada: nome, nomeParametroPowerBI e dashboardId são obrigatórios (nome: ${row.nome || "?"}).`);
                     continue;
                   }
                   try {
@@ -183,9 +183,9 @@ export default function ParametrosRLSPage() {
             />
             <button
               onClick={openCreate}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--status-success)] hover:bg-[color-mix(in srgb, var(--status-success) 82%, black)] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
             >
-              <Plus size={16} /> Novo ParÃ¢metro
+              <Plus size={16} /> Novo Parâmetro
             </button>
           </div>
         </div>
@@ -211,8 +211,8 @@ export default function ParametrosRLSPage() {
             type="text"
             value={filtroNome}
             onChange={(e) => setFiltroNome(e.target.value)}
-            placeholder="Pesquisar por nome ou parÃ¢metro Power BI..."
-            className="w-full px-5 py-2.5 bg-[var(--bg-input)] border-0 rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
+            placeholder="Pesquisar por nome ou parâmetro Power BI..."
+            className="w-full px-5 py-2.5 bg-[var(--bg-input)] border-0 rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
           />
         </div>
 
@@ -220,7 +220,7 @@ export default function ParametrosRLSPage() {
         <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card overflow-hidden">
           <div className="px-5 py-3 border-b border-[#e2e8f0]">
             <p className="text-[var(--text-secondary)] text-sm font-medium">
-              {filtered.length} parÃ¢metro{filtered.length !== 1 ? "s" : ""} cadastrado{filtered.length !== 1 ? "s" : ""}
+              {filtered.length} parâmetro{filtered.length !== 1 ? "s" : ""} cadastrado{filtered.length !== 1 ? "s" : ""}
             </p>
           </div>
 
@@ -229,11 +229,11 @@ export default function ParametrosRLSPage() {
               <thead>
                 <tr className="bg-[var(--bg-input)]">
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Nome (Portal)</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">ParÃ¢metro Power BI</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Parâmetro Power BI</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Tipo</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Dashboard</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Tenant</th>
-                  <th className="px-5 py-3 text-center text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">AÃ§Ãµes</th>
+                  <th className="px-5 py-3 text-center text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e2e8f0]">
@@ -246,12 +246,12 @@ export default function ParametrosRLSPage() {
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-5 py-12 text-center text-[var(--text-secondary)]">
-                      Nenhum parÃ¢metro RLS encontrado
+                      Nenhum parâmetro RLS encontrado
                     </td>
                   </tr>
                 ) : (
                   filtered.map((p, idx) => (
-                    <tr key={p.id} className={idx % 2 === 0 ? "bg-white" : "bg-[var(--bg-panel-soft)]"}>
+                    <tr key={p.id} className={idx % 2 === 0 ? "bg-[var(--bg-panel)]" : "bg-[var(--bg-panel-soft)]"}>
                       <td className="px-5 py-4 text-sm font-medium text-[var(--text-primary)]">
                         <span className="flex items-center gap-2">
                           <ShieldCheck size={14} className="text-[var(--brand-primary)] flex-shrink-0" />
@@ -269,10 +269,10 @@ export default function ParametrosRLSPage() {
                         </span>
                       </td>
                       <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">
-                        {p.dashboardId ? getDashboardNome(p.dashboardId) : <span className="text-[#cbd5e1]">â€”</span>}
+                        {p.dashboardId ? getDashboardNome(p.dashboardId) : <span className="text-[#cbd5e1]">—</span>}
                       </td>
                       <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">
-                        {p.tenant || <span className="text-[#cbd5e1]">â€”</span>}
+                        {p.tenant || <span className="text-[#cbd5e1]">—</span>}
                       </td>
                       <td className="px-5 py-4 text-center">
                         <div className="flex items-center justify-center gap-1">
@@ -301,15 +301,15 @@ export default function ParametrosRLSPage() {
         </div>
 
         {/* Bloco informativo */}
-        <div className="mt-6 bg-[var(--brand-primary)]/5 border border-[var(--brand-primary)]/20 rounded-2xl p-5">
+        <div className="mt-6 bg-[var(--brand-primary)]/5 border border-[#4B5FBF]/20 rounded-2xl p-5">
           <div className="flex items-start gap-3">
             <ShieldCheck size={18} className="text-[var(--brand-primary)] flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">Como funciona a integraÃ§Ã£o RLS</p>
+              <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">Como funciona a integração RLS</p>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                Cada parÃ¢metro define a relaÃ§Ã£o entre o portal e o Power BI.
-                O <strong>Nome do ParÃ¢metro no Power BI</strong> deve corresponder ao campo usado na DAX da Role RLS.
-                Para tipo <strong>Filial</strong>, o sistema envia automaticamente as filiais do usuÃ¡rio como <code className="bg-[var(--bg-panel)] px-1 rounded">CUSTOMDATA()</code> ao gerar o token de embed.
+                Cada parâmetro define a relação entre o portal e o Power BI.
+                O <strong>Nome do Parâmetro no Power BI</strong> deve corresponder ao campo usado na DAX da Role RLS.
+                Para tipo <strong>Filial</strong>, o sistema envia automaticamente as filiais do usuário como <code className="bg-[var(--bg-panel)] px-1 rounded">CUSTOMDATA()</code> ao gerar o token de embed.
                 Exemplo DAX: <code className="bg-[var(--bg-panel)] px-1 rounded">FIND([PLANTA_ID], CUSTOMDATA(), 1, 0) &gt; 0</code>
               </p>
             </div>
@@ -327,7 +327,7 @@ export default function ParametrosRLSPage() {
           <div className="bg-[var(--bg-panel)] rounded-2xl shadow-2xl w-full max-w-lg border border-[#e2e8f0] flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0] flex-shrink-0">
               <h3 className="text-[var(--brand-primary)] font-bold text-lg">
-                {isEdit ? "Editar RLS Parameter" : "Novo ParÃ¢metro RLS"}
+                {isEdit ? "Editar RLS Parameter" : "Novo Parâmetro RLS"}
               </h3>
               <button
                 onClick={() => setModalOpen(false)}
@@ -345,21 +345,21 @@ export default function ParametrosRLSPage() {
                   type="text"
                   value={form.nome}
                   onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                  className={`w-full px-5 py-2.5 bg-[var(--bg-input)] border rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all ${erros.nome ? "border-red-500" : "border-transparent"}`}
+                  className={`w-full px-5 py-2.5 bg-[var(--bg-input)] border rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all ${erros.nome ? "border-red-500" : "border-transparent"}`}
                   placeholder="ex: Filial Custo por KM"
                 />
                 {erros.nome && <p className="text-red-500 text-xs mt-1 ml-3">{erros.nome}</p>}
                 <p className="text-xs text-[var(--text-muted)] mt-1 ml-3">Identificador interno no portal</p>
               </div>
 
-              {/* Nome do ParÃ¢metro no Power BI */}
+              {/* Nome do Parâmetro no Power BI */}
               <div>
-                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Nome do ParÃ¢metro no Power BI *</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Nome do Parâmetro no Power BI *</label>
                 <input
                   type="text"
                   value={form.nomeParametroPowerBI}
                   onChange={(e) => setForm({ ...form, nomeParametroPowerBI: e.target.value })}
-                  className={`w-full px-5 py-2.5 bg-[var(--bg-input)] border rounded-full text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all ${erros.nomeParametroPowerBI ? "border-red-500" : "border-transparent"}`}
+                  className={`w-full px-5 py-2.5 bg-[var(--bg-input)] border rounded-full text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all ${erros.nomeParametroPowerBI ? "border-red-500" : "border-transparent"}`}
                   placeholder="ex: Filial"
                 />
                 {erros.nomeParametroPowerBI && (
@@ -386,7 +386,7 @@ export default function ParametrosRLSPage() {
                 <CustomSelect
                   value={form.dashboardId}
                   onValueChange={(v) => setForm({ ...form, dashboardId: v })}
-                  placeholder="- Selecione um dashboard -"
+                  placeholder="— Selecione um dashboard —"
                   options={dashboards.map(d => ({ value: d.id, label: d.nome }))}
                 />
               </div>
@@ -397,7 +397,7 @@ export default function ParametrosRLSPage() {
                 <CustomSelect
                   value={form.tenant}
                   onValueChange={(v) => setForm({ ...form, tenant: v })}
-                  placeholder="- Selecione um tenant -"
+                  placeholder="— Selecione um tenant —"
                   options={credenciais.map(c => ({ value: c.tenant, label: `${c.tenant} (${c.nome})` }))}
                 />
               </div>

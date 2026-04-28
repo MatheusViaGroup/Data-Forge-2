@@ -269,7 +269,7 @@ export default function AdminDashboardsPage() {
             />
             <button
               onClick={openCreate}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--status-success)] hover:bg-[color-mix(in srgb, var(--status-success) 82%, black)] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
             >
               <Plus size={16} /> Novo Dashboard
             </button>
@@ -328,7 +328,7 @@ export default function AdminDashboardsPage() {
                   </tr>
                 ) : (
                   filtered.map((d, idx) => (
-                    <tr key={d.id} className={idx % 2 === 0 ? "bg-white" : "bg-[var(--bg-panel-soft)]"}>
+                    <tr key={d.id} className={idx % 2 === 0 ? "bg-[var(--bg-panel)]" : "bg-[var(--bg-panel-soft)]"}>
                       <td className="px-5 py-4 text-sm font-medium text-[var(--text-primary)] max-w-[200px] truncate">{d.nome}</td>
                       <td className="px-5 py-4 text-sm text-[var(--text-secondary)] max-w-[250px] truncate">{d.descricao}</td>
                       <td className="px-5 py-4 text-sm">
@@ -352,7 +352,7 @@ export default function AdminDashboardsPage() {
 
                           {menuOpenId === d.id && (
                             <div
-                              className="fixed bg-white rounded-xl shadow-2xl border border-[#e2e8f0] z-[9999] overflow-hidden w-40"
+                              className="fixed bg-[var(--bg-panel)] rounded-xl shadow-2xl border border-[#e2e8f0] z-[9999] overflow-hidden w-40"
                               style={{
                                 top: `${menuPosition.top}px`,
                                 right: `${menuPosition.right}px`,

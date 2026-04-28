@@ -220,7 +220,7 @@ export default function CredenciaisPage() {
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[var(--status-success)] hover:bg-[color-mix(in srgb, var(--status-success) 82%, black)] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
           >
             <Plus size={16} /> Novo Registro
           </button>
@@ -268,7 +268,7 @@ export default function CredenciaisPage() {
                   </tr>
                 ) : (
                   paginated.map((c, idx) => (
-                    <tr key={c.id} className={idx % 2 === 0 ? "bg-white" : "bg-[var(--bg-panel-soft)]"}>
+                    <tr key={c.id} className={idx % 2 === 0 ? "bg-[var(--bg-panel)]" : "bg-[var(--bg-panel-soft)]"}>
                       <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">{c.id}</td>
                       <td className="px-5 py-4 text-sm font-medium text-[var(--text-primary)]">{c.nome}</td>
                       <td className="px-5 py-4 text-sm text-[var(--text-secondary)] font-mono">{c.tenantId}</td>
@@ -295,7 +295,7 @@ export default function CredenciaisPage() {
 
                           {menuOpenId === c.id && (
                             <div 
-                              className="fixed bg-white rounded-xl shadow-2xl border border-[#e2e8f0] z-[9999] overflow-hidden w-40"
+                              className="fixed bg-[var(--bg-panel)] rounded-xl shadow-2xl border border-[#e2e8f0] z-[9999] overflow-hidden w-40"
                               style={{
                                 top: `${menuPosition.top}px`,
                                 right: `${menuPosition.right}px`,
@@ -403,7 +403,7 @@ export default function CredenciaisPage() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay)] backdrop-blur-sm p-4">
           <div className="bg-[var(--bg-panel)] rounded-2xl shadow-2xl w-full max-w-2xl border border-[#e2e8f0] overflow-hidden max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0] sticky top-0 bg-white z-10">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0] sticky top-0 bg-[var(--bg-panel)] z-10">
               <h3 className="text-[var(--brand-primary)] font-bold text-lg">{isEdit ? "Editar Credencial" : "Novo Registro"}</h3>
               <button onClick={() => setModalOpen(false)} className="flex items-center justify-center w-8 h-8 rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-input)] transition-colors">
                 <X size={18} />

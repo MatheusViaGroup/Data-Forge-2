@@ -163,7 +163,7 @@ export default function Sidebar() {
 
       {/* Sidebar Desktop */}
       <aside
-        className="fixed top-0 left-0 h-screen hidden md:flex flex-col z-30 transition-[width] duration-200"
+        className="fixed top-0 left-0 h-screen hidden md:flex flex-col z-30"
         style={{
           width: collapsed ? "68px" : "230px",
           background: "var(--bg-panel)",

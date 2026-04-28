@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -38,7 +38,7 @@ export default function AcessosEspeciaisPage() {
   // Filtros
   const [filtroNome, setFiltroNome] = useState("");
 
-  // FormulÃ¡rio
+  // Formulário
   const [form, setForm] = useState<Omit<AcessoEspecial, "id"> & { id: string }>({
     id: "", nome: "", descricao: "", filiais: [], status: "Ativo",
   });
@@ -47,7 +47,7 @@ export default function AcessosEspeciaisPage() {
     if (authStatus === "authenticated" && session?.user?.role !== "admin") router.push("/dashboard");
   }, [session, authStatus, router]);
 
-  // Carrega filiais quando abre o modal (uma vez sÃ³)
+  // Carrega filiais quando abre o modal (uma vez só)
   useEffect(() => {
     if (!modalOpen) return;
     if (filiais.length > 0) return;
@@ -59,7 +59,7 @@ export default function AcessosEspeciaisPage() {
       .finally(() => setLoadingFiliais(false));
   }, [modalOpen, filiais.length]);
 
-  // Carrega dados admin quando a pÃ¡gina monta
+  // Carrega dados admin quando a página monta
   useEffect(() => {
     if (authStatus === "authenticated") {
       loadAdminData();
@@ -100,7 +100,7 @@ export default function AcessosEspeciaisPage() {
 
   const handleSave = async () => {
     if (!form.nome) {
-      setFeedback({ type: "error", msg: "Nome Ã© obrigatÃ³rio." });
+      setFeedback({ type: "error", msg: "Nome é obrigatório." });
       return;
     }
 
@@ -127,7 +127,7 @@ export default function AcessosEspeciaisPage() {
       }
       setModalOpen(false);
     } catch {
-      setFeedback({ type: "error", msg: "Erro ao salvar. Verifique sua conexÃ£o." });
+      setFeedback({ type: "error", msg: "Erro ao salvar. Verifique sua conexão." });
     } finally {
       setSaving(false);
     }
@@ -140,7 +140,7 @@ export default function AcessosEspeciaisPage() {
     setDeleting(id);
     try {
       await deleteAcessoEspecial(id);
-      setFeedback({ type: "success", msg: "Acesso Especial excluÃ­do com sucesso!" });
+      setFeedback({ type: "success", msg: "Acesso Especial excluído com sucesso!" });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erro ao excluir acesso especial.";
       setFeedback({ type: "error", msg });
@@ -160,7 +160,7 @@ export default function AcessosEspeciaisPage() {
   }
 
   return (
-    <AppShell title="Acessos Especiais" subtitle="Gerencie perfis de acesso com filiais prÃ©-selecionadas">
+    <AppShell title="Acessos Especiais" subtitle="Gerencie perfis de acesso com filiais pré-selecionadas">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -173,8 +173,8 @@ export default function AcessosEspeciaisPage() {
               nomeTemplate="template_acessos_especiais"
               cols={[
                 { key: "nome",      header: "nome",      instrucao: "Nome do acesso especial",                     exemplo: "Acesso Filial SP" },
-                { key: "descricao", header: "descricao", instrucao: "DescriÃ§Ã£o (opcional)",                          exemplo: "Acesso para filiais de SÃ£o Paulo" },
-                { key: "filiais",   header: "filiais",   instrucao: "CÃ³digos de filiais separados por vÃ­rgula",      exemplo: "AB01,AB02,AB03" },
+                { key: "descricao", header: "descricao", instrucao: "Descrição (opcional)",                          exemplo: "Acesso para filiais de São Paulo" },
+                { key: "filiais",   header: "filiais",   instrucao: "Códigos de filiais separados por vírgula",      exemplo: "AB01,AB02,AB03" },
                 { key: "status",    header: "status",    instrucao: "Ativo ou Inativo",                              exemplo: "Ativo" },
               ]}
               onImport={async (rows): Promise<ImportResult> => {
@@ -182,7 +182,7 @@ export default function AcessosEspeciaisPage() {
                 const errors: string[] = [];
                 for (const row of rows) {
                   if (!row.nome) {
-                    errors.push(`Linha ignorada: campo "nome" Ã© obrigatÃ³rio.`);
+                    errors.push(`Linha ignorada: campo "nome" é obrigatório.`);
                     continue;
                   }
                   try {
@@ -203,7 +203,7 @@ export default function AcessosEspeciaisPage() {
             />
             <button
               onClick={openCreate}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--status-success)] hover:bg-[color-mix(in srgb, var(--status-success) 82%, black)] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-sm font-semibold rounded-full transition-colors shadow-md"
             >
               <Plus size={16} /> Novo Acesso
             </button>
@@ -229,7 +229,7 @@ export default function AcessosEspeciaisPage() {
               value={filtroNome}
               onChange={(e) => setFiltroNome(e.target.value)}
               placeholder="Pesquisar por Nome"
-              className="flex-1 min-w-[300px] px-5 py-2.5 bg-[var(--bg-input)] border-0 rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
+              className="flex-1 min-w-[300px] px-5 py-2.5 bg-[var(--bg-input)] border-0 rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
             />
           </div>
         </div>
@@ -241,10 +241,10 @@ export default function AcessosEspeciaisPage() {
               <thead>
                 <tr className="bg-[var(--bg-input)]">
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Nome</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">DescriÃ§Ã£o</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Descrição</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Filiais</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Status</th>
-                  <th className="px-5 py-3 text-right text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">AÃ§Ãµes</th>
+                  <th className="px-5 py-3 text-right text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e2e8f0]">
@@ -262,7 +262,7 @@ export default function AcessosEspeciaisPage() {
                   </tr>
                 ) : (
                   filtered.map((a, idx) => (
-                    <tr key={a.id} className={idx % 2 === 0 ? "bg-white" : "bg-[var(--bg-panel-soft)]"}>
+                    <tr key={a.id} className={idx % 2 === 0 ? "bg-[var(--bg-panel)]" : "bg-[var(--bg-panel-soft)]"}>
                       <td className="px-5 py-4 text-sm font-medium text-[var(--text-primary)]">{a.nome}</td>
                       <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">{a.descricao}</td>
                       <td className="px-5 py-4 text-sm">
@@ -273,14 +273,14 @@ export default function AcessosEspeciaisPage() {
                             <span className="text-[var(--text-secondary)]">filial{a.filiais.length !== 1 ? "is" : ""}</span>
                           </span>
                         ) : (
-                          <span className="text-[#cbd5e1]">â€”</span>
+                          <span className="text-[#cbd5e1]">—</span>
                         )}
                       </td>
                       <td className="px-5 py-4 text-sm">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                           a.status === "Ativo"
-                            ? "bg-[var(--status-success)]/10 text-[var(--status-success)]"
-                            : "bg-[var(--text-secondary)]/10 text-[var(--text-secondary)]"
+                            ? "bg-[#28A745]/10 text-[#28A745]"
+                            : "bg-[#6C757D]/10 text-[var(--text-secondary)]"
                         }`}>
                           {a.status}
                         </span>
@@ -310,7 +310,7 @@ export default function AcessosEspeciaisPage() {
 
                           <div
                             id={`menu-${a.id}`}
-                            className="hidden fixed bg-white rounded-xl shadow-2xl border border-[#e2e8f0] z-[9999] overflow-hidden w-40"
+                            className="hidden fixed bg-[var(--bg-panel)] rounded-xl shadow-2xl border border-[#e2e8f0] z-[9999] overflow-hidden w-40"
                           >
                             <button
                               onClick={() => { openEdit(a); document.getElementById(`menu-${a.id}`)!.style.display = "none"; }}
@@ -344,7 +344,7 @@ export default function AcessosEspeciaisPage() {
           </div>
         </div>
 
-        {/* RodapÃ© */}
+        {/* Rodapé */}
         <p className="text-center text-[var(--text-secondary)] text-xs mt-8">
           Via Labs
         </p>
@@ -368,19 +368,19 @@ export default function AcessosEspeciaisPage() {
                   type="text"
                   value={form.nome}
                   onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                  className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
+                  className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
                   placeholder="ex: Acesso Diretoria"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">DescriÃ§Ã£o</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Descrição</label>
                 <input
                   type="text"
                   value={form.descricao}
                   onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-                  className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
-                  placeholder="DescriÃ§Ã£o do acesso especial"
+                  className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all"
+                  placeholder="Descrição do acesso especial"
                 />
               </div>
 
@@ -446,7 +446,7 @@ export default function AcessosEspeciaisPage() {
                               type="checkbox"
                               checked={checked}
                               onChange={() => toggleFilial(f.PLANTA)}
-                              className="w-4 h-4 rounded border-[#cbd5e1] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)] cursor-pointer flex-shrink-0"
+                              className="w-4 h-4 rounded border-[#cbd5e1] text-[var(--brand-primary)] focus:ring-[#4B5FBF] cursor-pointer flex-shrink-0"
                             />
                             <span className={`text-sm leading-tight ${
                               checked ? "text-[var(--brand-primary)] font-medium" : "text-[var(--text-primary)]"
@@ -465,13 +465,13 @@ export default function AcessosEspeciaisPage() {
                         onClick={() => setForm({ ...form, filiais: [] })}
                         className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
                       >
-                        Limpar seleÃ§Ã£o
+                        Limpar seleção
                       </button>
                     </div>
                   )}
                 </div>
                 <p className="text-xs text-[var(--text-muted)] mt-1 ml-1">
-                  Este acesso serÃ¡ usado para prÃ©-selecionar filiais na criaÃ§Ã£o de usuÃ¡rios
+                  Este acesso será usado para pré-selecionar filiais na criação de usuários
                 </p>
               </div>
             </div>
