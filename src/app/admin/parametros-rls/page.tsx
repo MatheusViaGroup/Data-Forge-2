@@ -206,7 +206,7 @@ export default function ParametrosRLSPage() {
         )}
 
         {/* Filtro */}
-        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card p-4 mb-6">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[var(--border-soft)] shadow-card p-4 mb-6">
           <input
             type="text"
             value={filtroNome}
@@ -217,7 +217,7 @@ export default function ParametrosRLSPage() {
         </div>
 
         {/* Tabela */}
-        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card overflow-hidden">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[var(--border-soft)] shadow-card overflow-hidden">
           <div className="px-5 py-3 border-b border-[#e2e8f0]">
             <p className="text-[var(--text-secondary)] text-sm font-medium">
               {filtered.length} parâmetro{filtered.length !== 1 ? "s" : ""} cadastrado{filtered.length !== 1 ? "s" : ""}

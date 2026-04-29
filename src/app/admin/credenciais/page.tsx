@@ -238,7 +238,7 @@ export default function CredenciaisPage() {
         )}
 
         {/* Tabela */}
-        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card overflow-hidden">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[var(--border-soft)] shadow-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -335,7 +335,7 @@ export default function CredenciaisPage() {
 
           {/* Paginação */}
           {isLoaded && credenciais.length > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-t border-[#e2e8f0]">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-t border-[var(--border-soft)]">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="text-sm text-[var(--text-secondary)] whitespace-nowrap shrink-0">Mostrar</span>
                 <CustomSelect

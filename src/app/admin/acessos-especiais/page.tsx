@@ -222,7 +222,7 @@ export default function AcessosEspeciaisPage() {
         )}
 
         {/* Filtros */}
-        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card p-4 mb-6">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[var(--border-soft)] shadow-card p-4 mb-6">
           <div className="flex flex-wrap gap-3">
             <input
               type="text"
@@ -235,7 +235,7 @@ export default function AcessosEspeciaisPage() {
         </div>
 
         {/* Tabela */}
-        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card overflow-hidden">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[var(--border-soft)] shadow-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>

@@ -372,7 +372,7 @@ export default function UsuariosPage() {
         )}
 
         {/* Filtros */}
-        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card p-4 mb-6">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[var(--border-soft)] shadow-card p-4 mb-6">
           <div className="flex flex-wrap gap-3">
             <input type="text" value={filtroNome} onChange={(e) => setFiltroNome(e.target.value)} placeholder="Filtrar por Nome"
               className="flex-1 min-w-[200px] px-5 py-2.5 bg-[var(--bg-input)] border-0 rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all" />
@@ -491,7 +491,7 @@ export default function UsuariosPage() {
 
           {/* Paginação */}
           {isLoaded && filtered.length > itensPorPagina && (
-            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-t border-[#e2e8f0]">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-t border-[var(--border-soft)]">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="text-sm text-[var(--text-secondary)] whitespace-nowrap shrink-0">Mostrar</span>
                 <CustomSelect
