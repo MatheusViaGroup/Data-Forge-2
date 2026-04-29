@@ -2,9 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import * as msal from "@azure/msal-node";
 import axios from "axios";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { ADMIN_TENANT_ACCESS, authOptions } from "@/lib/authOptions";
 import { query, queryOne } from "@/lib/db";
 import { registerTokenUsage } from "@/lib/tokenUsage";
+
+type EmbedRequestBody = {
+  reportId?: string;
+  groupId?: string;
+  dashboardId?: string;
+  rls?: boolean;
+  rlsRole?: string;
+};
 
 type RlsParamRow = {
   tipo: string;
@@ -55,14 +63,14 @@ async function canUseCredentialTokenCache(): Promise<boolean> {
       columns.has("cached_access_token") && columns.has("token_expires_at");
   } catch (error: unknown) {
     const err = error as Error;
-    console.error("[embed-token] Erro ao verificar colunas de cache no banco:", err.message);
+    console.error("[embed-token-by-id] Erro ao verificar colunas de cache:", err.message);
     hasCredentialTokenCacheColumns = false;
   }
 
   return hasCredentialTokenCacheColumns;
 }
 
-async function getCredentials() {
+async function getCredentials(): Promise<CredentialsResult> {
   const data = await queryOne<CredentialRow>(
     `SELECT id, client_id, tenant_id, client_secret, master_user, master_password
      FROM via_core.credenciais
@@ -72,48 +80,50 @@ async function getCredentials() {
 
   if (data) {
     return {
-      id: data.id as string,
-      clientId: data.client_id as string,
-      tenantId: data.tenant_id as string,
-      clientSecret: data.client_secret as string,
-      masterUser: data.master_user as string,
-      masterPassword: data.master_password as string,
+      id: data.id,
+      clientId: data.client_id,
+      tenantId: data.tenant_id,
+      clientSecret: data.client_secret,
+      masterUser: data.master_user,
+      masterPassword: data.master_password,
     };
   }
 
   return {
     id: null,
-    clientId: process.env.POWERBI_CLIENT_ID as string,
-    tenantId: process.env.POWERBI_TENANT_ID as string,
-    clientSecret: process.env.POWERBI_CLIENT_SECRET as string,
-    masterUser: process.env.POWERBI_MASTER_USER as string,
-    masterPassword: process.env.POWERBI_MASTER_PASSWORD as string,
+    clientId: process.env.POWERBI_CLIENT_ID ?? "",
+    tenantId: process.env.POWERBI_TENANT_ID ?? "",
+    clientSecret: process.env.POWERBI_CLIENT_SECRET ?? "",
+    masterUser: process.env.POWERBI_MASTER_USER ?? "",
+    masterPassword: process.env.POWERBI_MASTER_PASSWORD ?? "",
   };
 }
 
 async function getAccessToken(): Promise<string> {
   const now = Date.now();
-  const creds = (await getCredentials()) as CredentialsResult;
+  const creds = await getCredentials();
 
   if (await canUseCredentialTokenCache()) {
     try {
-      const dbCache = await queryOne<CredentialTokenCacheRow>(
-        `SELECT cached_access_token, token_expires_at
-         FROM via_core.credenciais
-         WHERE id = $1
-         LIMIT 1`,
-        [creds.id]
-      );
+      if (creds.id) {
+        const dbCache = await queryOne<CredentialTokenCacheRow>(
+          `SELECT cached_access_token, token_expires_at
+           FROM via_core.credenciais
+           WHERE id = $1
+           LIMIT 1`,
+          [creds.id]
+        );
 
-      if (dbCache?.cached_access_token && dbCache.token_expires_at) {
-        const expiresAt = new Date(dbCache.token_expires_at).getTime();
-        if (expiresAt > now + 60_000) {
-          return dbCache.cached_access_token;
+        if (dbCache?.cached_access_token && dbCache.token_expires_at) {
+          const expiresAt = new Date(dbCache.token_expires_at).getTime();
+          if (expiresAt > now + 60_000) {
+            return dbCache.cached_access_token;
+          }
         }
       }
     } catch (error: unknown) {
       const err = error as Error;
-      console.error("[embed-token] Erro ao ler cache de token no banco:", err.message);
+      console.error("[embed-token-by-id] Erro ao ler cache do token no banco:", err.message);
     }
   }
 
@@ -125,195 +135,147 @@ async function getAccessToken(): Promise<string> {
     },
   };
 
-
   const cca = new msal.ConfidentialClientApplication(msalConfig);
-
   const result = await cca.acquireTokenByUsernamePassword({
     scopes: ["https://analysis.windows.net/powerbi/api/.default"],
     username: creds.masterUser,
     password: creds.masterPassword,
   });
 
-
   if (!result?.accessToken) {
-    console.error("[MSAL] ERRO: Token não obtido!");
-    throw new Error("Token não obtido do Azure AD");
+    throw new Error("Access token não obtido");
   }
 
   const expiresAt = result.expiresOn?.getTime() ?? now + 3_600_000;
 
   if (await canUseCredentialTokenCache()) {
     try {
-      await query(
-        `UPDATE via_core.credenciais
-         SET cached_access_token = $1,
-             token_expires_at = $2
-         WHERE id = $3`,
-        [result.accessToken, new Date(expiresAt).toISOString(), creds.id]
-      );
+      if (creds.id) {
+        await query(
+          `UPDATE via_core.credenciais
+           SET cached_access_token = $1,
+               token_expires_at = $2
+           WHERE id = $3`,
+          [result.accessToken, new Date(expiresAt).toISOString(), creds.id]
+        );
+      }
     } catch (error: unknown) {
       const err = error as Error;
-      console.error("[embed-token] Erro ao salvar cache de token no banco:", err.message);
+      console.error("[embed-token-by-id] Erro ao salvar cache do token no banco:", err.message);
     }
   }
 
   return result.accessToken;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const apiMessage = error.response?.data;
+    if (typeof apiMessage === "string") return apiMessage;
+    if (apiMessage && typeof apiMessage === "object" && "message" in apiMessage) {
+      const message = (apiMessage as { message?: unknown }).message;
+      if (typeof message === "string") return message;
+    }
+    if (error.message) return error.message;
+  }
+
+  if (error instanceof Error) return error.message;
+  return "Erro desconhecido";
+}
+
 export async function POST(request: NextRequest) {
-
   try {
-    // STEP 1: Session
     const session = await getServerSession(authOptions);
-
     if (!session?.user?.email) {
-      console.error("ERRO: Usuário não autenticado");
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    // STEP 2: Parse body
-    const body = await request.json();
-
+    const body = (await request.json()) as EmbedRequestBody;
     const { reportId, groupId, dashboardId, rls, rlsRole } = body;
+
     if (!reportId || !groupId) {
-      console.error("ERRO: reportId e groupId são obrigatórios");
-      return NextResponse.json({ error: "reportId e groupId obrigatórios" }, { status: 400 });
+      return NextResponse.json({ error: "Parâmetros obrigatórios ausentes" }, { status: 400 });
     }
 
-    // STEP 3: Buscar credenciais
-    let credsData;
-    try {
-      credsData = await queryOne(
-        `SELECT id, client_id, tenant_id, client_secret, master_user, master_password, status
-         FROM via_core.credenciais
-         WHERE status = 'ativo'
-         LIMIT 1`
-      );
-    } catch (credsError: any) {
-      console.error("ERRO ao buscar credenciais:", credsError.message);
-      console.error("Detalhes:", credsError);
-      return NextResponse.json({
-        error: "Credenciais não encontradas",
-        details: credsError.message,
-        step: 3
-      }, { status: 500 });
-    }
+    const credsData = await queryOne<{ id: string }>(
+      `SELECT id
+       FROM via_core.credenciais
+       WHERE status = 'ativo'
+       LIMIT 1`
+    );
 
     if (!credsData) {
-      console.error("ERRO: Nenhuma credencial ativa encontrada");
-      return NextResponse.json({
-        error: "Nenhuma credencial ativa encontrada no banco",
-        step: 3
-      }, { status: 500 });
+      console.error("[embed-token-by-id] Nenhuma credencial ativa encontrada");
+      return NextResponse.json({ error: "Falha ao gerar token de embed" }, { status: 500 });
     }
 
-
-    // STEP 4: Buscar dados do usuário para RLS
-    let userFiliais: string[] = [];
-    let customData = "";
-    let isAdmin = false;
-
-    // Verifica se o usuário é admin
-    const userData = await queryOne<{ filiais: string[]; acesso: string }>(
-      `SELECT filiais, acesso FROM via_core.usuarios WHERE email = $1 LIMIT 1`,
+    const userData = await queryOne<{ filiais: string[] | null; acesso: string }>(
+      `SELECT filiais, acesso
+       FROM via_core.usuarios
+       WHERE email = $1
+       LIMIT 1`,
       [session.user.email]
     );
 
-    // Matriz tem todas as filiais liberadas (sem filtro RLS por filial)
-    isAdmin = userData?.acesso === "Administrador do Locatário" || userData?.acesso === "Matriz";
+    const isAdmin =
+      userData?.acesso === ADMIN_TENANT_ACCESS || userData?.acesso === "Matriz";
+    const userFiliais = rls && !isAdmin ? userData?.filiais ?? [] : [];
 
-    if (rls && !isAdmin) {
-      // Apenas busca filiais se NÃO for admin
-      // Agora filiais já contém os NOMES das filiais, não IDs
-      userFiliais = userData?.filiais ?? [];
-    } else if (isAdmin) {
-    }
-
-    // STEP 5: Buscar parâmetros RLS
-    let resolvedRlsRole = rlsRole as string | undefined;
-    let customDataOrigem = "nome"; // Padrão: usar nome da filial
-
+    let resolvedRlsRole = rlsRole;
+    let customData = "";
 
     if (rls && dashboardId) {
-
       const { rows: rlsParams } = await query<RlsParamRow>(
-        `SELECT tipo, nome_parametro_powerbi FROM via_core.parametros_rls WHERE dashboard_id = $1`,
+        `SELECT tipo, nome_parametro_powerbi
+         FROM via_core.parametros_rls
+         WHERE dashboard_id = $1`,
         [dashboardId]
       );
 
-
-      if (rlsParams && rlsParams.length > 0) {
-        rlsParams.forEach((p, i: number) => {
-        });
-
-        const filialParam = rlsParams.find((p) => p.tipo === "Filial");
-        if (filialParam) {
-          resolvedRlsRole = filialParam.nome_parametro_powerbi ?? undefined;
-        }
-        const userParam = rlsParams.find((p) => p.tipo === "Usuário");
-        if (userParam && !filialParam) {
-          customData = session.user.email ?? "";
-          resolvedRlsRole = userParam.nome_parametro_powerbi ?? undefined;
-        }
-      } else {
+      const filialParam = rlsParams.find((param) => param.tipo === "Filial");
+      if (filialParam) {
+        resolvedRlsRole = filialParam.nome_parametro_powerbi ?? undefined;
       }
-    } else {
+
+      const userParam = rlsParams.find((param) => param.tipo === "Usuário");
+      if (userParam && !filialParam) {
+        customData = session.user.email;
+        resolvedRlsRole = userParam.nome_parametro_powerbi ?? undefined;
+      }
     }
 
-    // STEP 6: Obter access token do Azure
-
-    let accessToken: string;
-    try {
-      accessToken = await getAccessToken();
-    } catch (azureError: unknown) {
-      const err = azureError as Error;
-      console.error("ERRO ao obter token do Azure:");
-      console.error("   Mensagem:", err.message);
-      console.error("   Stack:", err.stack);
-      return NextResponse.json({
-        error: "Falha ao autenticar no Azure AD",
-        details: err.message,
-        step: 6
-      }, { status: 500 });
-    }
-
-    // STEP 7: Buscar informações do relatório
-    const reportUrl = `https://api.powerbi.com/v1.0/myorg/groups/${groupId}/reports/${reportId}`;
+    const accessToken = await getAccessToken();
 
     let reportRes;
     try {
-      reportRes = await axios.get(reportUrl, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-    } catch (reportError: unknown) {
-      const err = reportError as any;
-      console.error("ERRO ao buscar relatório:");
-      console.error("   Status:", err.response?.status);
-      console.error("   Mensagem:", err.response?.data?.message ?? err.message);
-      return NextResponse.json({
-        error: "Relatório não encontrado no Power BI",
-        details: err.response?.data?.message ?? err.message,
-        step: 7,
-        reportId,
-        groupId
-      }, { status: 500 });
+      reportRes = await axios.get(
+        `https://api.powerbi.com/v1.0/myorg/groups/${groupId}/reports/${reportId}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+    } catch (error: unknown) {
+      console.error("[embed-token-by-id] Erro ao buscar relatório:", getErrorMessage(error));
+      return NextResponse.json({ error: "Falha ao gerar token de embed" }, { status: 500 });
     }
 
-    const embedUrl = reportRes.data.embedUrl;
-    const datasetId = reportRes.data.datasetId;
+    const embedUrl = reportRes.data.embedUrl as string;
+    const datasetId = reportRes.data.datasetId as string | undefined;
 
-    // STEP 8: Gerar token de embed
-    const generateTokenBody: any = {
+    const generateTokenBody: {
+      accessLevel: "View";
+      expiration: Date;
+      identities?: Array<{
+        username: string;
+        roles: string[];
+        customData: string;
+        datasets: string[];
+      }>;
+    } = {
       accessLevel: "View",
-      // Aumentar validade para 8 horas (28800 segundos) - máximo permitido
-      expiration: new Date(Date.now() + 8 * 60 * 60 * 1000)
+      expiration: new Date(Date.now() + 8 * 60 * 60 * 1000),
     };
 
-    // Formatar customData como string entre aspas (para texto no Power BI)
-    const customDataFormatado = userFiliais.length > 0
-      ? userFiliais.map(f => `"${f}"`).join(",")
-      : "";
-
+    const customDataFormatado =
+      customData || (userFiliais.length > 0 ? userFiliais.map((filial) => `"${filial}"`).join(",") : "");
 
     if (rls && resolvedRlsRole && datasetId && customDataFormatado && !isAdmin) {
       generateTokenBody.identities = [
@@ -324,70 +286,51 @@ export async function POST(request: NextRequest) {
           datasets: [datasetId],
         },
       ];
-    } else {
     }
-
-    const tokenUrl = `https://api.powerbi.com/v1.0/myorg/groups/${groupId}/reports/${reportId}/GenerateToken`;
 
     let tokenRes;
     try {
-      tokenRes = await axios.post(tokenUrl, generateTokenBody, {
-        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }
-      });
-    } catch (tokenError: unknown) {
-      const err = tokenError as any;
-      console.error("ERRO ao gerar token de embed:");
-      console.error("   Status:", err.response?.status);
-      console.error("   Error Code:", err.response?.data?.errorCode);
-      console.error("   Message:", err.response?.data?.message);
-      console.error("   Details:", JSON.stringify(err.response?.data, null, 2));
-      return NextResponse.json({
-        error: "Falha ao gerar token de embed",
-        errorCode: err.response?.data?.errorCode,
-        details: err.response?.data?.message ?? err.message,
-        step: 8,
-        powerBIResponse: err.response?.data
-      }, { status: 500 });
-    }
-    // Registrar uso do token (auditoria)
-    if (tokenRes.data.token && credsData?.id) {
-      try {
-        await registerTokenUsage({
-          token: tokenRes.data.token,
-          dashboardId,
-          userId: String(session.user.id),
-          credentialId: String(credsData.id),
-          expiresAt: generateTokenBody.expiration.toISOString(),
-          ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("remote-addr") || null,
-          userAgent: request.headers.get("user-agent") || null,
-        });
-      } catch (regError) {
-        console.error("[embed-token] Erro ao chamar registro de uso:", regError);
-        // Nao falha a requisicao se registro der erro
-      }
+      tokenRes = await axios.post(
+        `https://api.powerbi.com/v1.0/myorg/groups/${groupId}/reports/${reportId}/GenerateToken`,
+        generateTokenBody,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    } catch (error: unknown) {
+      console.error("[embed-token-by-id] Erro ao gerar token de embed:", getErrorMessage(error));
+      return NextResponse.json({ error: "Falha ao gerar token de embed" }, { status: 500 });
     }
 
-    // STEP 9: Retornar sucesso
+    if (tokenRes.data.token && credsData.id && dashboardId && session.user.id) {
+      try {
+        await registerTokenUsage({
+          token: tokenRes.data.token as string,
+          dashboardId,
+          userId: session.user.id,
+          credentialId: credsData.id,
+          expiresAt: generateTokenBody.expiration.toISOString(),
+          ipAddress:
+            request.headers.get("x-forwarded-for") || request.headers.get("remote-addr") || null,
+          userAgent: request.headers.get("user-agent") || null,
+        });
+      } catch (error: unknown) {
+        const err = error as Error;
+        console.error("[embed-token-by-id] Erro ao registrar uso do token:", err.message);
+      }
+    }
 
     return NextResponse.json({
       accessToken: tokenRes.data.token,
       embedUrl,
       reportName: reportRes.data.name,
     });
-
   } catch (error: unknown) {
-    const err = error as Error & { errorCode?: string; errorMessage?: string; response?: { data: unknown } };
-    console.error("\n" + "=".repeat(60));
-    console.error("[API] ERRO DESCONHECIDO");
-    console.error("=".repeat(60));
-    console.error("Erro:", err.message);
-    console.error("Stack:", err.stack);
-    console.error("Response:", JSON.stringify(err.response?.data, null, 2));
-    console.error("=".repeat(60) + "\n");
-
-    return NextResponse.json(
-      { error: "Erro inesperado", details: err.message },
-      { status: 500 }
-    );
+    const err = error as Error;
+    console.error("[embed-token-by-id] Erro inesperado:", err.message);
+    return NextResponse.json({ error: "Falha ao gerar token de embed" }, { status: 500 });
   }
 }

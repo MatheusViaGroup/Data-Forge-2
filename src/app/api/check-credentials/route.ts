@@ -3,55 +3,63 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { query } from "@/lib/db";
 
-export async function GET(request: NextRequest) {
-  // Apenas administradores podem verificar expiração
+type CredentialCheckRow = {
+  id: string;
+  nome: string;
+  client_id: string;
+  master_user: string;
+  data_expiracao: string | null;
+  status: string;
+};
+
+export async function GET(_request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user || session.user.role !== "admin") {
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
   }
 
-  // Busca todas as credenciais ativas
   try {
-    const { rows: credenciais } = await query(
-      `SELECT id, nome, client_id, master_user, data_expiracao, status, created_at
+    const { rows: credenciais } = await query<CredentialCheckRow>(
+      `SELECT id, nome, client_id, master_user, data_expiracao, status
        FROM via_core.credenciais
        WHERE status = 'ativo'
        ORDER BY data_expiracao ASC`
     );
 
     const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0); // Normalizar para início do dia
+    hoje.setHours(0, 0, 0, 0);
 
-    const resultado = credenciais.map((c: any) => {
-      const expiraCerta = c.data_expiracao ? new Date(c.data_expiracao) : null;
-      const diasRestantes = expiraCerta
-        ? Math.max(0, Math.ceil((expiraCerta.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)))
-        : null;
+    const resultado = credenciais.map((credencial) => {
+      const expiraEm = credencial.data_expiracao ? new Date(credencial.data_expiracao) : null;
+      const diasRestantes =
+        expiraEm === null
+          ? null
+          : Math.max(0, Math.ceil((expiraEm.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)));
 
-      // Determinar nível de alerta
-      let nivelAlerta: null | "crítico" | "alto" | "médio" = null;
+      let nivelAlerta: null | "critico" | "alto" | "medio" = null;
       if (diasRestantes !== null) {
-        if (diasRestantes === 0) nivelAlerta = "crítico";
+        if (diasRestantes === 0) nivelAlerta = "critico";
         else if (diasRestantes <= 7) nivelAlerta = "alto";
-        else if (diasRestantes <= 30) nivelAlerta = "médio";
+        else if (diasRestantes <= 30) nivelAlerta = "medio";
       }
 
       return {
-        id: c.id,
-        nome: c.nome,
-        clientId: c.client_id,
-        masterUser: c.master_user,
-        dataExpiracao: c.data_expiracao,
+        id: credencial.id,
+        nome: credencial.nome,
+        clientId: credencial.client_id,
+        masterUser: credencial.master_user,
+        dataExpiracao: credencial.data_expiracao,
         diasRestantes,
-        status: c.status,
+        status: credencial.status,
         alerta: nivelAlerta !== null,
-        nivelAlerta: nivelAlerta,
+        nivelAlerta,
       };
     });
 
     return NextResponse.json({ credenciais: resultado });
-  } catch (error: any) {
-    console.error("[check-credentials] Erro ao buscar credenciais:", error.message);
-    return NextResponse.json({ error: "Erro ao buscar credenciais", details: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("[check-credentials] Erro ao buscar credenciais:", err.message);
+    return NextResponse.json({ error: "Erro ao buscar credenciais" }, { status: 500 });
   }
 }

@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
   }
 
-  const { id } = await request.json();
+  const { id } = (await request.json()) as { id?: string };
   if (!id) {
     return NextResponse.json({ error: "ID do usuário é obrigatório" }, { status: 400 });
   }
@@ -21,11 +21,16 @@ export async function POST(request: NextRequest) {
 
   try {
     await query(
-      `UPDATE via_core.usuarios SET senha_hash = $1, must_change_password = true WHERE id = $2`,
+      `UPDATE via_core.usuarios
+       SET senha_hash = $1, must_change_password = true
+       WHERE id = $2`,
       [hash, id]
     );
+
     return NextResponse.json({ success: true, tempPassword });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("[reset-password] Erro:", err.message);
+    return NextResponse.json({ error: "Erro ao redefinir senha" }, { status: 500 });
   }
 }

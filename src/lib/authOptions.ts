@@ -20,7 +20,7 @@ interface SessionRefreshRow extends Record<string, unknown> {
   acesso: string;
 }
 
-const ADMIN_TENANT_ACCESS = "Administrador do Locat\u00e1rio";
+export const ADMIN_TENANT_ACCESS = "Administrador do Locat\u00e1rio";
 
 export const authOptions: NextAuthOptions = {
   providers: [
