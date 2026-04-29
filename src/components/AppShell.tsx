@@ -15,7 +15,7 @@ function Shell({ title, subtitle, children, fullHeight, topBar }: AppShellProps)
   const { collapsed } = useSidebar();
 
   return (
-    <div className="flex min-h-screen overflow-hidden" style={{ background: "var(--bg-app)" }}>
+    <div className="flex min-h-screen overflow-hidden" style={{ background: "var(--bg-panel)" }}>
       <Sidebar />
 
       {/* Conteúdo principal: empurra pela largura da sidebar (desktop) */}
