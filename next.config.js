@@ -7,7 +7,7 @@ const csp = [
   "form-action 'self'",
   "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https://*.sharepoint.com",
+  "img-src 'self' data: https://viagroup.com.br https://*.viagroup.com.br https://*.sharepoint.com",
   "font-src 'self' data:",
   "frame-src https://app.powerbi.com https://challenges.cloudflare.com",
   "connect-src 'self' https://api.powerbi.com https://challenges.cloudflare.com",
