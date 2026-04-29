@@ -20,6 +20,8 @@ interface SessionRefreshRow extends Record<string, unknown> {
   acesso: string;
 }
 
+const ADMIN_TENANT_ACCESS = "Administrador do Locat\u00e1rio";
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -55,13 +57,13 @@ export const authOptions: NextAuthOptions = {
           name: user.nome,
           email: user.email,
           role:
-            user.acesso === "Administrador do Locat\u00e1rio"
+            user.acesso === ADMIN_TENANT_ACCESS
               ? "admin"
               : user.acesso === "Matriz"
                 ? "matriz"
                 : "user",
           mustChangePassword: user.must_change_password ?? false,
-          allowedDashboards: user.acesso === "Administrador do Locat\u00e1rio" ? [] : (user.dashboards ?? []),
+          allowedDashboards: user.acesso === ADMIN_TENANT_ACCESS ? [] : (user.dashboards ?? []),
         };
       },
     }),
@@ -88,14 +90,14 @@ export const authOptions: NextAuthOptions = {
         if (!data) return null as unknown as JWT;
 
         token.role =
-          data.acesso === "Administrador do Locat\u00e1rio"
+          data.acesso === ADMIN_TENANT_ACCESS
             ? "admin"
             : data.acesso === "Matriz"
               ? "matriz"
               : "user";
 
         token.allowedDashboards =
-          data.acesso === "Administrador do Locat\u00e1rio"
+          data.acesso === ADMIN_TENANT_ACCESS
             ? []
             : (data.dashboards ?? []);
       }

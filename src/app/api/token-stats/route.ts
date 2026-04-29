@@ -3,6 +3,33 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { query } from "@/lib/db";
 
+type UsageTokenRow = {
+  id: string;
+  created_at: string;
+  dashboard_id: string | null;
+  user_id: string | null;
+  credential_id: string | null;
+  status: string;
+};
+
+type DashboardNameRow = {
+  id: string;
+  nome: string;
+};
+
+type UsuarioNameRow = {
+  id: string;
+  nome: string;
+  email: string;
+};
+
+type CredentialNameRow = {
+  id: string;
+  nome: string;
+};
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user || session.user.role !== "admin") {
@@ -10,11 +37,17 @@ export async function GET(request: NextRequest) {
   }
 
   const searchParams = request.nextUrl.searchParams;
-  const period = searchParams.get("period") || "today"; // today, week, month
+  const period = searchParams.get("period") || "today";
   const dashboardId = searchParams.get("dashboardId") || null;
   const userId = searchParams.get("userId") || null;
 
-  // Determinar intervalo de datas
+  if (dashboardId && !UUID_REGEX.test(dashboardId)) {
+    return NextResponse.json({ error: "dashboardId inválido" }, { status: 400 });
+  }
+  if (userId && !UUID_REGEX.test(userId)) {
+    return NextResponse.json({ error: "userId inválido" }, { status: 400 });
+  }
+
   const now = new Date();
   let startDate: Date;
   switch (period) {
@@ -30,11 +63,7 @@ export async function GET(request: NextRequest) {
       break;
   }
 
-  // Build dynamic query for uso_tokens
-  const conditions: string[] = [
-    `created_at >= $1`,
-    `status = 'ativo'`,
-  ];
+  const conditions: string[] = [`created_at >= $1`, `status = 'ativo'`];
   const params: unknown[] = [startDate.toISOString()];
   let paramIdx = 2;
 
@@ -48,69 +77,70 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { rows: tokens } = await query(
+    const { rows: tokens } = await query<UsageTokenRow>(
       `SELECT id, created_at, dashboard_id, user_id, credential_id, status
        FROM via_core.uso_tokens
        WHERE ${conditions.join(" AND ")}`,
       params
     );
 
-    // Buscar nomes de dashboards em uma query separada (para não precisar de join)
-    const allTokens = tokens || [];
-    const dashboardIds = Array.from(new Set(allTokens.map((t: any) => t.dashboard_id).filter((id: any): id is string => !!id)));
-    const userIds = Array.from(new Set(allTokens.map((t: any) => t.user_id).filter((id: any): id is string => !!id)));
-    const credentialIds = Array.from(new Set(allTokens.map((t: any) => t.credential_id).filter((id: any): id is string => !!id)));
+    const allTokens = tokens ?? [];
+    const dashboardIds = Array.from(new Set(allTokens.map((token) => token.dashboard_id).filter((id): id is string => Boolean(id))));
+    const userIds = Array.from(new Set(allTokens.map((token) => token.user_id).filter((id): id is string => Boolean(id))));
+    const credentialIds = Array.from(new Set(allTokens.map((token) => token.credential_id).filter((id): id is string => Boolean(id))));
 
     const [dashboardsRes, usuariosRes, credenciaisRes] = await Promise.all([
       dashboardIds.length > 0
-        ? query("SELECT id, nome FROM via_core.dashboards WHERE id = ANY($1)", [dashboardIds])
-        : Promise.resolve({ rows: [] }),
+        ? query<DashboardNameRow>("SELECT id, nome FROM via_core.dashboards WHERE id = ANY($1)", [dashboardIds])
+        : Promise.resolve({ rows: [] as DashboardNameRow[] }),
       userIds.length > 0
-        ? query("SELECT id, nome, email FROM via_core.usuarios WHERE id = ANY($1)", [userIds])
-        : Promise.resolve({ rows: [] }),
+        ? query<UsuarioNameRow>("SELECT id, nome, email FROM via_core.usuarios WHERE id = ANY($1)", [userIds])
+        : Promise.resolve({ rows: [] as UsuarioNameRow[] }),
       credentialIds.length > 0
-        ? query("SELECT id, nome FROM via_core.credenciais WHERE id = ANY($1)", [credentialIds])
-        : Promise.resolve({ rows: [] }),
+        ? query<CredentialNameRow>("SELECT id, nome FROM via_core.credenciais WHERE id = ANY($1)", [credentialIds])
+        : Promise.resolve({ rows: [] as CredentialNameRow[] }),
     ]);
 
-    const dashboardsMap = new Map(dashboardsRes.rows?.map((d: any) => [d.id, d.nome]) || []);
-    const usuariosMap = new Map(usuariosRes.rows?.map((u: any) => [u.id, `${u.nome} (${u.email})`]) || []);
-    const credenciaisMap = new Map(credenciaisRes.rows?.map((c: any) => [c.id, c.nome]) || []);
+    const dashboardsMap = new Map(dashboardsRes.rows.map((dashboard) => [dashboard.id, dashboard.nome]));
+    const usuariosMap = new Map(usuariosRes.rows.map((usuario) => [usuario.id, `${usuario.nome} (${usuario.email})`]));
+    const credenciaisMap = new Map(credenciaisRes.rows.map((credencial) => [credencial.id, credencial.nome]));
 
-    // Agrupar por dashboard
     const byDashboard = new Map<string, { nome: string; count: number }>();
-    allTokens.filter((t: any) => t.dashboard_id).forEach((t: any) => {
-      const nome = dashboardsMap.get(t.dashboard_id) || t.dashboard_id;
-      const current = byDashboard.get(t.dashboard_id) || { nome, count: 0 };
-      byDashboard.set(t.dashboard_id, { nome, count: current.count + 1 });
-    });
+    allTokens
+      .filter((token) => token.dashboard_id)
+      .forEach((token) => {
+        const key = token.dashboard_id as string;
+        const nome = dashboardsMap.get(key) || key;
+        const current = byDashboard.get(key) || { nome, count: 0 };
+        byDashboard.set(key, { nome, count: current.count + 1 });
+      });
 
-    // Agrupar por usuário
     const byUser = new Map<string, { nome: string; count: number }>();
-    allTokens.filter((t: any) => t.user_id).forEach((t: any) => {
-      const nome = usuariosMap.get(t.user_id) || t.user_id;
-      const current = byUser.get(t.user_id) || { nome, count: 0 };
-      byUser.set(t.user_id, { nome, count: current.count + 1 });
-    });
+    allTokens
+      .filter((token) => token.user_id)
+      .forEach((token) => {
+        const key = token.user_id as string;
+        const nome = usuariosMap.get(key) || key;
+        const current = byUser.get(key) || { nome, count: 0 };
+        byUser.set(key, { nome, count: current.count + 1 });
+      });
 
-    // Agrupar por credencial
     const byCredential = new Map<string, { nome: string; count: number }>();
-    allTokens.filter((t: any) => t.credential_id).forEach((t: any) => {
-      const nome = credenciaisMap.get(t.credential_id) || t.credential_id;
-      const current = byCredential.get(t.credential_id) || { nome, count: 0 };
-      byCredential.set(t.credential_id, { nome, count: current.count + 1 });
-    });
+    allTokens
+      .filter((token) => token.credential_id)
+      .forEach((token) => {
+        const key = token.credential_id as string;
+        const nome = credenciaisMap.get(key) || key;
+        const current = byCredential.get(key) || { nome, count: 0 };
+        byCredential.set(key, { nome, count: current.count + 1 });
+      });
 
-    // Estimar limite restante
-    // Power BI Pro: ~1000 tokens/dia (https://learn.microsoft.com/en-us/power-bi/developer/embedded/embed-token)
-    // Power BI Embedded: baseado na capacidade (Premium) - não temos essa info
     const limiteDiarioPro = 1000;
-    const totalTokensPeriodo = allTokens.length || 0;
-    let tokensRemaining = null;
+    const totalTokensPeriodo = allTokens.length;
+    let tokensRemaining: number | null = null;
     let limitReached = false;
 
     if (period === "today") {
-      // Estimativa para Power BI Pro
       tokensRemaining = Math.max(0, limiteDiarioPro - totalTokensPeriodo);
       limitReached = totalTokensPeriodo >= limiteDiarioPro;
     }
@@ -125,12 +155,14 @@ export async function GET(request: NextRequest) {
       byCredential: Array.from(byCredential.values()).sort((a, b) => b.count - a.count),
       limitReached,
       tokensRemaining,
-      warning: period === "today"
-        ? "Limite de 1000 tokens/dia é estimativa para Power BI Pro. Para Embedded, consulte sua capacidade no Azure."
-        : null,
+      warning:
+        period === "today"
+          ? "Limite de 1000 tokens/dia é estimativa para Power BI Pro. Para Embedded, consulte sua capacidade no Azure."
+          : null,
     });
-  } catch (error: any) {
-    console.error("[token-stats] Erro ao buscar tokens:", error.message);
-    return NextResponse.json({ error: "Erro ao buscar estatísticas", details: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("[token-stats] Erro ao buscar estatísticas:", err.message);
+    return NextResponse.json({ error: "Erro ao buscar estatísticas" }, { status: 500 });
   }
 }

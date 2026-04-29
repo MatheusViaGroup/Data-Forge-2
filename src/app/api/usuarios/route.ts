@@ -3,7 +3,24 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { query, queryOne } from "@/lib/db";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";function mapRow(row: any) {
+import crypto from "crypto";
+
+type UsuarioRow = {
+  id: string;
+  nome: string;
+  email: string;
+  departamento: string | null;
+  acesso: string;
+  status: string;
+  filiais: string[] | null;
+  dashboards: string[] | null;
+};
+
+type PgError = Error & {
+  code?: string;
+};
+
+function mapRow(row: UsuarioRow) {
   return {
     id: row.id,
     nome: row.nome,
@@ -24,7 +41,6 @@ function normalizeStringArray(value: unknown): string[] {
     .filter(Boolean);
 }
 
-// ─── GET ──────────────────────────────────────────────────────────────────────
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "admin") {
@@ -32,131 +48,79 @@ export async function GET() {
   }
 
   try {
-    const { rows } = await query(
+    const { rows } = await query<UsuarioRow>(
       "SELECT id, nome, email, departamento, acesso, status, filiais, dashboards FROM via_core.usuarios ORDER BY created_at"
     );
     return NextResponse.json({ entries: rows.map(mapRow) });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("[usuarios][GET] Erro ao buscar usuários:", err.message);
+    return NextResponse.json({ error: "Erro ao buscar usuários" }, { status: 500 });
   }
 }
 
-// ─── POST ─────────────────────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
-  console.log("\n" + "=".repeat(60));
-  console.log("🔵 [USUARIOS API] POST - INICIANDO");
-  console.log("=".repeat(60));
-
-  // STEP 1: Session
-  console.log("\n[STEP 1] Verificando sessão...");
   const session = await getServerSession(authOptions);
-  console.log("Session:", session ? "✓" : "✗");
-  console.log("User role:", session?.user?.role ?? "NENHUMA");
-
   if (!session || session.user?.role !== "admin") {
-    console.error("❌ ERRO: Usuário não autorizado");
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
   }
 
-  // STEP 2: Parse body
-  console.log("\n[STEP 2] Lendo body da requisição...");
-  const body = await request.json();
-  console.log("Body recebido:");
-  console.log("  - nome:", body.nome ?? "NÃO INFORMADO");
-  console.log("  - email:", body.email ?? "NÃO INFORMADO");
-  console.log("  - departamento:", body.departamento ?? "NÃO INFORMADO");
-  console.log("  - acesso:", body.acesso ?? "NÃO INFORMADO");
-  console.log("  - status:", body.status ?? "NÃO INFORMADO");
-  console.log("  - filiais:", body.filiais ?? "NÃO INFORMADO");
-  console.log("  - dashboards:", body.dashboards ?? "NÃO INFORMADO");
-
-  // STEP 3: Hash senha
-  console.log("\n[STEP 3] Gerando hash da senha...");
-  const senhaPlain = body.senha || crypto.randomBytes(8).toString("hex");
-  console.log("  - Senha fornecida pelo admin:", body.senha ? "SIM" : "NÃO (gerada automaticamente)");
+  const body = (await request.json()) as Record<string, unknown>;
+  const senhaInformada = typeof body.senha === "string" ? body.senha : "";
+  const senhaPlain = senhaInformada || crypto.randomBytes(8).toString("hex");
   const senhaHash = await bcrypt.hash(senhaPlain, 10);
-  console.log("Senha hash gerada:", senhaHash.substring(0, 20) + "...");
 
-  // STEP 4: Insert no banco
-  console.log("\n[STEP 4] Inserindo no banco...");
-  const insertData = {
-    nome: body.nome ?? "",
-    email: body.email ?? "",
-    senha_hash: senhaHash,
-    departamento: (body.departamento ?? "").toUpperCase(),
-    acesso: body.acesso ?? "Usuário",
-    status: body.status ?? "Ativo",
-    filiais: normalizeStringArray(body.filiais),
-    dashboards: body.dashboards ?? [],
-    must_change_password: true,
-  };
-  console.log("Dados para insert:", JSON.stringify(insertData, null, 2));
+  const nome = typeof body.nome === "string" ? body.nome : "";
+  const email = typeof body.email === "string" ? body.email : "";
+  const departamentoRaw = typeof body.departamento === "string" ? body.departamento : "";
+  const acesso = typeof body.acesso === "string" ? body.acesso : "Usuário";
+  const status = typeof body.status === "string" ? body.status : "Ativo";
+  const filiais = normalizeStringArray(body.filiais);
+  const dashboards = Array.isArray(body.dashboards) ? body.dashboards : [];
 
   try {
-    const data = await queryOne(
+    const data = await queryOne<UsuarioRow>(
       `INSERT INTO via_core.usuarios (nome, email, senha_hash, departamento, acesso, status, filiais, dashboards, must_change_password)
        VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8::jsonb, $9)
        RETURNING id, nome, email, departamento, acesso, status, filiais, dashboards`,
       [
-        insertData.nome,
-        insertData.email,
-        insertData.senha_hash,
-        insertData.departamento,
-        insertData.acesso,
-        insertData.status,
-        insertData.filiais,
-        JSON.stringify(insertData.dashboards),
-        insertData.must_change_password,
+        nome,
+        email,
+        senhaHash,
+        departamentoRaw.toUpperCase(),
+        acesso,
+        status,
+        filiais,
+        JSON.stringify(dashboards),
+        true,
       ]
     );
 
     if (!data) {
-      console.error("\n❌ [USUARIOS API] ERRO: Insert retornou sem dados");
-      console.log("\n" + "=".repeat(60));
-      return NextResponse.json({ error: "Erro ao inserir usuário" }, { status: 500 });
+      return NextResponse.json({ error: "Erro ao criar usuário" }, { status: 500 });
     }
 
-    console.log("\n✅ [USUARIOS API] Usuário criado com sucesso!");
-    console.log("  - ID:", data.id);
-    console.log("  - Nome:", data.nome);
-    console.log("  - Email:", data.email);
-    console.log("  - Acesso:", data.acesso);
-    console.log("  - Status:", data.status);
-    console.log("  - Filiais:", (data.filiais as any[])?.length ?? 0, "filiais");
-    console.log("  - Dashboards:", (data.dashboards as any[])?.length ?? 0, "dashboards");
-    console.log("\n" + "=".repeat(60) + "\n");
-
     return NextResponse.json({ success: true, entry: mapRow(data) });
-  } catch (error: any) {
-    console.error("\n❌ [USUARIOS API] ERRO AO INSERIR:");
-    console.error("  - Message:", error.message);
-    console.error("  - Code:", error.code ?? "N/A");
-    console.error("  - Details:", error.detail ?? "N/A");
-    console.error("  - Hint:", error.hint ?? "N/A");
-    console.error("  - Full error:", JSON.stringify(error, null, 2));
-    console.log("\n" + "=".repeat(60));
-    return NextResponse.json(
-      {
-        error: error.message,
-        code: error.code,
-        details: error.detail,
-        hint: error.hint,
-      },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    const err = error as PgError;
+    console.error("[usuarios][POST] Erro ao criar usuário:", err.message);
+
+    if (err.code === "23505") {
+      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
+    }
+
+    return NextResponse.json({ error: "Erro ao criar usuário" }, { status: 500 });
   }
 }
 
-// ─── PUT ──────────────────────────────────────────────────────────────────────
 export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "admin") {
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
   }
 
-  const body = await request.json();
+  const body = (await request.json()) as Record<string, unknown>;
 
-  // Build dynamic SET clause
   const setClauses: string[] = [];
   const params: unknown[] = [];
   let paramIdx = 1;
@@ -170,8 +134,9 @@ export async function PUT(request: NextRequest) {
     params.push(body.email);
   }
   if (body.departamento !== undefined) {
+    const departamento = typeof body.departamento === "string" ? body.departamento.toUpperCase() : "";
     setClauses.push(`departamento = $${paramIdx++}`);
-    params.push(body.departamento.toUpperCase());
+    params.push(departamento);
   }
   if (body.acesso !== undefined) {
     setClauses.push(`acesso = $${paramIdx++}`);
@@ -193,17 +158,21 @@ export async function PUT(request: NextRequest) {
     setClauses.push(`must_change_password = $${paramIdx++}`);
     params.push(body.must_change_password);
   }
-  if (body.senha) {
+  if (typeof body.senha === "string" && body.senha) {
     const senhaHash = await bcrypt.hash(body.senha, 10);
     setClauses.push(`senha_hash = $${paramIdx++}`);
     params.push(senhaHash);
   }
 
-  // id is the last parameter
-  params.push(body.id);
+  const id = typeof body.id === "string" ? body.id : "";
+  if (!id) {
+    return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
+  }
+
+  params.push(id);
 
   try {
-    const data = await queryOne(
+    const data = await queryOne<UsuarioRow>(
       `UPDATE via_core.usuarios SET ${setClauses.join(", ")} WHERE id = $${paramIdx}
        RETURNING id, nome, email, departamento, acesso, status, filiais, dashboards`,
       params
@@ -213,12 +182,13 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
     }
     return NextResponse.json({ success: true, entry: mapRow(data) });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("[usuarios][PUT] Erro ao atualizar usuário:", err.message);
+    return NextResponse.json({ error: "Erro ao atualizar usuário" }, { status: 500 });
   }
 }
 
-// ─── DELETE ───────────────────────────────────────────────────────────────────
 export async function DELETE(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "admin") {
@@ -232,7 +202,9 @@ export async function DELETE(request: NextRequest) {
   try {
     await query("DELETE FROM via_core.usuarios WHERE id = $1", [id]);
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("[usuarios][DELETE] Erro ao excluir usuário:", err.message);
+    return NextResponse.json({ error: "Erro ao excluir usuário" }, { status: 500 });
   }
 }

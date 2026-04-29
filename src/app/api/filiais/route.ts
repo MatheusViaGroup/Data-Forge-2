@@ -15,18 +15,25 @@ export async function GET() {
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
   }
 
-  const res = await fetch("https://n8n.datastack.viagroup.com.br/webhook/filial", {
-    next: { revalidate: 300 }, // cache 5 minutos
-  });
-
-  if (!res.ok) {
-    return NextResponse.json({ error: "Erro ao buscar filiais" }, { status: 502 });
+  let response: Response;
+  try {
+    response = await fetch("https://n8n.datastack.viagroup.com.br/webhook/filial", {
+      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("[filiais] Erro ao consultar webhook:", err.message);
+    return NextResponse.json({ filiais: [] }, { status: 502 });
   }
 
-  const data: Filial[] = await res.json();
+  if (!response.ok) {
+    return NextResponse.json({ filiais: [] }, { status: 502 });
+  }
 
+  const data: Filial[] = await response.json();
   const filiais = data
-    .filter((f) => f.PLANTA_ID && f.PLANTA)
+    .filter((filial) => filial.PLANTA_ID && filial.PLANTA)
     .sort((a, b) => a.PLANTA.localeCompare(b.PLANTA));
 
   return NextResponse.json({ filiais });
