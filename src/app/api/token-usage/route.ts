@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "N\u00e3o autorizado" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     if (!token || !dashboardId || !credentialId || !expiresAt) {
       return NextResponse.json(
-        { error: "Token, dashboardId, credentialId e expiresAt sÃ£o obrigatÃ³rios" },
+        { error: "Token, dashboardId, credentialId e expiresAt s\u00e3o obrigat\u00f3rios" },
         { status: 400 }
       );
     }
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (result.duplicate) {
-      return NextResponse.json({ success: true, message: "Token jÃ¡ registrado" });
+      return NextResponse.json({ success: true, message: "Token j\u00e1 registrado" });
     }
 
     if (!result.id) {

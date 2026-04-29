@@ -176,7 +176,7 @@ export function CustomSelect({
 
           {options.length === 0 && (
             <div className="px-4 py-3 text-sm text-[var(--text-muted)] text-center">
-              Nenhuma opÃ§Ã£o disponÃ­vel
+              Nenhuma op\u00e7\u00e3o dispon\u00edvel
             </div>
           )}
         </div>,

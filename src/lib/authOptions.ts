@@ -55,13 +55,13 @@ export const authOptions: NextAuthOptions = {
           name: user.nome,
           email: user.email,
           role:
-            user.acesso === "Administrador do LocatÃ¡rio"
+            user.acesso === "Administrador do Locat\u00e1rio"
               ? "admin"
               : user.acesso === "Matriz"
                 ? "matriz"
                 : "user",
           mustChangePassword: user.must_change_password ?? false,
-          allowedDashboards: user.acesso === "Administrador do LocatÃ¡rio" ? [] : (user.dashboards ?? []),
+          allowedDashboards: user.acesso === "Administrador do Locat\u00e1rio" ? [] : (user.dashboards ?? []),
         };
       },
     }),
@@ -88,14 +88,14 @@ export const authOptions: NextAuthOptions = {
         if (!data) return null as unknown as JWT;
 
         token.role =
-          data.acesso === "Administrador do LocatÃ¡rio"
+          data.acesso === "Administrador do Locat\u00e1rio"
             ? "admin"
             : data.acesso === "Matriz"
               ? "matriz"
               : "user";
 
         token.allowedDashboards =
-          data.acesso === "Administrador do LocatÃ¡rio"
+          data.acesso === "Administrador do Locat\u00e1rio"
             ? []
             : (data.dashboards ?? []);
       }

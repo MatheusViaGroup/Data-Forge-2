@@ -18,7 +18,7 @@ function Shell({ title, subtitle, children, fullHeight, topBar }: AppShellProps)
     <div className="flex min-h-screen overflow-hidden" style={{ background: "var(--bg-app)" }}>
       <Sidebar />
 
-      {/* Conteúdo principal �?" empurra pela largura da sidebar (desktop) */}
+      {/* Conteúdo principal: empurra pela largura da sidebar (desktop) */}
       <div
         className="flex flex-col flex-1 min-w-0"
         style={{ marginLeft: collapsed ? "68px" : "230px" }}
@@ -48,4 +48,3 @@ function Shell({ title, subtitle, children, fullHeight, topBar }: AppShellProps)
 export default function AppShell(props: AppShellProps) {
   return <Shell {...props} />;
 }
-
