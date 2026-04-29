@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 export interface Dashboard {
   id: string;
@@ -61,19 +62,31 @@ export interface AcessoEspecial {
 }
 
 export function useDataStore() {
+  const { status, data: session } = useSession();
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [credenciais, setCredenciais] = useState<Credencial[]>([]);
   const [parametrosRLS, setParametrosRLS] = useState<ParametroRLS[]>([]);
   const [acessosEspeciais, setAcessosEspeciais] = useState<AcessoEspecial[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [initialized, setInitialized] = useState(false);
+  const [loadedForUser, setLoadedForUser] = useState<string | null>(null);
 
   useEffect(() => {
-    if (initialized) return;
-    setInitialized(true);
-    
-    // Carrega apenas dashboards inicialmente
+    if (status === "loading") return;
+
+    if (status !== "authenticated") {
+      setDashboards([]);
+      setIsLoaded(false);
+      setLoadedForUser(null);
+      return;
+    }
+
+    const userKey = session?.user?.email ?? "authenticated-user";
+    if (loadedForUser === userKey) return;
+
+    setIsLoaded(false);
+
+    // Carrega dashboards assim que a sessao estiver autenticada.
     fetch("/api/dashboards")
       .then((r) => {
         if (!r.ok) throw new Error("Erro ao buscar dashboards");
@@ -81,12 +94,14 @@ export function useDataStore() {
       })
       .then((dashData) => {
         setDashboards(dashData.all ?? []);
+        setLoadedForUser(userKey);
       })
       .catch((err) => {
         console.warn("Erro ao carregar dashboards:", err.message);
+        setDashboards([]);
       })
       .finally(() => setIsLoaded(true));
-  }, [initialized]);
+  }, [status, session?.user?.email, loadedForUser]);
 
   // ─── Dashboard operations ──────────────────────────────────────────────────
   const addDashboard = useCallback(async (dashboard: Omit<Dashboard, "id">) => {
