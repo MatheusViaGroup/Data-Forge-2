@@ -4,6 +4,7 @@ import axios from "axios";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { query, queryOne } from "@/lib/db";
+import { registerTokenUsage } from "@/lib/tokenUsage";
 
 type RlsParamRow = {
   tipo: string;
@@ -370,27 +371,21 @@ export async function POST(request: NextRequest) {
         powerBIResponse: err.response?.data
       }, { status: 500 });
     }
-
     // Registrar uso do token (auditoria)
     if (tokenRes.data.token && credsData?.id) {
       try {
-        await fetch("/api/token-usage", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token: tokenRes.data.token,
-            dashboardId: dashboardId,
-            credentialId: credsData.id,
-            expiresAt: generateTokenBody.expiration.toISOString(),
-            reportId,
-            groupId,
-          }),
-        }).catch((regError) => {
-          console.error("[embed-token] Erro ao registrar uso:", regError);
-          // Não falha a requisição se registro der erro
+        await registerTokenUsage({
+          token: tokenRes.data.token,
+          dashboardId,
+          userId: String(session.user.id),
+          credentialId: String(credsData.id),
+          expiresAt: generateTokenBody.expiration.toISOString(),
+          ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("remote-addr") || null,
+          userAgent: request.headers.get("user-agent") || null,
         });
       } catch (regError) {
         console.error("[embed-token] Erro ao chamar registro de uso:", regError);
+        // Nao falha a requisicao se registro der erro
       }
     }
 
@@ -416,7 +411,7 @@ export async function POST(request: NextRequest) {
     console.error("=".repeat(60) + "\n");
 
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
+      { error: "Erro inesperado", details: err.message },
       { status: 500 }
     );
   }

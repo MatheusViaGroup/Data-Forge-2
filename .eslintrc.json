@@ -1,0 +1,28 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    "react/no-unescaped-entities": "off"
+  },
+  "overrides": [
+    {
+      "files": ["src/components/**/*.{ts,tsx}", "src/contexts/**/*.{ts,tsx}", "src/hooks/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@/lib/db",
+                "message": "Nao importe modulos server-only em componentes client-side."
+              },
+              {
+                "name": "@/lib/supabase",
+                "message": "Nao importe clientes admin no client-side."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

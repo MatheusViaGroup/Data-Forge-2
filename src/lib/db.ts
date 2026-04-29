@@ -1,4 +1,8 @@
+import "server-only";
 import { Pool, PoolConfig, QueryResult } from "pg";
+
+// WARNING: Server-side only.
+// Never import this module in Client Components ("use client").
 
 const schema = "via_core";
 

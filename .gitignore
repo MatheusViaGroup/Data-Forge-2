@@ -42,6 +42,7 @@ venv.bak/
 
 # vercel
 .vercel
+.vscode/
 
 # typescript
 *.tsbuildinfo

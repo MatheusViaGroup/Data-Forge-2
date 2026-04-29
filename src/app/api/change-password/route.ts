@@ -11,8 +11,14 @@ export async function POST(request: NextRequest) {
   }
 
   const { novaSenha } = await request.json();
-  if (!novaSenha || novaSenha.length < 6) {
-    return NextResponse.json({ error: "A senha deve ter pelo menos 6 caracteres" }, { status: 400 });
+  const senhaValida =
+    typeof novaSenha === "string" &&
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(novaSenha);
+  if (!senhaValida) {
+    return NextResponse.json(
+      { error: "A senha deve ter minimo 8 caracteres, uma letra maiuscula, uma minuscula e um numero" },
+      { status: 400 }
+    );
   }
 
   const hash = await bcrypt.hash(novaSenha, 10);

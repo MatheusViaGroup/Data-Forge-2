@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { query, queryOne } from "@/lib/db";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapRow(row: any) {
+import { query, queryOne } from "@/lib/db";function mapRow(row: any) {
   const urlCapa =
     row["url-dash"] ??
     row.url_dash ??

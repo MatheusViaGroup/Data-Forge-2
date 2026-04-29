@@ -3,10 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { query, queryOne } from "@/lib/db";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapRow(row: any) {
+import crypto from "crypto";function mapRow(row: any) {
   return {
     id: row.id,
     nome: row.nome,

@@ -1,10 +1,8 @@
-import type { NextAuthOptions } from "next-auth";
+﻿import type { NextAuthOptions } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { queryOne } from "@/lib/db";
-
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface UserRow extends Record<string, unknown> {
   id: string;
   nome: string;
@@ -15,11 +13,11 @@ interface UserRow extends Record<string, unknown> {
   must_change_password: boolean;
   dashboards: string[];
 }
-
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface StatusRow extends Record<string, unknown> {
+interface SessionRefreshRow extends Record<string, unknown> {
   id: string;
   status: string;
+  dashboards: string[] | null;
+  acesso: string;
 }
 
 export const authOptions: NextAuthOptions = {
@@ -32,11 +30,8 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          console.log('[Auth] Email ou senha não fornecidos');
           return null;
         }
-
-        console.log('[Auth] Tentando autenticar:', credentials.email);
 
         const user = await queryOne<UserRow>(
           `SELECT id, nome, email, senha_hash, acesso, status, must_change_password, dashboards
@@ -47,29 +42,26 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!user) {
-          console.log('[Auth] Usuário não encontrado:', credentials.email);
           return null;
         }
-
-        console.log('[Auth] Usuário encontrado:', user.nome);
 
         const passwordMatch = await bcrypt.compare(credentials.password, user.senha_hash);
         if (!passwordMatch) {
-          console.log('[Auth] Senha incorreta');
           return null;
         }
-
-        console.log('[Auth] Autenticação bem sucedida');
 
         return {
           id: user.id,
           name: user.nome,
           email: user.email,
-          role: user.acesso === "Administrador do Locatário" ? "admin"
-              : user.acesso === "Matriz" ? "matriz"
-              : "user",
+          role:
+            user.acesso === "Administrador do LocatÃ¡rio"
+              ? "admin"
+              : user.acesso === "Matriz"
+                ? "matriz"
+                : "user",
           mustChangePassword: user.must_change_password ?? false,
-          allowedDashboards: (user.acesso === "Administrador do Locatário") ? [] : (user.dashboards ?? []),
+          allowedDashboards: user.acesso === "Administrador do LocatÃ¡rio" ? [] : (user.dashboards ?? []),
         };
       },
     }),
@@ -83,14 +75,29 @@ export const authOptions: NextAuthOptions = {
         token.allowedDashboards = user.allowedDashboards ?? [];
       }
 
-      // Valida se o usuário ainda existe e está ativo no banco
+      // Revalida status e acessos a cada request de JWT
       if (token.id) {
-        const data = await queryOne<StatusRow>(
-          `SELECT id, status FROM via_core.usuarios WHERE id = $1 AND status = 'Ativo' LIMIT 1`,
+        const data = await queryOne<SessionRefreshRow>(
+          `SELECT id, status, dashboards, acesso
+           FROM via_core.usuarios
+           WHERE id = $1 AND status = 'Ativo'
+           LIMIT 1`,
           [token.id as string]
         );
 
-        if (!data) return null as unknown as JWT; // Invalida o token → redireciona para login
+        if (!data) return null as unknown as JWT;
+
+        token.role =
+          data.acesso === "Administrador do LocatÃ¡rio"
+            ? "admin"
+            : data.acesso === "Matriz"
+              ? "matriz"
+              : "user";
+
+        token.allowedDashboards =
+          data.acesso === "Administrador do LocatÃ¡rio"
+            ? []
+            : (data.dashboards ?? []);
       }
 
       return token;
@@ -110,7 +117,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
-    maxAge: 8 * 60 * 60, // 8 horas
+    maxAge: 8 * 60 * 60,
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

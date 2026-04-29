@@ -37,7 +37,7 @@ async function getCredentials() {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
