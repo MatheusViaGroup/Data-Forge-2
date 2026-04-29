@@ -228,7 +228,7 @@ export default function DashboardPage() {
             <Link
               href="/admin/dashboards"
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap"
-              style={{ background: "var(--brand-primary)", color: "var(--bg-panel)", fontSize: "13px" }}
+              style={{ background: "var(--brand-primary)", color: "#ffffff", fontSize: "13px" }}
             >
               <Plus size={15} /> Adicionar
             </Link>
@@ -271,7 +271,7 @@ export default function DashboardPage() {
               <Link
                 href="/admin/dashboards"
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all"
-                style={{ background: "var(--brand-primary)", color: "var(--bg-panel)", fontSize: "13px" }}
+                style={{ background: "var(--brand-primary)", color: "#ffffff", fontSize: "13px" }}
               >
                 <Plus size={15} /> Adicionar primeiro dashboard
               </Link>

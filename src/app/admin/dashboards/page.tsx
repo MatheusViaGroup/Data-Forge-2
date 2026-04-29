@@ -288,7 +288,7 @@ export default function AdminDashboardsPage() {
         )}
 
         {/* Filtros */}
-        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card p-4 mb-6">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[var(--border-soft)] shadow-card p-4 mb-6">
           <div className="flex flex-wrap gap-3">
             <input
               type="text"
@@ -301,7 +301,7 @@ export default function AdminDashboardsPage() {
         </div>
 
         {/* Tabela */}
-        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card overflow-hidden">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[var(--border-soft)] shadow-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -313,7 +313,7 @@ export default function AdminDashboardsPage() {
                   <th className="px-5 py-3 text-right text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#e2e8f0]">
+              <tbody className="divide-y divide-[var(--border-soft)]">
                 {!isLoaded ? (
                   <tr>
                     <td colSpan={5} className="px-5 py-12 text-center">
@@ -352,7 +352,7 @@ export default function AdminDashboardsPage() {
 
                           {menuOpenId === d.id && (
                             <div
-                              className="fixed bg-[var(--bg-panel)] rounded-xl shadow-2xl border border-[#e2e8f0] z-[9999] overflow-hidden w-40"
+                              className="fixed bg-[var(--bg-panel)] rounded-xl shadow-2xl border border-[var(--border-soft)] z-[9999] overflow-hidden w-40"
                               style={{
                                 top: `${menuPosition.top}px`,
                                 right: `${menuPosition.right}px`,
@@ -400,8 +400,8 @@ export default function AdminDashboardsPage() {
       {/* Modal Criar/Editar */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay)] backdrop-blur-sm p-4">
-          <div className="bg-[var(--bg-panel)] rounded-2xl shadow-2xl w-full max-w-2xl border border-[#e2e8f0] overflow-hidden max-h-[90dvh] flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0] flex-shrink-0">
+          <div className="bg-[var(--bg-panel)] rounded-2xl shadow-2xl w-full max-w-2xl border border-[var(--border-soft)] overflow-hidden max-h-[90dvh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-soft)] flex-shrink-0">
               <h3 className="text-[var(--brand-primary)] font-bold text-lg">{isEdit ? "Editar Dashboard" : "Novo Dashboard"}</h3>
               <button onClick={() => setModalOpen(false)} className="flex items-center justify-center w-8 h-8 rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-input)] transition-colors">
                 <X size={18} />
@@ -456,7 +456,7 @@ export default function AdminDashboardsPage() {
                 </div>
               </div>
 
-              <div className="border-t border-[#e2e8f0] pt-4">
+              <div className="border-t border-[var(--border-soft)] pt-4">
                 <p className="text-xs font-semibold text-[var(--text-secondary)] mb-3">Dados de Segurança</p>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
@@ -493,13 +493,13 @@ export default function AdminDashboardsPage() {
               </div>
 
               {/* URL Capa SharePoint */}
-              <div className="border-t border-[#e2e8f0] pt-4">
+              <div className="border-t border-[var(--border-soft)] pt-4">
                 <p className="text-xs font-semibold text-[var(--text-secondary)] mb-3">Capa do Dashboard</p>
                 <div className="flex items-start gap-4">
                   {/* Preview */}
                   <div
                     className="flex-shrink-0 rounded-xl overflow-hidden flex items-center justify-center"
-                    style={{ width: 72, height: 72, background: "var(--bg-hover)", border: "1px solid #e2e8f0" }}
+                    style={{ width: 72, height: 72, background: "var(--bg-hover)", border: "1px solid var(--border-soft)" }}
                   >
                     {form.urlCapa ? (
                       <img
@@ -544,7 +544,7 @@ export default function AdminDashboardsPage() {
                     id="rls"
                     checked={form.rls}
                     onChange={(e) => setForm({ ...form, rls: e.target.checked })}
-                    className="w-4 h-4 rounded border-[#e2e8f0] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
+                    className="w-4 h-4 rounded border-[var(--border-soft)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
                   />
                   <label htmlFor="rls" className="text-sm text-[var(--text-primary)] font-medium">
                     Possui RLS?
