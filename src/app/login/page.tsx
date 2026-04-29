@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, AlertCircle, LogIn } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 const SAVED_EMAIL_KEY = "via-core-saved-email";
 const SAVED_PASSWORD_KEY = "via-core-saved-password";
@@ -16,6 +17,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 
   // Se já está autenticado, redireciona direto para o dashboard
   useEffect(() => {
@@ -34,12 +37,18 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!turnstileToken) {
+      setError("Confirme que voc\u00ea n\u00e3o \u00e9 um rob\u00f4.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
     const result = await signIn("credentials", {
       email,
       password,
+      turnstileToken,
       redirect: false,
     });
 
@@ -175,10 +184,28 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Botão Entrar */}
+          {/* Botao Entrar */}
+          <div className="pt-2">
+            {turnstileSiteKey ? (
+              <Turnstile
+                siteKey={turnstileSiteKey}
+                onSuccess={setTurnstileToken}
+                onExpire={() => setTurnstileToken(null)}
+                onError={() => {
+                  setTurnstileToken(null);
+                  setError("Erro ao validar captcha. Tente novamente.");
+                }}
+              />
+            ) : (
+              <p style={{ color: "var(--status-danger)", fontSize: "13px" }}>
+                NEXT_PUBLIC_TURNSTILE_SITE_KEY n\u00e3o configurada.
+              </p>
+            )}
+          </div>
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !turnstileToken}
             className="w-full flex items-center justify-center gap-2 transition-all duration-150"
             style={{
               padding: "12px",

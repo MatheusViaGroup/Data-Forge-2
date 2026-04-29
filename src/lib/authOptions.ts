@@ -29,9 +29,42 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Senha", type: "password" },
+        turnstileToken: { label: "Turnstile", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        const turnstileToken = credentials.turnstileToken;
+        if (!turnstileToken || !process.env.TURNSTILE_SECRET_KEY) {
+          return null;
+        }
+
+        try {
+          const turnstileRes = await fetch(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                secret: process.env.TURNSTILE_SECRET_KEY,
+                response: turnstileToken,
+              }),
+            }
+          );
+
+          if (!turnstileRes.ok) {
+            return null;
+          }
+
+          const turnstileData = (await turnstileRes.json()) as { success?: boolean };
+          if (!turnstileData.success) {
+            return null;
+          }
+        } catch (error: unknown) {
+          const err = error as Error;
+          console.error("[auth] Falha ao validar Turnstile:", err.message);
           return null;
         }
 
