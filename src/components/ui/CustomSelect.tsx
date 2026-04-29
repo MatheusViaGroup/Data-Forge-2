@@ -147,7 +147,7 @@ export function CustomSelect({
           style={menuStyle}
           className="
             max-h-60 overflow-y-auto
-            bg-white rounded-xl
+            bg-[var(--bg-input)] rounded-xl
             border border-[var(--border-default)]
             shadow-lg
             p-1
