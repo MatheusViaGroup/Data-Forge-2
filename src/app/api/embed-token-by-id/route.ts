@@ -91,9 +91,6 @@ async function getCredentials() {
   };
 }
 
-// Cache em memória do access token (evita múltiplas chamadas ao Azure)
-let cachedToken: { token: string; expiresAt: number } | null = null;
-
 async function getAccessToken(): Promise<string> {
   const now = Date.now();
   const creds = (await getCredentials()) as CredentialsResult;
@@ -118,8 +115,6 @@ async function getAccessToken(): Promise<string> {
       const err = error as Error;
       console.error("[embed-token] Erro ao ler cache de token no banco:", err.message);
     }
-  } else if (cachedToken && cachedToken.expiresAt > now + 60_000) {
-    return cachedToken.token;
   }
 
   const msalConfig: msal.Configuration = {
@@ -160,11 +155,6 @@ async function getAccessToken(): Promise<string> {
       const err = error as Error;
       console.error("[embed-token] Erro ao salvar cache de token no banco:", err.message);
     }
-  } else {
-    cachedToken = {
-      token: result.accessToken,
-      expiresAt,
-    };
   }
 
   return result.accessToken;
