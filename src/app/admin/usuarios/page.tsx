@@ -394,7 +394,7 @@ export default function UsuariosPage() {
         </div>
 
         {/* Tabela */}
-        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[#e2e8f0] shadow-card overflow-hidden">
+        <div className="bg-[var(--bg-panel)] rounded-2xl border border-[var(--border-soft)] shadow-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -409,7 +409,7 @@ export default function UsuariosPage() {
                   <th className="px-5 py-3 text-center text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#e2e8f0]">
+              <tbody className="divide-y divide-[var(--border-soft)]">
                 {!isLoaded ? (
                   <tr><td colSpan={8} className="px-5 py-12 text-center"><Loader2 size={24} className="animate-spin text-[var(--brand-primary)] mx-auto" /></td></tr>
                 ) : paginated.length === 0 ? (
