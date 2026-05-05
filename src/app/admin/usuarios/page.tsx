@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
@@ -21,10 +21,14 @@ interface Filial {
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
+function unique(values: string[]): string[] {
+  return Array.from(new Set(values));
+}
+
 export default function UsuariosPage() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const { usuarios, dashboards, acessosEspeciais, isLoaded, loadAdminData, addUsuario, updateUsuario, deleteUsuario } = useDataStoreContext();
+  const { usuarios, dashboards, setores, acessosEspeciais, isLoaded, loadAdminData, addUsuario, updateUsuario, deleteUsuario } = useDataStoreContext();
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -65,7 +69,7 @@ export default function UsuariosPage() {
 
   // Formulário
   const [form, setForm] = useState<Omit<Usuario, "id"> & { id: string }>({
-    id: "", nome: "", email: "", departamento: "", acesso: "Usuário", status: "Ativo", filiais: [], dashboards: [],
+    id: "", nome: "", email: "", departamento: "", acesso: "Usuário", status: "Ativo", filiais: [], dashboards: [], setorId: "",
   });
   const [senhaEdicao, setSenhaEdicao] = useState("");
   const [showSenhaEdicao, setShowSenhaEdicao] = useState(false);
