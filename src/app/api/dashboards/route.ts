@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { query, queryOne } from "@/lib/db";
+import {
+  ensureSetoresSchema,
+  findSetorByNome,
+  getDashboardSetorMap,
+  replaceDashboardSectorLinks,
+  removeDashboardSectorLinksByDashboardId,
+  syncUsersDashboardsBySetorId,
+} from "@/lib/setores";
 
 type DashboardRow = {
   id: string;
@@ -36,7 +44,50 @@ type DashboardRequestBody = {
   rlsRole?: string;
   status?: string;
   urlCapa?: string;
+  setorIds?: string[];
 };
+
+function normalizeIds(values: unknown): string[] {
+  if (!Array.isArray(values)) return [];
+
+  return Array.from(
+    new Set(
+      values
+        .filter((item): item is string => typeof item === "string")
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0)
+    )
+  );
+}
+
+function normalizeSetorNames(value: string | undefined): string[] {
+  if (!value) return [];
+  return Array.from(
+    new Set(
+      value
+        .split(",")
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0)
+    )
+  );
+}
+
+async function resolveSetorIdsFromBody(setorIdsFromBody: unknown, setorNamesRaw: string | undefined): Promise<string[]> {
+  const ids = normalizeIds(setorIdsFromBody);
+  if (ids.length > 0) return ids;
+
+  const names = normalizeSetorNames(setorNamesRaw);
+  if (names.length === 0) return [];
+
+  const resolved = await Promise.all(names.map(async (name) => findSetorByNome(name)));
+  return Array.from(
+    new Set(
+      resolved
+        .map((item) => item?.id)
+        .filter((id): id is string => typeof id === "string" && id.length > 0)
+    )
+  );
+}
 
 function mapRow(row: DashboardRow) {
   const urlCapa = row["url-dash"] ?? row.url_dash ?? row.url_capa ?? row.urlCapa ?? "";
@@ -55,18 +106,41 @@ function mapRow(row: DashboardRow) {
     rlsRole: row.rls_role ?? "",
     status: row.status ?? "Ativo",
     urlCapa,
+    setorIds: [] as string[],
+    setores: [] as string[],
   };
 }
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
   }
 
   try {
-    const { rows } = await query<DashboardRow>("SELECT * FROM via_core.dashboards ORDER BY created_at");
-    const all = rows.map(mapRow);
+    await ensureSetoresSchema();
+
+    const { rows } = await query<DashboardRow>(
+      "SELECT * FROM via_core.dashboards ORDER BY created_at"
+    );
+    const setorMap = await getDashboardSetorMap();
+
+    const all = rows.map((row) => {
+      const mapped = mapRow(row);
+      const setorInfo = setorMap.get(mapped.id);
+      if (!setorInfo) {
+        return { ...mapped, setor: "" };
+      }
+
+      const setorLabel = setorInfo.setorNomes.join(", ");
+      return {
+        ...mapped,
+        setorIds: setorInfo.setorIds,
+        setores: setorInfo.setorNomes,
+        setor: setorLabel,
+      };
+    });
+
     const entries = all.filter((dashboard) => dashboard.ativo);
     return NextResponse.json({ entries, all });
   } catch (error: unknown) {
@@ -79,12 +153,15 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 403 });
   }
 
   const body = (await request.json()) as DashboardRequestBody;
 
   try {
+    await ensureSetoresSchema();
+    const setorIds = await resolveSetorIdsFromBody(body.setorIds, body.setor);
+
     const data = await queryOne<DashboardRow>(
       `INSERT INTO via_core.dashboards (nome, descricao, workspace_id, report_id, dataset_id, ativo, prioridade, setor, rls, rls_role, status, "url-dash")
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
@@ -119,11 +196,30 @@ export async function POST(request: NextRequest) {
         );
       } catch (rlsError: unknown) {
         const err = rlsError as Error;
-        console.error("[dashboards][POST] Erro ao criar parâmetro RLS:", err.message);
+        console.error("[dashboards][POST] Erro ao criar parÃ¢metro RLS:", err.message);
       }
     }
 
-    return NextResponse.json({ success: true, entry: mapRow(data) });
+    if (setorIds.length > 0) {
+      await replaceDashboardSectorLinks(data.id, setorIds);
+      for (const setorId of setorIds) {
+        await syncUsersDashboardsBySetorId(setorId);
+      }
+    }
+
+    const setorMap = await getDashboardSetorMap();
+    const setorInfo = setorMap.get(data.id);
+    const entry = mapRow(data);
+
+    return NextResponse.json({
+      success: true,
+      entry: {
+        ...entry,
+        setorIds: setorInfo?.setorIds ?? [],
+        setores: setorInfo?.setorNomes ?? [],
+        setor: setorInfo?.setorNomes.join(", ") ?? "",
+      },
+    });
   } catch (error: unknown) {
     const err = error as Error;
     console.error("[dashboards][POST] Erro ao inserir dashboard:", err.message);
@@ -134,12 +230,17 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 403 });
   }
 
   const body = (await request.json()) as DashboardRequestBody;
 
   try {
+    await ensureSetoresSchema();
+    const setorIds = body.setorIds !== undefined
+      ? await resolveSetorIdsFromBody(body.setorIds, body.setor)
+      : undefined;
+
     const data = await queryOne<DashboardRow>(
       `UPDATE via_core.dashboards
        SET nome = $1, descricao = $2, workspace_id = $3, report_id = $4, dataset_id = $5,
@@ -165,7 +266,7 @@ export async function PUT(request: NextRequest) {
     );
 
     if (!data) {
-      return NextResponse.json({ error: "Dashboard não encontrado" }, { status: 404 });
+      return NextResponse.json({ error: "Dashboard nÃ£o encontrado" }, { status: 404 });
     }
 
     if (body.rls && body.id) {
@@ -184,12 +285,56 @@ export async function PUT(request: NextRequest) {
           );
         } catch (rlsError: unknown) {
           const err = rlsError as Error;
-          console.error("[dashboards][PUT] Erro ao criar parâmetro RLS:", err.message);
+          console.error("[dashboards][PUT] Erro ao criar parÃ¢metro RLS:", err.message);
         }
       }
     }
 
-    return NextResponse.json({ success: true, entry: mapRow(data) });
+    let setorInfo = { setorIds: [] as string[], setorNomes: [] as string[] };
+
+    if (setorIds !== undefined) {
+      const { previousSetorIds, nextSetorIds } = await replaceDashboardSectorLinks(data.id, setorIds);
+      const nextSet = new Set(nextSetorIds);
+      const previousSet = new Set(previousSetorIds);
+
+      for (const setorId of previousSetorIds) {
+        const removedFromSetor = !nextSet.has(setorId);
+        if (removedFromSetor) {
+          await syncUsersDashboardsBySetorId(setorId, [data.id]);
+          continue;
+        }
+        await syncUsersDashboardsBySetorId(setorId);
+      }
+
+      for (const setorId of nextSetorIds) {
+        if (!previousSet.has(setorId)) {
+          await syncUsersDashboardsBySetorId(setorId);
+        }
+      }
+
+      const setorMap = await getDashboardSetorMap();
+      const mapped = setorMap.get(data.id);
+      if (mapped) {
+        setorInfo = mapped;
+      }
+    } else {
+      const setorMap = await getDashboardSetorMap();
+      const mapped = setorMap.get(data.id);
+      if (mapped) {
+        setorInfo = mapped;
+      }
+    }
+
+    const entry = mapRow(data);
+    return NextResponse.json({
+      success: true,
+      entry: {
+        ...entry,
+        setorIds: setorInfo.setorIds,
+        setores: setorInfo.setorNomes,
+        setor: setorInfo.setorNomes.join(", "),
+      },
+    });
   } catch (error: unknown) {
     const err = error as Error;
     console.error("[dashboards][PUT] Erro ao atualizar dashboard:", err.message);
@@ -200,15 +345,22 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 403 });
   }
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: "id obrigatÃ³rio" }, { status: 400 });
 
   try {
+    await ensureSetoresSchema();
+    const affectedSetores = await removeDashboardSectorLinksByDashboardId(id);
     await query("DELETE FROM via_core.dashboards WHERE id = $1", [id]);
+
+    for (const setorId of affectedSetores) {
+      await syncUsersDashboardsBySetorId(setorId, [id]);
+    }
+
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     const err = error as Error;
