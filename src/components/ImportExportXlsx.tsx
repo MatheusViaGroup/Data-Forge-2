@@ -149,8 +149,8 @@ export function ImportExportXlsx({ cols, nomeTemplate, onImport }: Props) {
         disabled={importing}
         className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all"
         style={{
-          background: "var(--bg-hover)",
-          border: "1px solid #C7CEED",
+          background: "var(--bg-app)",
+          border: "1px solid var(--border-soft)",
           color: "var(--brand-primary)",
           whiteSpace: "nowrap",
           opacity: importing ? 0.7 : 1,

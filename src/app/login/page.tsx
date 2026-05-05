@@ -185,17 +185,19 @@ export default function LoginPage() {
           </div>
 
           {/* Botao Entrar */}
-          <div className="pt-2">
+          <div className="pt-2 flex justify-center">
             {turnstileSiteKey ? (
-              <Turnstile
-                siteKey={turnstileSiteKey}
-                onSuccess={setTurnstileToken}
-                onExpire={() => setTurnstileToken(null)}
-                onError={() => {
-                  setTurnstileToken(null);
-                  setError("Erro ao validar captcha. Tente novamente.");
-                }}
-              />
+              <div className="w-full flex justify-center">
+                <Turnstile
+                  siteKey={turnstileSiteKey}
+                  onSuccess={setTurnstileToken}
+                  onExpire={() => setTurnstileToken(null)}
+                  onError={() => {
+                    setTurnstileToken(null);
+                    setError("Erro ao validar captcha. Tente novamente.");
+                  }}
+                />
+              </div>
             ) : (
               <p style={{ color: "var(--status-danger)", fontSize: "13px" }}>
                 NEXT_PUBLIC_TURNSTILE_SITE_KEY n\u00e3o configurada.
