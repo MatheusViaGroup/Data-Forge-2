@@ -24,7 +24,7 @@ async function getCredentials() {
     };
   }
 
-  console.log("[embed-token] Fallback para variáveis de ambiente");
+  console.log("[embed-token] Fallback para variÃƒÂ¡veis de ambiente");
   return {
     clientId: process.env.POWERBI_CLIENT_ID as string,
     tenantId: process.env.POWERBI_TENANT_ID as string,
@@ -38,21 +38,21 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "NÃƒÂ£o autorizado" }, { status: 401 });
     }
 
     const body = await request.json();
     const { reportId, groupId } = body;
 
     console.log("\n========================================");
-    console.log("[embed-token] Nova requisição");
+    console.log("[embed-token] Nova requisiÃƒÂ§ÃƒÂ£o");
     console.log("[embed-token] reportId:", reportId);
     console.log("[embed-token] groupId:", groupId);
     console.log("========================================\n");
 
     if (!reportId || !groupId) {
       return NextResponse.json(
-        { error: "reportId e groupId são obrigatórios" },
+        { error: "reportId e groupId sÃƒÂ£o obrigatÃƒÂ³rios" },
         { status: 400 }
       );
     }
@@ -67,12 +67,12 @@ export async function POST(request: NextRequest) {
         masterPassword: !!creds.masterPassword,
       });
       return NextResponse.json(
-        { error: "Credenciais Power BI não configuradas. Acesse Admin → Credenciais Power BI." },
+        { error: "Credenciais Power BI nÃƒÂ£o configuradas. Acesse Admin Ã¢â€ â€™ Credenciais Power BI." },
         { status: 500 }
       );
     }
 
-    // ─── 1. Configurar MSAL ───────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ 1. Configurar MSAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     const authority = `https://login.microsoftonline.com/${creds.tenantId}`;
     console.log("[embed-token] authority:", authority);
 
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       password: creds.masterPassword,
     };
 
-    // ─── 2. Adquirir access token via Master User (ROPC) ─────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ 2. Adquirir access token via Master User (ROPC) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     console.log("[embed-token] Iniciando acquireTokenByUsernamePassword...");
 
     let authResult: msal.AuthenticationResult | null;
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       };
 
       console.error("\n========================================");
-      console.error("[embed-token] ERRO NA AUTENTICAÇÃO AZURE AD");
+      console.error("[embed-token] ERRO NA AUTENTICAÃƒâ€¡ÃƒÆ’O AZURE AD");
       console.error("message       :", err.message);
       console.error("errorCode     :", err.errorCode);
       console.error("errorMessage  :", err.errorMessage);
@@ -127,20 +127,20 @@ export async function POST(request: NextRequest) {
       console.error("stack         :", err.stack);
       console.error("========================================\n");
 
-      // Traduz os códigos mais comuns para mensagens amigáveis
+      // Traduz os cÃƒÂ³digos mais comuns para mensagens amigÃƒÂ¡veis
       let userFriendly = err.errorMessage ?? err.message;
-      if (err.errorCode === "AADSTS50126") userFriendly = "Usuário ou senha incorretos (AADSTS50126)";
-      if (err.errorCode === "AADSTS50076") userFriendly = "A conta exige autenticação multifator (MFA) — não suportado em ROPC (AADSTS50076)";
-      if (err.errorCode === "AADSTS70011") userFriendly = "Scope inválido para este app (AADSTS70011)";
+      if (err.errorCode === "AADSTS50126") userFriendly = "UsuÃƒÂ¡rio ou senha incorretos (AADSTS50126)";
+      if (err.errorCode === "AADSTS50076") userFriendly = "A conta exige autenticaÃƒÂ§ÃƒÂ£o multifator (MFA) Ã¢â‚¬â€ nÃƒÂ£o suportado em ROPC (AADSTS50076)";
+      if (err.errorCode === "AADSTS70011") userFriendly = "Scope invÃƒÂ¡lido para este app (AADSTS70011)";
       if (err.errorCode === "AADSTS7000218") userFriendly = "Client Secret incorreto ou expirado (AADSTS7000218)";
-      if (err.errorCode === "AADSTS90002") userFriendly = "Tenant ID não encontrado (AADSTS90002)";
-      if (err.errorCode === "AADSTS700016") userFriendly = "Client ID não encontrado no tenant (AADSTS700016)";
-      if (err.errorCode === "AADSTS65001") userFriendly = "O app não tem permissão para acessar o Power BI — conceda consentimento no Azure AD (AADSTS65001)";
-      if (err.errorCode === "AADSTS50034") userFriendly = "Usuário não existe neste tenant (AADSTS50034)";
+      if (err.errorCode === "AADSTS90002") userFriendly = "Tenant ID nÃƒÂ£o encontrado (AADSTS90002)";
+      if (err.errorCode === "AADSTS700016") userFriendly = "Client ID nÃƒÂ£o encontrado no tenant (AADSTS700016)";
+      if (err.errorCode === "AADSTS65001") userFriendly = "O app nÃƒÂ£o tem permissÃƒÂ£o para acessar o Power BI Ã¢â‚¬â€ conceda consentimento no Azure AD (AADSTS65001)";
+      if (err.errorCode === "AADSTS50034") userFriendly = "UsuÃƒÂ¡rio nÃƒÂ£o existe neste tenant (AADSTS50034)";
 
       return NextResponse.json(
         {
-          error: "Falha na autenticação Azure AD",
+          error: "Falha na autenticaÃƒÂ§ÃƒÂ£o Azure AD",
           details: userFriendly,
           errorCode: err.errorCode,
           subError: err.subError,
@@ -151,15 +151,15 @@ export async function POST(request: NextRequest) {
 
     if (!authResult?.accessToken) {
       console.error("[embed-token] authResult retornou sem accessToken:", authResult);
-      return NextResponse.json({ error: "Access token não obtido" }, { status: 500 });
+      return NextResponse.json({ error: "Access token nÃƒÂ£o obtido" }, { status: 500 });
     }
 
     console.log("[embed-token] Access token obtido com sucesso");
     console.log("[embed-token] tokenType:", authResult.tokenType);
     console.log("[embed-token] expiresOn:", authResult.expiresOn);
 
-    // ─── 3. Buscar embedUrl do relatório ─────────────────────────────────────
-    console.log("[embed-token] Buscando embedUrl do relatório...");
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ 3. Buscar embedUrl do relatÃƒÂ³rio Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    console.log("[embed-token] Buscando embedUrl do relatÃƒÂ³rio...");
 
     let embedUrl: string;
     try {
@@ -176,20 +176,20 @@ export async function POST(request: NextRequest) {
       console.log("[embed-token] embedUrl obtida:", embedUrl);
     } catch (reportError: unknown) {
       const err = reportError as Error & { response?: { data: unknown; status: number } };
-      console.error("[embed-token] Erro ao buscar relatório:");
+      console.error("[embed-token] Erro ao buscar relatÃƒÂ³rio:");
       console.error("  status HTTP :", err.response?.status);
       console.error("  response    :", JSON.stringify(err.response?.data, null, 2));
       console.error("  message     :", err.message);
       return NextResponse.json(
         {
-          error: "Falha ao buscar informações do relatório",
-          details: `HTTP ${err.response?.status} — ${err.message}`,
+          error: "Falha ao buscar informaÃƒÂ§ÃƒÂµes do relatÃƒÂ³rio",
+          details: `HTTP ${err.response?.status} Ã¢â‚¬â€ ${err.message}`,
         },
         { status: 500 }
       );
     }
 
-    // ─── 4. Gerar Embed Token ─────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ 4. Gerar Embed Token Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     console.log("[embed-token] Gerando embed token...");
 
     let embedToken: string;
@@ -215,13 +215,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "Falha ao gerar embed token",
-          details: `HTTP ${err.response?.status} — ${err.message}`,
+          details: `HTTP ${err.response?.status} Ã¢â‚¬â€ ${err.message}`,
         },
         { status: 500 }
       );
     }
 
-    console.log("[embed-token] Tudo OK — retornando accessToken + embedUrl\n");
+    console.log("[embed-token] Tudo OK Ã¢â‚¬â€ retornando accessToken + embedUrl\n");
     return NextResponse.json({ accessToken: embedToken, embedUrl });
 
   } catch (error: unknown) {

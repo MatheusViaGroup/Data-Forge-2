@@ -43,10 +43,6 @@ export function CustomMultiSelect({
 
   const selectedText = useMemo(() => {
     const selectedOptions = options.filter((option) => selectedSet.has(option.value));
-<<<<<<< HEAD
-
-=======
->>>>>>> stag
     if (selectedOptions.length === 0) {
       return placeholder;
     }
@@ -118,10 +114,6 @@ export function CustomMultiSelect({
       onChange(values.filter((item) => item !== value));
       return;
     }
-<<<<<<< HEAD
-
-=======
->>>>>>> stag
     onChange(unique([...values, value]));
   };
 
@@ -170,10 +162,6 @@ export function CustomMultiSelect({
         >
           {options.map((option) => {
             const checked = selectedSet.has(option.value);
-<<<<<<< HEAD
-
-=======
->>>>>>> stag
             return (
               <button
                 key={option.value}
@@ -203,7 +191,7 @@ export function CustomMultiSelect({
 
           {options.length === 0 && (
             <div className="px-4 py-3 text-sm text-[var(--text-muted)] text-center">
-              Nenhuma opção disponível
+              Nenhuma opÃƒÂ§ÃƒÂ£o disponÃƒÂ­vel
             </div>
           )}
         </div>,

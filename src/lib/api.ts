@@ -1,19 +1,19 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-// ==================== USUÁRIOS ====================
+// ==================== USUÃƒÂRIOS ====================
 
 export interface Usuario {
   id: string;
   nome: string;
   email: string;
   departamento: string;
-  acesso: 'Usuário' | 'Administrador do Locatário';
-  status: 'Ativo' | 'Excluído';
+  acesso: 'UsuÃƒÂ¡rio' | 'Administrador do LocatÃƒÂ¡rio';
+  status: 'Ativo' | 'ExcluÃƒÂ­do';
 }
 
 export async function fetchUsuarios(): Promise<Usuario[]> {
   const res = await fetch(`${API_URL}/api/usuarios`);
-  if (!res.ok) throw new Error('Erro ao buscar usuários');
+  if (!res.ok) throw new Error('Erro ao buscar usuÃƒÂ¡rios');
   return res.json();
 }
 
@@ -23,7 +23,7 @@ export async function createUsuario(data: Omit<Usuario, 'id'>): Promise<Usuario>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Erro ao criar usuário');
+  if (!res.ok) throw new Error('Erro ao criar usuÃƒÂ¡rio');
   return res.json();
 }
 
@@ -33,7 +33,7 @@ export async function updateUsuario(id: string, data: Partial<Usuario>): Promise
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Erro ao atualizar usuário');
+  if (!res.ok) throw new Error('Erro ao atualizar usuÃƒÂ¡rio');
   return res.json();
 }
 
@@ -41,7 +41,7 @@ export async function deleteUsuario(id: string): Promise<void> {
   const res = await fetch(`${API_URL}/api/usuarios/${id}`, {
     method: 'DELETE',
   });
-  if (!res.ok) throw new Error('Erro ao excluir usuário');
+  if (!res.ok) throw new Error('Erro ao excluir usuÃƒÂ¡rio');
 }
 
 

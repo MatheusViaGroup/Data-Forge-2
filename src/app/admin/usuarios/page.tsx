@@ -232,7 +232,7 @@ export default function UsuariosPage() {
     else if (!/\S+@\S+\.\S+/.test(form.email)) novosErros.email = "Email inválido";
     if (!form.departamento.trim()) novosErros.departamento = "Departamento é obrigatório";
     if (!isEdit && !senhaEdicao) novosErros.senhaEdicao = "Senha é obrigatória para novo usuário";
-    if (senhaEdicao && senhaEdicao.length < 6) novosErros.senhaEdicao = "A senha deve ter pelo menos 6 caracteres";
+    if (!isEdit && senhaEdicao && senhaEdicao.length < 6) novosErros.senhaEdicao = "A senha deve ter pelo menos 6 caracteres";
     setErros(novosErros);
     return Object.keys(novosErros).length === 0;
   };
@@ -252,7 +252,6 @@ export default function UsuariosPage() {
           filiais: form.filiais,
           dashboards: form.dashboards,
           setorId: form.setorId,
-          ...(senhaEdicao ? { senha: senhaEdicao, must_change_password: false } : {}),
         });
         setFeedback({ type: "success", msg: "Usuário atualizado com sucesso!" });
       } else {
@@ -671,7 +670,7 @@ export default function UsuariosPage() {
                 </div>
               )}
 
-              {/* Senha (apenas criação) ou Nova Senha (edição) */}
+              {/* Senha inicial (apenas criação) */}
               {!isEdit && (
                 <div>
                   <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Senha Inicial *</label>
@@ -690,28 +689,6 @@ export default function UsuariosPage() {
                   </div>
                   {erros.senhaEdicao && <p className="text-red-500 text-xs mt-1 ml-3">{erros.senhaEdicao}</p>}
                   <p className="text-xs text-[var(--text-muted)] mt-1 ml-3">O usuário deverá trocar esta senha no primeiro login</p>
-                </div>
-              )}
-
-              {isEdit && (
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">
-                    Nova Senha <span className="text-[var(--text-muted)] font-normal">(deixe em branco para não alterar)</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showSenhaEdicao ? "text" : "password"}
-                      value={senhaEdicao}
-                      onChange={(e) => setSenhaEdicao(e.target.value)}
-                      placeholder="Mínimo 6 caracteres"
-                      className={`w-full px-5 py-2.5 bg-[var(--bg-input)] border rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all pr-12 ${erros.senhaEdicao ? "border-red-500" : "border-transparent"}`}
-                    />
-                    <button type="button" onClick={() => setShowSenhaEdicao(!showSenhaEdicao)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--brand-primary)] transition-colors">
-                      {showSenhaEdicao ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                  {erros.senhaEdicao && <p className="text-red-500 text-xs mt-1 ml-3">{erros.senhaEdicao}</p>}
                 </div>
               )}
 
