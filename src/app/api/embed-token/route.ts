@@ -3,10 +3,20 @@ import * as msal from "@azure/msal-node";
 import axios from "axios";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { query, queryOne } from "@/lib/db";
+import { queryOne } from "@/lib/db";
+import { decryptCredentialIfNeeded } from "@/lib/credentialCrypto";
+import { resolveDashboardId, userCanAccessDashboard } from "@/lib/dashboardAccess";
+
+type CredentialRow = {
+  client_id: string;
+  tenant_id: string;
+  client_secret: string | null;
+  master_user: string;
+  master_password: string | null;
+};
 
 async function getCredentials() {
-  const data = await queryOne(
+  const data = await queryOne<CredentialRow>(
     `SELECT client_id, tenant_id, client_secret, master_user, master_password
      FROM via_core.credenciais
      WHERE status = 'ativo'
@@ -16,11 +26,11 @@ async function getCredentials() {
   if (data) {
     console.log("[embed-token] Usando credenciais do banco");
     return {
-      clientId: data.client_id as string,
-      tenantId: data.tenant_id as string,
-      clientSecret: data.client_secret as string,
-      masterUser: data.master_user as string,
-      masterPassword: data.master_password as string,
+      clientId: data.client_id,
+      tenantId: data.tenant_id,
+      clientSecret: decryptCredentialIfNeeded(data.client_secret ?? ""),
+      masterUser: data.master_user,
+      masterPassword: decryptCredentialIfNeeded(data.master_password ?? ""),
     };
   }
 
@@ -55,6 +65,20 @@ export async function POST(request: NextRequest) {
         { error: "reportId e groupId são obrigatórios" },
         { status: 400 }
       );
+    }
+
+    const requestedDashboardId = await resolveDashboardId(reportId, groupId);
+    if (!requestedDashboardId) {
+      return NextResponse.json({ error: "Dashboard nÃ£o encontrado" }, { status: 404 });
+    }
+
+    const canAccessDashboard = userCanAccessDashboard(
+      session.user.role,
+      session.user.allowedDashboards,
+      requestedDashboardId
+    );
+    if (!canAccessDashboard) {
+      return NextResponse.json({ error: "Acesso negado ao dashboard solicitado" }, { status: 403 });
     }
 
     const creds = await getCredentials();

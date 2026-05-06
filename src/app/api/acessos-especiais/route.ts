@@ -3,7 +3,29 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { query, queryOne } from "@/lib/db";
 
-function mapRow(row: any) {
+type AcessoEspecialRow = {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  filiais: string[] | null;
+  status: string | null;
+};
+
+type AcessoEspecialBody = {
+  id?: string;
+  nome?: string;
+  descricao?: string;
+  filiais?: string[];
+  status?: string;
+};
+
+type SessionLike = {
+  user?: {
+    role?: string;
+  };
+} | null;
+
+function mapRow(row: AcessoEspecialRow) {
   return {
     id: row.id,
     nome: row.nome,
@@ -13,36 +35,38 @@ function mapRow(row: any) {
   };
 }
 
-// ─── GET: lista todos ─────────────────────────────────────────────────────────
+function ensureAdmin(session: SessionLike) {
+  return session?.user?.role === "admin";
+}
+
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!ensureAdmin(session)) {
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
   try {
-    const { rows } = await query(
+    const { rows } = await query<AcessoEspecialRow>(
       "SELECT * FROM via_core.acessos_especiais ORDER BY nome"
     );
-    const entries = rows.map(mapRow);
-    return NextResponse.json({ entries });
-  } catch (error: any) {
-    console.error("Erro ao buscar acessos especiais:", error.message);
+    return NextResponse.json({ entries: rows.map(mapRow) });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("[acessos-especiais][GET] Erro ao buscar acessos especiais:", err.message);
     return NextResponse.json({ entries: [] });
   }
 }
 
-// ─── POST: cria novo ──────────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+  if (!ensureAdmin(session)) {
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
-  const body = await request.json();
+  const body = (await request.json()) as AcessoEspecialBody;
 
   try {
-    const data = await queryOne(
+    const data = await queryOne<AcessoEspecialRow>(
       `INSERT INTO via_core.acessos_especiais (nome, descricao, filiais, status)
        VALUES ($1, $2, $3::jsonb, $4)
        RETURNING *`,
@@ -58,22 +82,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Erro ao inserir acesso especial" }, { status: 500 });
     }
     return NextResponse.json({ success: true, entry: mapRow(data) });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
-// ─── PUT: atualiza ────────────────────────────────────────────────────────────
 export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+  if (!ensureAdmin(session)) {
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
-  const body = await request.json();
+  const body = (await request.json()) as AcessoEspecialBody;
 
   try {
-    const data = await queryOne(
+    const data = await queryOne<AcessoEspecialRow>(
       `UPDATE via_core.acessos_especiais
        SET nome = $1, descricao = $2, filiais = $3::jsonb, status = $4
        WHERE id = $5
@@ -88,29 +112,30 @@ export async function PUT(request: NextRequest) {
     );
 
     if (!data) {
-      return NextResponse.json({ error: "Acesso especial não encontrado" }, { status: 404 });
+      return NextResponse.json({ error: "Acesso especial nao encontrado" }, { status: 404 });
     }
     return NextResponse.json({ success: true, entry: mapRow(data) });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
-// ─── DELETE ───────────────────────────────────────────────────────────────────
 export async function DELETE(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+  if (!ensureAdmin(session)) {
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: "id obrigatorio" }, { status: 400 });
 
   try {
     await query("DELETE FROM via_core.acessos_especiais WHERE id = $1", [id]);
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

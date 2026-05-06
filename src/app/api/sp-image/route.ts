@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { queryOne } from "@/lib/db";
+import { decryptCredentialIfNeeded } from "@/lib/credentialCrypto";
 import * as msal from "@azure/msal-node";
 
 function encodeSharingUrl(url: string): string {
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
       auth: {
         clientId: cred.client_id as string,
         authority: `https://login.microsoftonline.com/${cred.tenant_id}`,
-        clientSecret: cred.client_secret as string,
+        clientSecret: decryptCredentialIfNeeded((cred.client_secret as string) ?? ""),
       },
     });
 

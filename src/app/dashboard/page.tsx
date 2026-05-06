@@ -151,7 +151,7 @@ export default function DashboardPage() {
   const filtered = dashboards.filter((d) => {
     if (!d.ativo) return false;
     // Admin vê todos; Usuário/Matriz vê apenas os permitidos
-    if (!isAdmin && allowedDashboards.length > 0 && !allowedDashboards.includes(d.id)) return false;
+    if (!isAdmin && !allowedDashboards.includes(d.id)) return false;
     const q = search.toLowerCase();
     return d.nome.toLowerCase().includes(q) || d.descricao?.toLowerCase().includes(q);
   });
