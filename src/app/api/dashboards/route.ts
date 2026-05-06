@@ -4,10 +4,7 @@ import { authOptions } from "@/lib/authOptions";
 import { query, queryOne } from "@/lib/db";
 import {
   ensureSetoresSchema,
-<<<<<<< HEAD
-=======
   findSetorByNome,
->>>>>>> stag
   getDashboardSetorMap,
   replaceDashboardSectorLinks,
   removeDashboardSectorLinksByDashboardId,
@@ -50,8 +47,6 @@ type DashboardRequestBody = {
   setorIds?: string[];
 };
 
-<<<<<<< HEAD
-=======
 type PgError = Error & {
   code?: string;
   detail?: string;
@@ -116,7 +111,6 @@ async function tryEnsureSetoresSchema(context: string): Promise<boolean> {
   }
 }
 
->>>>>>> stag
 function normalizeIds(values: unknown): string[] {
   if (!Array.isArray(values)) return [];
 
@@ -130,8 +124,6 @@ function normalizeIds(values: unknown): string[] {
   );
 }
 
-<<<<<<< HEAD
-=======
 function normalizeSetorNames(value: string | undefined): string[] {
   if (!value) return [];
   return Array.from(
@@ -161,7 +153,6 @@ async function resolveSetorIdsFromBody(setorIdsFromBody: unknown, setorNamesRaw:
   );
 }
 
->>>>>>> stag
 function mapRow(row: DashboardRow) {
   const urlCapa = row["url-dash"] ?? row.url_dash ?? row.url_capa ?? row.urlCapa ?? "";
 
@@ -191,11 +182,6 @@ export async function GET() {
   }
 
   try {
-<<<<<<< HEAD
-    await ensureSetoresSchema();
-    const { rows } = await query<DashboardRow>("SELECT * FROM via_core.dashboards ORDER BY created_at");
-    const setorMap = await getDashboardSetorMap();
-=======
     const setoresEnabled = await tryEnsureSetoresSchema("GET");
 
     const { rows } = await query<DashboardRow>(
@@ -204,19 +190,12 @@ export async function GET() {
     const setorMap = setoresEnabled
       ? await getDashboardSetorMap()
       : new Map<string, { setorIds: string[]; setorNomes: string[] }>();
->>>>>>> stag
 
     const all = rows.map((row) => {
       const mapped = mapRow(row);
       const setorInfo = setorMap.get(mapped.id);
-<<<<<<< HEAD
-
-      if (!setorInfo) {
-        return { ...mapped, setor: "" };
-=======
       if (!setorInfo) {
         return mapped;
->>>>>>> stag
       }
 
       const setorLabel = setorInfo.setorNomes.join(", ");
@@ -254,15 +233,10 @@ export async function POST(request: NextRequest) {
   const body = (await request.json()) as DashboardRequestBody;
 
   try {
-<<<<<<< HEAD
-    await ensureSetoresSchema();
-    const setorIds = normalizeIds(body.setorIds);
-=======
     const setoresEnabled = await tryEnsureSetoresSchema("POST");
     const setorIds = setoresEnabled
       ? await resolveSetorIdsFromBody(body.setorIds, body.setor)
       : [];
->>>>>>> stag
 
     const data = await queryOne<DashboardRow>(
       `INSERT INTO via_core.dashboards (nome, descricao, workspace_id, report_id, dataset_id, ativo, prioridade, setor, rls, rls_role, status, "url-dash")
@@ -301,25 +275,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-<<<<<<< HEAD
-    if (setorIds.length > 0) {
-=======
     if (setoresEnabled && setorIds.length > 0) {
->>>>>>> stag
       await replaceDashboardSectorLinks(data.id, setorIds);
       for (const setorId of setorIds) {
         await syncUsersDashboardsBySetorId(setorId);
       }
     }
 
-<<<<<<< HEAD
-    const setorMap = await getDashboardSetorMap();
-    const setorInfo = setorMap.get(data.id);
-=======
     const setorInfo = setoresEnabled
       ? (await getDashboardSetorMap()).get(data.id)
       : undefined;
->>>>>>> stag
     const entry = mapRow(data);
 
     return NextResponse.json({
@@ -349,15 +314,10 @@ export async function PUT(request: NextRequest) {
   const body = (await request.json()) as DashboardRequestBody;
 
   try {
-<<<<<<< HEAD
-    await ensureSetoresSchema();
-    const setorIds = body.setorIds !== undefined ? normalizeIds(body.setorIds) : undefined;
-=======
     const setoresEnabled = await tryEnsureSetoresSchema("PUT");
     const setorIds = setoresEnabled && body.setorIds !== undefined
       ? await resolveSetorIdsFromBody(body.setorIds, body.setor)
       : undefined;
->>>>>>> stag
 
     const data = await queryOne<DashboardRow>(
       `UPDATE via_core.dashboards
@@ -408,19 +368,6 @@ export async function PUT(request: NextRequest) {
     }
 
     let setorInfo = { setorIds: [] as string[], setorNomes: [] as string[] };
-<<<<<<< HEAD
-    if (setorIds !== undefined) {
-      const { previousSetorIds, nextSetorIds } = await replaceDashboardSectorLinks(data.id, setorIds);
-      const impacted = Array.from(new Set([...previousSetorIds, ...nextSetorIds]));
-      for (const setorId of impacted) {
-        await syncUsersDashboardsBySetorId(setorId);
-      }
-
-      setorInfo = {
-        setorIds: nextSetorIds,
-        setorNomes: [],
-      };
-=======
 
     if (setoresEnabled && setorIds !== undefined) {
       const { previousSetorIds, nextSetorIds } = await replaceDashboardSectorLinks(data.id, setorIds);
@@ -442,17 +389,12 @@ export async function PUT(request: NextRequest) {
         }
       }
 
->>>>>>> stag
       const setorMap = await getDashboardSetorMap();
       const mapped = setorMap.get(data.id);
       if (mapped) {
         setorInfo = mapped;
       }
-<<<<<<< HEAD
-    } else {
-=======
     } else if (setoresEnabled) {
->>>>>>> stag
       const setorMap = await getDashboardSetorMap();
       const mapped = setorMap.get(data.id);
       if (mapped) {
@@ -490,14 +432,6 @@ export async function DELETE(request: NextRequest) {
   if (!id) return NextResponse.json({ error: "id obrigatorio" }, { status: 400 });
 
   try {
-<<<<<<< HEAD
-    await ensureSetoresSchema();
-    const affectedSetores = await removeDashboardSectorLinksByDashboardId(id);
-    await query("DELETE FROM via_core.dashboards WHERE id = $1", [id]);
-    for (const setorId of affectedSetores) {
-      await syncUsersDashboardsBySetorId(setorId, [id]);
-    }
-=======
     const setoresEnabled = await tryEnsureSetoresSchema("DELETE");
     const affectedSetores = setoresEnabled ? await removeDashboardSectorLinksByDashboardId(id) : [];
     await query("DELETE FROM via_core.dashboards WHERE id = $1", [id]);
@@ -508,7 +442,6 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
->>>>>>> stag
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     logPgError("[dashboards][DELETE] Erro ao excluir dashboard", error);

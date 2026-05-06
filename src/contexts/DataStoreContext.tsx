@@ -64,7 +64,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
 export function useDataStoreContext() {
   const context = useContext(DataStoreContext);
   if (context === undefined) {
-    console.warn("useDataStoreContext used outside DataStoreProvider - returning default values");
+    console.warn("useDataStoreContext usado fora do DataStoreProvider - retornando valores padrão");
     return {
       dashboards: [],
       usuarios: [],
@@ -74,27 +74,10 @@ export function useDataStoreContext() {
       setores: [],
       isLoaded: true,
       loadAdminData: async () => {},
-      addDashboard: async () => { throw new Error("Not available"); },
-      updateDashboard: async () => { throw new Error("Not available"); },
-      deleteDashboard: async () => { throw new Error("Not available"); },
+      addDashboard: async () => { throw new Error("Não disponível"); },
+      updateDashboard: async () => { throw new Error("Não disponível"); },
+      deleteDashboard: async () => { throw new Error("Não disponível"); },
       getDashboardById: () => null,
-<<<<<<< HEAD
-      addUsuario: async () => { throw new Error("Not available"); },
-      updateUsuario: async () => { throw new Error("Not available"); },
-      deleteUsuario: async () => { throw new Error("Not available"); },
-      addCredencial: async () => { throw new Error("Not available"); },
-      updateCredencial: async () => { throw new Error("Not available"); },
-      deleteCredencial: async () => { throw new Error("Not available"); },
-      addParametroRLS: async () => { throw new Error("Not available"); },
-      updateParametroRLS: async () => { throw new Error("Not available"); },
-      deleteParametroRLS: async () => { throw new Error("Not available"); },
-      addAcessoEspecial: async () => { throw new Error("Not available"); },
-      updateAcessoEspecial: async () => { throw new Error("Not available"); },
-      deleteAcessoEspecial: async () => { throw new Error("Not available"); },
-      addSetor: async () => { throw new Error("Not available"); },
-      updateSetor: async () => { throw new Error("Not available"); },
-      deleteSetor: async () => { throw new Error("Not available"); },
-=======
       addUsuario: async () => { throw new Error("Não disponível"); },
       updateUsuario: async () => { throw new Error("Não disponível"); },
       deleteUsuario: async () => { throw new Error("Não disponível"); },
@@ -110,7 +93,6 @@ export function useDataStoreContext() {
       addSetor: async () => { throw new Error("Não disponível"); },
       updateSetor: async () => { throw new Error("Não disponível"); },
       deleteSetor: async () => { throw new Error("Não disponível"); },
->>>>>>> stag
     };
   }
   return context;
