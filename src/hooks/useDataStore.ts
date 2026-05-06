@@ -103,8 +103,13 @@ export function useDataStore() {
         if (!response.ok) throw new Error("Erro ao buscar dashboards");
         return response.json();
       })
+<<<<<<< HEAD
       .then((dashData: { all?: Dashboard[] }) => {
         setDashboards(dashData.all ?? []);
+=======
+      .then((dashData: { all?: Dashboard[]; entries?: Dashboard[] }) => {
+        setDashboards(dashData.all ?? dashData.entries ?? []);
+>>>>>>> stag
         setLoadedForUser(userKey);
       })
       .catch((error: Error) => {

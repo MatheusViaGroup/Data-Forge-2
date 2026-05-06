@@ -4,8 +4,11 @@ import { query, queryOne } from "@/lib/db";
 type SetorRow = {
   id: string;
   nome: string;
+<<<<<<< HEAD
   created_at: string | Date;
   updated_at: string | Date;
+=======
+>>>>>>> stag
 };
 
 type DashboardSetorRow = {
@@ -28,7 +31,10 @@ let schemaEnsured = false;
 
 function normalizeStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
+<<<<<<< HEAD
 
+=======
+>>>>>>> stag
   return value
     .filter((item): item is string => typeof item === "string")
     .map((item) => item.trim())
@@ -44,7 +50,11 @@ export async function ensureSetoresSchema(): Promise<void> {
 
   await query(`
     CREATE TABLE IF NOT EXISTS via_core.setores (
+<<<<<<< HEAD
       id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+=======
+      id TEXT PRIMARY KEY,
+>>>>>>> stag
       nome TEXT NOT NULL UNIQUE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -82,7 +92,11 @@ export async function listSetores(): Promise<Array<{ id: string; nome: string; d
   await ensureSetoresSchema();
 
   const { rows: setoresRows } = await query<SetorRow>(
+<<<<<<< HEAD
     `SELECT id, nome, created_at, updated_at
+=======
+    `SELECT id, nome
+>>>>>>> stag
      FROM via_core.setores
      ORDER BY nome`
   );
@@ -92,17 +106,29 @@ export async function listSetores(): Promise<Array<{ id: string; nome: string; d
      FROM via_core.dashboard_setores`
   );
 
+<<<<<<< HEAD
   const idsBySetor = new Map<string, string[]>();
   for (const row of linkRows) {
     const current = idsBySetor.get(row.setor_id) ?? [];
     current.push(row.dashboard_id);
     idsBySetor.set(row.setor_id, current);
+=======
+  const dashboardIdsBySetorId = new Map<string, string[]>();
+  for (const row of linkRows) {
+    const current = dashboardIdsBySetorId.get(row.setor_id) ?? [];
+    current.push(row.dashboard_id);
+    dashboardIdsBySetorId.set(row.setor_id, current);
+>>>>>>> stag
   }
 
   return setoresRows.map((setor) => ({
     id: setor.id,
     nome: setor.nome,
+<<<<<<< HEAD
     dashboardIds: unique(idsBySetor.get(setor.id) ?? []),
+=======
+    dashboardIds: unique(dashboardIdsBySetorId.get(setor.id) ?? []),
+>>>>>>> stag
   }));
 }
 
@@ -123,7 +149,11 @@ export async function getDashboardSetorMap(): Promise<Map<string, { setorIds: st
     map.set(row.dashboard_id, current);
   }
 
+<<<<<<< HEAD
   for (const [dashboardId, value] of map) {
+=======
+  for (const [dashboardId, value] of Array.from(map.entries())) {
+>>>>>>> stag
     map.set(dashboardId, {
       setorIds: unique(value.setorIds),
       setorNomes: unique(value.setorNomes),
@@ -162,7 +192,15 @@ export async function replaceDashboardSectorLinks(
   );
   const previousSetorIds = unique(previousRows.map((row) => row.setor_id));
 
+<<<<<<< HEAD
   await query(`DELETE FROM via_core.dashboard_setores WHERE dashboard_id = $1`, [dashboardId]);
+=======
+  await query(
+    `DELETE FROM via_core.dashboard_setores
+     WHERE dashboard_id = $1`,
+    [dashboardId]
+  );
+>>>>>>> stag
 
   for (const setorId of nextSetorIds) {
     await query(
@@ -192,7 +230,15 @@ export async function replaceSetorDashboardLinks(
   );
   const previousDashboardIds = unique(previousRows.map((row) => row.dashboard_id));
 
+<<<<<<< HEAD
   await query(`DELETE FROM via_core.dashboard_setores WHERE setor_id = $1`, [setorId]);
+=======
+  await query(
+    `DELETE FROM via_core.dashboard_setores
+     WHERE setor_id = $1`,
+    [setorId]
+  );
+>>>>>>> stag
 
   for (const dashboardId of nextDashboardIds) {
     await query(
@@ -216,7 +262,16 @@ export async function removeDashboardSectorLinksByDashboardId(dashboardId: strin
     [dashboardId]
   );
 
+<<<<<<< HEAD
   await query(`DELETE FROM via_core.dashboard_setores WHERE dashboard_id = $1`, [dashboardId]);
+=======
+  await query(
+    `DELETE FROM via_core.dashboard_setores
+     WHERE dashboard_id = $1`,
+    [dashboardId]
+  );
+
+>>>>>>> stag
   return unique(rows.map((row) => row.setor_id));
 }
 
@@ -227,7 +282,11 @@ export async function syncUsersDashboardsBySetorId(
   await ensureSetoresSchema();
 
   const forceRemoveSet = new Set(forceRemoveDashboardIds);
+<<<<<<< HEAD
   const baseDashboards = await getSectorDashboardIds(setorId);
+=======
+  const dashboardIdsDoSetor = await getSectorDashboardIds(setorId);
+>>>>>>> stag
 
   const { rows: usersRows } = await query<UsuarioSetorSyncRow>(
     `SELECT id, dashboards_manual_add, dashboards_manual_remove
@@ -239,9 +298,15 @@ export async function syncUsersDashboardsBySetorId(
   for (const user of usersRows) {
     const manualAdd = normalizeStringArray(user.dashboards_manual_add).filter((id) => !forceRemoveSet.has(id));
     const manualRemove = normalizeStringArray(user.dashboards_manual_remove).filter((id) => !forceRemoveSet.has(id));
+<<<<<<< HEAD
     const manualRemoveSet = new Set(manualRemove);
 
     const inherited = baseDashboards.filter((dashboardId) => !manualRemoveSet.has(dashboardId));
+=======
+    const removeSet = new Set(manualRemove);
+
+    const inherited = dashboardIdsDoSetor.filter((dashboardId) => !removeSet.has(dashboardId));
+>>>>>>> stag
     const finalDashboards = unique([...inherited, ...manualAdd]).filter((id) => !forceRemoveSet.has(id));
 
     await query(
@@ -258,8 +323,12 @@ export async function syncUsersDashboardsBySetorId(
 export async function unlinkUsersFromSetor(setorId: string): Promise<void> {
   await ensureSetoresSchema();
 
+<<<<<<< HEAD
   const removedSetorDashboards = new Set(await getSectorDashboardIds(setorId));
 
+=======
+  const removedDashboardsSet = new Set(await getSectorDashboardIds(setorId));
+>>>>>>> stag
   const { rows } = await query<UsuarioSetorDeleteRow>(
     `SELECT id, dashboards_manual_add
      FROM via_core.usuarios
@@ -269,7 +338,11 @@ export async function unlinkUsersFromSetor(setorId: string): Promise<void> {
 
   for (const user of rows) {
     const manualAdd = normalizeStringArray(user.dashboards_manual_add).filter(
+<<<<<<< HEAD
       (dashboardId) => !removedSetorDashboards.has(dashboardId)
+=======
+      (dashboardId) => !removedDashboardsSet.has(dashboardId)
+>>>>>>> stag
     );
 
     await query(

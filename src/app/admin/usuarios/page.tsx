@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
@@ -21,10 +21,14 @@ interface Filial {
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
+function unique(values: string[]): string[] {
+  return Array.from(new Set(values));
+}
+
 export default function UsuariosPage() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const { usuarios, dashboards, acessosEspeciais, isLoaded, loadAdminData, addUsuario, updateUsuario, deleteUsuario } = useDataStoreContext();
+  const { usuarios, dashboards, setores, acessosEspeciais, isLoaded, loadAdminData, addUsuario, updateUsuario, deleteUsuario } = useDataStoreContext();
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -65,7 +69,7 @@ export default function UsuariosPage() {
 
   // Formulário
   const [form, setForm] = useState<Omit<Usuario, "id"> & { id: string }>({
-    id: "", nome: "", email: "", departamento: "", acesso: "Usuário", status: "Ativo", filiais: [], dashboards: [],
+    id: "", nome: "", email: "", departamento: "", acesso: "Usuário", status: "Ativo", filiais: [], dashboards: [], setorId: "",
   });
   const [senhaEdicao, setSenhaEdicao] = useState("");
   const [showSenhaEdicao, setShowSenhaEdicao] = useState(false);
@@ -91,9 +95,9 @@ export default function UsuariosPage() {
   // Carrega dados admin quando a página monta
   useEffect(() => {
     if (authStatus === "authenticated") {
-      loadAdminData();
+      void loadAdminData();
     }
-  }, [authStatus]);
+  }, [authStatus, loadAdminData]);
 
   const toggleFilial = (planta: string) => {
     setForm((prev) => ({
@@ -142,6 +146,49 @@ export default function UsuariosPage() {
     d.nome.toLowerCase().includes(buscaDashboard.toLowerCase())
   );
 
+  const setorLabelById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const setor of setores) {
+      map.set(setor.id, setor.nome);
+    }
+    return map;
+  }, [setores]);
+
+  const setorOptions = useMemo(
+    () => [
+      { value: "", label: "Sem setor" },
+      ...setores.map((setor) => ({ value: setor.id, label: setor.nome })),
+    ],
+    [setores]
+  );
+
+  const dashboardsBySetorId = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const setor of setores) {
+      map.set(setor.id, unique(setor.dashboardIds ?? []));
+    }
+    return map;
+  }, [setores]);
+
+  const handleSetorChange = (setorId: string) => {
+    setForm((prev) => {
+      if (!setorId) {
+        return { ...prev, setorId: "" };
+      }
+
+      const dashboardsDoSetor = dashboardsBySetorId.get(setorId) ?? [];
+      return {
+        ...prev,
+        setorId,
+        dashboards: dashboardsDoSetor,
+      };
+    });
+  };
+
+  const dashboardsDoSetorSelecionado = form.setorId
+    ? dashboardsBySetorId.get(form.setorId) ?? []
+    : [];
+
   const filtered = usuarios.filter(u => {
     const matchNome = u.nome.toLowerCase().includes(filtroNome.toLowerCase());
     const matchEmail = u.email.toLowerCase().includes(filtroEmail.toLowerCase());
@@ -156,7 +203,7 @@ export default function UsuariosPage() {
   const paginated = filtered.slice(inicio, fim);
 
   const openCreate = () => {
-    setForm({ id: "", nome: "", email: "", departamento: "", acesso: "Usuário", status: "Ativo", filiais: [], dashboards: [] });
+    setForm({ id: "", nome: "", email: "", departamento: "", acesso: "Usuário", status: "Ativo", filiais: [], dashboards: [], setorId: "" });
     setErros({});
     setSenhaEdicao("");
     setShowSenhaEdicao(false);
@@ -168,7 +215,7 @@ export default function UsuariosPage() {
   };
 
   const openEdit = (u: Usuario) => {
-    setForm({ ...u, id: u.id, dashboards: u.dashboards ?? [] });
+    setForm({ ...u, id: u.id, dashboards: u.dashboards ?? [], setorId: u.setorId ?? "" });
     setErros({});
     setSenhaEdicao("");
     setShowSenhaEdicao(false);
@@ -204,6 +251,7 @@ export default function UsuariosPage() {
           status: form.status,
           filiais: form.filiais,
           dashboards: form.dashboards,
+          setorId: form.setorId,
           ...(senhaEdicao ? { senha: senhaEdicao, must_change_password: false } : {}),
         });
         setFeedback({ type: "success", msg: "Usuário atualizado com sucesso!" });
@@ -216,6 +264,7 @@ export default function UsuariosPage() {
           status: form.status,
           filiais: form.filiais,
           dashboards: form.dashboards,
+          setorId: form.setorId,
           senha: senhaEdicao || "1234",
         });
         setFeedback({ type: "success", msg: "Usuário criado com sucesso!" });
@@ -402,6 +451,7 @@ export default function UsuariosPage() {
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Nome</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Email</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Departamento</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Setor</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Filiais</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Dashboards</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Acesso</th>
@@ -411,15 +461,18 @@ export default function UsuariosPage() {
               </thead>
               <tbody className="divide-y divide-[var(--border-soft)]">
                 {!isLoaded ? (
-                  <tr><td colSpan={8} className="px-5 py-12 text-center"><Loader2 size={24} className="animate-spin text-[var(--brand-primary)] mx-auto" /></td></tr>
+                  <tr><td colSpan={9} className="px-5 py-12 text-center"><Loader2 size={24} className="animate-spin text-[var(--brand-primary)] mx-auto" /></td></tr>
                 ) : paginated.length === 0 ? (
-                  <tr><td colSpan={8} className="px-5 py-12 text-center text-[var(--text-secondary)]">Nenhum usuário encontrado</td></tr>
+                  <tr><td colSpan={9} className="px-5 py-12 text-center text-[var(--text-secondary)]">Nenhum usuário encontrado</td></tr>
                 ) : (
                   paginated.map((u, idx) => (
                     <tr key={u.id} className={idx % 2 === 0 ? "bg-[var(--bg-panel)]" : "bg-[var(--bg-panel-soft)]"}>
                       <td className="px-5 py-4 text-sm font-medium text-[var(--text-primary)]">{u.nome}</td>
                       <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">{u.email}</td>
                       <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">{u.departamento}</td>
+                      <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">
+                        {u.setorId ? setorLabelById.get(u.setorId) ?? "—" : "—"}
+                      </td>
                       <td className="px-5 py-4 text-sm">
                         {u.filiais?.length > 0 ? (
                           <span className="flex items-center gap-1">
@@ -562,7 +615,15 @@ export default function UsuariosPage() {
                   <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Nível de Acesso *</label>
                   <CustomSelect
                     value={form.acesso}
-                    onValueChange={(v) => setForm({ ...form, acesso: v as Usuario["acesso"] })}
+                    onValueChange={(v) =>
+                      setForm((prev) => {
+                        const acesso = v as Usuario["acesso"];
+                        if (acesso === "Administrador do Locatário") {
+                          return { ...prev, acesso, setorId: "", dashboards: [] };
+                        }
+                        return { ...prev, acesso };
+                      })
+                    }
                     options={[
                       { value: "Usuário", label: "Usuário" },
                       { value: "Matriz", label: "Matriz" },
@@ -590,6 +651,25 @@ export default function UsuariosPage() {
                   </div>
                 )}
               </div>
+
+              {form.acesso !== "Administrador do Locatário" && (
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Setor</label>
+                  <CustomSelect
+                    value={form.setorId ?? ""}
+                    onValueChange={handleSetorChange}
+                    options={setorOptions}
+                  />
+                  <p className="text-xs text-[var(--text-muted)] mt-1 ml-1">
+                    Ao selecionar um setor, os BIs vinculados ao setor são carregados automaticamente e você pode editar manualmente.
+                  </p>
+                  {form.setorId && (
+                    <p className="text-xs text-[var(--brand-primary)] mt-1 ml-1">
+                      {dashboardsDoSetorSelecionado.length} BI(s) herdado(s) do setor selecionado.
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Senha (apenas criação) ou Nova Senha (edição) */}
               {!isEdit && (

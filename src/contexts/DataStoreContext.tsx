@@ -78,6 +78,7 @@ export function useDataStoreContext() {
       updateDashboard: async () => { throw new Error("Not available"); },
       deleteDashboard: async () => { throw new Error("Not available"); },
       getDashboardById: () => null,
+<<<<<<< HEAD
       addUsuario: async () => { throw new Error("Not available"); },
       updateUsuario: async () => { throw new Error("Not available"); },
       deleteUsuario: async () => { throw new Error("Not available"); },
@@ -93,6 +94,23 @@ export function useDataStoreContext() {
       addSetor: async () => { throw new Error("Not available"); },
       updateSetor: async () => { throw new Error("Not available"); },
       deleteSetor: async () => { throw new Error("Not available"); },
+=======
+      addUsuario: async () => { throw new Error("Não disponível"); },
+      updateUsuario: async () => { throw new Error("Não disponível"); },
+      deleteUsuario: async () => { throw new Error("Não disponível"); },
+      addCredencial: async () => { throw new Error("Não disponível"); },
+      updateCredencial: async () => { throw new Error("Não disponível"); },
+      deleteCredencial: async () => { throw new Error("Não disponível"); },
+      addParametroRLS: async () => { throw new Error("Não disponível"); },
+      updateParametroRLS: async () => { throw new Error("Não disponível"); },
+      deleteParametroRLS: async () => { throw new Error("Não disponível"); },
+      addAcessoEspecial: async () => { throw new Error("Não disponível"); },
+      updateAcessoEspecial: async () => { throw new Error("Não disponível"); },
+      deleteAcessoEspecial: async () => { throw new Error("Não disponível"); },
+      addSetor: async () => { throw new Error("Não disponível"); },
+      updateSetor: async () => { throw new Error("Não disponível"); },
+      deleteSetor: async () => { throw new Error("Não disponível"); },
+>>>>>>> stag
     };
   }
   return context;
