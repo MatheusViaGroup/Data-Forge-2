@@ -54,10 +54,6 @@ export default function AdminDashboardsPage() {
 
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
-<<<<<<< HEAD
-
-=======
->>>>>>> stag
   const [filtroNome, setFiltroNome] = useState("");
 
   const setorLabelById = useMemo(() => {
@@ -254,10 +250,6 @@ export default function AdminDashboardsPage() {
   const toggleMenu = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
     const target = event.currentTarget as HTMLElement;
-<<<<<<< HEAD
-
-=======
->>>>>>> stag
     const rect = target.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const dropdownHeight = 120;

@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-<<<<<<< HEAD
-=======
 import crypto from "crypto";
->>>>>>> stag
 import { authOptions } from "@/lib/authOptions";
 import { query, queryOne } from "@/lib/db";
 import {
@@ -20,16 +17,10 @@ type SetorBody = {
   dashboardIds?: string[];
 };
 
-<<<<<<< HEAD
-function normalizeIds(values: unknown): string[] {
-  if (!Array.isArray(values)) return [];
-
-=======
 type PgError = Error & { code?: string };
 
 function normalizeIds(values: unknown): string[] {
   if (!Array.isArray(values)) return [];
->>>>>>> stag
   return Array.from(
     new Set(
       values
@@ -41,21 +32,13 @@ function normalizeIds(values: unknown): string[] {
 }
 
 function unauthorized() {
-<<<<<<< HEAD
   return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
-=======
-  return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 403 });
->>>>>>> stag
 }
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
-<<<<<<< HEAD
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-=======
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
->>>>>>> stag
   }
 
   try {
@@ -80,23 +63,11 @@ export async function POST(request: NextRequest) {
   const dashboardIds = normalizeIds(body.dashboardIds);
 
   if (!nome) {
-<<<<<<< HEAD
     return NextResponse.json({ error: "Nome do setor é obrigatório" }, { status: 400 });
-=======
-    return NextResponse.json({ error: "Nome do setor Ã© obrigatÃ³rio" }, { status: 400 });
->>>>>>> stag
   }
 
   try {
     await ensureSetoresSchema();
-<<<<<<< HEAD
-
-    const created = await queryOne<{ id: string; nome: string }>(
-      `INSERT INTO via_core.setores (nome)
-       VALUES ($1)
-       RETURNING id, nome`,
-      [nome]
-=======
     const setorId = crypto.randomUUID();
 
     const created = await queryOne<{ id: string; nome: string }>(
@@ -104,7 +75,6 @@ export async function POST(request: NextRequest) {
        VALUES ($1, $2)
        RETURNING id, nome`,
       [setorId, nome]
->>>>>>> stag
     );
 
     if (!created) {
@@ -125,18 +95,13 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
-<<<<<<< HEAD
-    const err = error as Error;
-    console.error("[setores][POST] Erro ao criar setor:", err.message);
-=======
     const err = error as PgError;
     console.error("[setores][POST] Erro ao criar setor:", err.message);
 
     if (err.code === "23505") {
-      return NextResponse.json({ error: "Nome de setor jÃ¡ cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Nome de setor já cadastrado" }, { status: 409 });
     }
 
->>>>>>> stag
     return NextResponse.json({ error: "Erro ao criar setor" }, { status: 500 });
   }
 }
@@ -154,11 +119,7 @@ export async function PUT(request: NextRequest) {
   const dashboardIds = normalizeIds(body.dashboardIds);
 
   if (!id) {
-<<<<<<< HEAD
     return NextResponse.json({ error: "ID do setor é obrigatório" }, { status: 400 });
-=======
-    return NextResponse.json({ error: "ID do setor Ã© obrigatÃ³rio" }, { status: 400 });
->>>>>>> stag
   }
 
   try {
@@ -166,20 +127,7 @@ export async function PUT(request: NextRequest) {
 
     if (nome !== undefined) {
       if (!nome) {
-<<<<<<< HEAD
         return NextResponse.json({ error: "Nome do setor é obrigatório" }, { status: 400 });
-      }
-
-      await query(`UPDATE via_core.setores SET nome = $1, updated_at = NOW() WHERE id = $2`, [nome, id]);
-    }
-
-    let removedDashboardIds: string[] = [];
-    if (hasDashboardsPayload) {
-      const { previousDashboardIds, nextDashboardIds } = await replaceSetorDashboardLinks(id, dashboardIds);
-      const nextSet = new Set(nextDashboardIds);
-      removedDashboardIds = previousDashboardIds.filter((dashboardId) => !nextSet.has(dashboardId));
-=======
-        return NextResponse.json({ error: "Nome do setor Ã© obrigatÃ³rio" }, { status: 400 });
       }
 
       await query(
@@ -194,7 +142,6 @@ export async function PUT(request: NextRequest) {
       const { previousDashboardIds, nextDashboardIds } = await replaceSetorDashboardLinks(id, dashboardIds);
       const nextSet = new Set(nextDashboardIds);
       const removedDashboardIds = previousDashboardIds.filter((dashboardId) => !nextSet.has(dashboardId));
->>>>>>> stag
       await syncUsersDashboardsBySetorId(id, removedDashboardIds);
     }
 
@@ -207,11 +154,7 @@ export async function PUT(request: NextRequest) {
     );
 
     if (!updated) {
-<<<<<<< HEAD
       return NextResponse.json({ error: "Setor não encontrado" }, { status: 404 });
-=======
-      return NextResponse.json({ error: "Setor nÃ£o encontrado" }, { status: 404 });
->>>>>>> stag
     }
 
     const finalDashboardIds = hasDashboardsPayload
@@ -227,18 +170,13 @@ export async function PUT(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
-<<<<<<< HEAD
-    const err = error as Error;
-    console.error("[setores][PUT] Erro ao atualizar setor:", err.message);
-=======
     const err = error as PgError;
     console.error("[setores][PUT] Erro ao atualizar setor:", err.message);
 
     if (err.code === "23505") {
-      return NextResponse.json({ error: "Nome de setor jÃ¡ cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Nome de setor já cadastrado" }, { status: 409 });
     }
 
->>>>>>> stag
     return NextResponse.json({ error: "Erro ao atualizar setor" }, { status: 500 });
   }
 }
@@ -252,26 +190,14 @@ export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id")?.trim() ?? "";
   if (!id) {
-<<<<<<< HEAD
     return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
-=======
-    return NextResponse.json({ error: "id obrigatÃ³rio" }, { status: 400 });
->>>>>>> stag
   }
 
   try {
     await ensureSetoresSchema();
-<<<<<<< HEAD
-
     await unlinkUsersFromSetor(id);
     await query(`DELETE FROM via_core.dashboard_setores WHERE setor_id = $1`, [id]);
     await query(`DELETE FROM via_core.setores WHERE id = $1`, [id]);
-
-=======
-    await unlinkUsersFromSetor(id);
-    await query(`DELETE FROM via_core.dashboard_setores WHERE setor_id = $1`, [id]);
-    await query(`DELETE FROM via_core.setores WHERE id = $1`, [id]);
->>>>>>> stag
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     const err = error as Error;
