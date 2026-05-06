@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { query, queryOne } from "@/lib/db";
+import { encryptCredentialIfNeeded } from "@/lib/credentialCrypto";
 
 type CredencialRow = {
   id: string;
@@ -81,10 +82,10 @@ export async function POST(request: NextRequest) {
         body.nome ?? "",
         body.tenant ?? "",
         body.clientId ?? "",
-        body.clientSecret ?? "",
+        body.clientSecret ? encryptCredentialIfNeeded(body.clientSecret) : "",
         body.tenantId ?? "",
         body.usuarioPowerBI ?? "",
-        body.masterPassword ?? "",
+        body.masterPassword ? encryptCredentialIfNeeded(body.masterPassword) : "",
         body.dataExpiracao ? body.dataExpiracao.split("/").reverse().join("-") : null,
         body.status === "Ativo" ? "ativo" : "inativo",
       ]
@@ -136,11 +137,11 @@ export async function PUT(request: NextRequest) {
 
   if (body.clientSecret && body.clientSecret !== "••••••••") {
     setClauses.push(`client_secret = $${paramIdx++}`);
-    params.push(body.clientSecret);
+    params.push(encryptCredentialIfNeeded(body.clientSecret));
   }
   if (body.masterPassword && body.masterPassword !== "••••••••") {
     setClauses.push(`master_password = $${paramIdx++}`);
-    params.push(body.masterPassword);
+    params.push(encryptCredentialIfNeeded(body.masterPassword));
   }
 
   params.push(body.id);

@@ -228,8 +228,14 @@ export async function GET() {
       };
     });
 
-    const entries = all.filter((dashboard) => dashboard.ativo);
-    return NextResponse.json({ entries, all });
+    const isAdmin = session.user.role === "admin";
+    const allowedDashboards = new Set(session.user.allowedDashboards ?? []);
+    const visibleDashboards = isAdmin
+      ? all
+      : all.filter((dashboard) => allowedDashboards.has(dashboard.id));
+
+    const entries = visibleDashboards.filter((dashboard) => dashboard.ativo);
+    return NextResponse.json({ entries, all: visibleDashboards });
   } catch (error: unknown) {
     logPgError("[dashboards][GET] Erro ao buscar dashboards", error);
     return NextResponse.json(
@@ -512,5 +518,4 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
-
 
