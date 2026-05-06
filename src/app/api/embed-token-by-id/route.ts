@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import * as msal from "@azure/msal-node";
 import axios from "axios";
 import { getServerSession } from "next-auth";
-import { ADMIN_TENANT_ACCESS, authOptions } from "@/lib/authOptions";
+import { authOptions } from "@/lib/authOptions";
 import { query, queryOne } from "@/lib/db";
 import { registerTokenUsage } from "@/lib/tokenUsage";
+import { decryptCredentialValue } from "@/lib/credentialCrypto";
 
 type EmbedRequestBody = {
   reportId?: string;
@@ -23,14 +24,9 @@ type CredentialRow = {
   id: string;
   client_id: string;
   tenant_id: string;
-  client_secret: string;
+  client_secret: string | null;
   master_user: string;
-  master_password: string;
-};
-
-type CredentialTokenCacheRow = {
-  cached_access_token: string | null;
-  token_expires_at: string | null;
+  master_password: string | null;
 };
 
 type CredentialsResult = {
@@ -42,32 +38,24 @@ type CredentialsResult = {
   masterPassword: string;
 };
 
-let hasCredentialTokenCacheColumns: boolean | null = null;
+type DashboardLookupRow = {
+  id: string;
+};
 
-async function canUseCredentialTokenCache(): Promise<boolean> {
-  if (hasCredentialTokenCacheColumns !== null) {
-    return hasCredentialTokenCacheColumns;
-  }
+type UserFiliaisRow = {
+  filiais: string[] | null;
+};
 
-  try {
-    const { rows } = await query<{ column_name: string }>(
-      `SELECT column_name
-       FROM information_schema.columns
-       WHERE table_schema = 'via_core'
-         AND table_name = 'credenciais'
-         AND column_name IN ('cached_access_token', 'token_expires_at')`
-    );
+type MemoryTokenCache = {
+  token: string;
+  expiresAt: number;
+  cacheKey: string;
+};
 
-    const columns = new Set(rows.map((row) => row.column_name));
-    hasCredentialTokenCacheColumns =
-      columns.has("cached_access_token") && columns.has("token_expires_at");
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error("[embed-token-by-id] Erro ao verificar colunas de cache:", err.message);
-    hasCredentialTokenCacheColumns = false;
-  }
+let memoryTokenCache: MemoryTokenCache | null = null;
 
-  return hasCredentialTokenCacheColumns;
+function buildCredentialCacheKey(creds: CredentialsResult): string {
+  return `${creds.id ?? "env"}|${creds.clientId}|${creds.tenantId}|${creds.masterUser}`;
 }
 
 async function getCredentials(): Promise<CredentialsResult> {
@@ -83,9 +71,9 @@ async function getCredentials(): Promise<CredentialsResult> {
       id: data.id,
       clientId: data.client_id,
       tenantId: data.tenant_id,
-      clientSecret: data.client_secret,
+      clientSecret: decryptCredentialValue(data.client_secret ?? ""),
       masterUser: data.master_user,
-      masterPassword: data.master_password,
+      masterPassword: decryptCredentialValue(data.master_password ?? ""),
     };
   }
 
@@ -99,32 +87,12 @@ async function getCredentials(): Promise<CredentialsResult> {
   };
 }
 
-async function getAccessToken(): Promise<string> {
+async function getAccessToken(creds: CredentialsResult): Promise<string> {
   const now = Date.now();
-  const creds = await getCredentials();
+  const cacheKey = buildCredentialCacheKey(creds);
 
-  if (await canUseCredentialTokenCache()) {
-    try {
-      if (creds.id) {
-        const dbCache = await queryOne<CredentialTokenCacheRow>(
-          `SELECT cached_access_token, token_expires_at
-           FROM via_core.credenciais
-           WHERE id = $1
-           LIMIT 1`,
-          [creds.id]
-        );
-
-        if (dbCache?.cached_access_token && dbCache.token_expires_at) {
-          const expiresAt = new Date(dbCache.token_expires_at).getTime();
-          if (expiresAt > now + 60_000) {
-            return dbCache.cached_access_token;
-          }
-        }
-      }
-    } catch (error: unknown) {
-      const err = error as Error;
-      console.error("[embed-token-by-id] Erro ao ler cache do token no banco:", err.message);
-    }
+  if (memoryTokenCache && memoryTokenCache.cacheKey === cacheKey && memoryTokenCache.expiresAt > now + 60_000) {
+    return memoryTokenCache.token;
   }
 
   const msalConfig: msal.Configuration = {
@@ -143,27 +111,15 @@ async function getAccessToken(): Promise<string> {
   });
 
   if (!result?.accessToken) {
-    throw new Error("Access token não obtido");
+    throw new Error("Access token nao obtido");
   }
 
   const expiresAt = result.expiresOn?.getTime() ?? now + 3_600_000;
-
-  if (await canUseCredentialTokenCache()) {
-    try {
-      if (creds.id) {
-        await query(
-          `UPDATE via_core.credenciais
-           SET cached_access_token = $1,
-               token_expires_at = $2
-           WHERE id = $3`,
-          [result.accessToken, new Date(expiresAt).toISOString(), creds.id]
-        );
-      }
-    } catch (error: unknown) {
-      const err = error as Error;
-      console.error("[embed-token-by-id] Erro ao salvar cache do token no banco:", err.message);
-    }
-  }
+  memoryTokenCache = {
+    token: result.accessToken,
+    expiresAt,
+    cacheKey,
+  };
 
   return result.accessToken;
 }
@@ -187,49 +143,71 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
     }
 
     const body = (await request.json()) as EmbedRequestBody;
     const { reportId, groupId, dashboardId, rls, rlsRole } = body;
 
     if (!reportId || !groupId) {
-      return NextResponse.json({ error: "Parâmetros obrigatórios ausentes" }, { status: 400 });
+      return NextResponse.json({ error: "Parametros obrigatorios ausentes" }, { status: 400 });
     }
 
-    const credsData = await queryOne<{ id: string }>(
+    const dashboard = await queryOne<DashboardLookupRow>(
       `SELECT id
-       FROM via_core.credenciais
-       WHERE status = 'ativo'
-       LIMIT 1`
+       FROM via_core.dashboards
+       WHERE report_id = $1 AND workspace_id = $2
+       LIMIT 1`,
+      [reportId, groupId]
     );
 
-    if (!credsData) {
-      console.error("[embed-token-by-id] Nenhuma credencial ativa encontrada");
+    if (!dashboard) {
+      return NextResponse.json({ error: "Dashboard nao encontrado" }, { status: 404 });
+    }
+
+    const resolvedDashboardId = dashboard.id;
+
+    if (dashboardId && dashboardId !== resolvedDashboardId) {
+      return NextResponse.json({ error: "Requisicao inconsistente para o dashboard" }, { status: 403 });
+    }
+
+    const isPrivileged = session.user.role === "admin" || session.user.role === "matriz";
+
+    if (!isPrivileged) {
+      const allowed = new Set(session.user.allowedDashboards ?? []);
+      if (!allowed.has(resolvedDashboardId)) {
+        return NextResponse.json({ error: "Sem permissao para este dashboard" }, { status: 403 });
+      }
+    }
+
+    const creds = await getCredentials();
+    if (!creds.clientId || !creds.tenantId || !creds.clientSecret || !creds.masterUser || !creds.masterPassword) {
+      console.error("[embed-token-by-id] Credenciais Power BI incompletas");
       return NextResponse.json({ error: "Falha ao gerar token de embed" }, { status: 500 });
     }
 
-    const userData = await queryOne<{ filiais: string[] | null; acesso: string }>(
-      `SELECT filiais, acesso
-       FROM via_core.usuarios
-       WHERE email = $1
-       LIMIT 1`,
-      [session.user.email]
-    );
+    let userFiliais: string[] = [];
+    if (rls && !isPrivileged) {
+      const userData = await queryOne<UserFiliaisRow>(
+        `SELECT filiais
+         FROM via_core.usuarios
+         WHERE email = $1
+         LIMIT 1`,
+        [session.user.email]
+      );
 
-    const isAdmin =
-      userData?.acesso === ADMIN_TENANT_ACCESS || userData?.acesso === "Matriz";
-    const userFiliais = rls && !isAdmin ? userData?.filiais ?? [] : [];
+      userFiliais = userData?.filiais ?? [];
+    }
 
     let resolvedRlsRole = rlsRole;
     let customData = "";
 
-    if (rls && dashboardId) {
+    if (rls) {
       const { rows: rlsParams } = await query<RlsParamRow>(
         `SELECT tipo, nome_parametro_powerbi
          FROM via_core.parametros_rls
          WHERE dashboard_id = $1`,
-        [dashboardId]
+        [resolvedDashboardId]
       );
 
       const filialParam = rlsParams.find((param) => param.tipo === "Filial");
@@ -237,14 +215,16 @@ export async function POST(request: NextRequest) {
         resolvedRlsRole = filialParam.nome_parametro_powerbi ?? undefined;
       }
 
-      const userParam = rlsParams.find((param) => param.tipo === "Usuário");
+      const userParam = rlsParams.find(
+        (param) => param.tipo === "Usuario" || param.tipo === "Usuário"
+      );
       if (userParam && !filialParam) {
         customData = session.user.email;
         resolvedRlsRole = userParam.nome_parametro_powerbi ?? undefined;
       }
     }
 
-    const accessToken = await getAccessToken();
+    const accessToken = await getAccessToken(creds);
 
     let reportRes;
     try {
@@ -253,7 +233,7 @@ export async function POST(request: NextRequest) {
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
     } catch (error: unknown) {
-      console.error("[embed-token-by-id] Erro ao buscar relatório:", getErrorMessage(error));
+      console.error("[embed-token-by-id] Erro ao buscar relatorio:", getErrorMessage(error));
       return NextResponse.json({ error: "Falha ao gerar token de embed" }, { status: 500 });
     }
 
@@ -277,7 +257,7 @@ export async function POST(request: NextRequest) {
     const customDataFormatado =
       customData || (userFiliais.length > 0 ? userFiliais.map((filial) => `"${filial}"`).join(",") : "");
 
-    if (rls && resolvedRlsRole && datasetId && customDataFormatado && !isAdmin) {
+    if (rls && resolvedRlsRole && datasetId && customDataFormatado && !isPrivileged) {
       generateTokenBody.identities = [
         {
           username: session.user.email,
@@ -305,13 +285,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Falha ao gerar token de embed" }, { status: 500 });
     }
 
-    if (tokenRes.data.token && credsData.id && dashboardId && session.user.id) {
+    if (tokenRes.data.token && creds.id && session.user.id) {
       try {
         await registerTokenUsage({
           token: tokenRes.data.token as string,
-          dashboardId,
+          dashboardId: resolvedDashboardId,
           userId: session.user.id,
-          credentialId: credsData.id,
+          credentialId: creds.id,
           expiresAt: generateTokenBody.expiration.toISOString(),
           ipAddress:
             request.headers.get("x-forwarded-for") || request.headers.get("remote-addr") || null,
@@ -331,6 +311,12 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     const err = error as Error;
     console.error("[embed-token-by-id] Erro inesperado:", err.message);
+    if (err.message.includes("CREDENTIAL_ENCRYPTION_KEY")) {
+      return NextResponse.json(
+        { error: "CREDENTIAL_ENCRYPTION_KEY nao configurada no ambiente." },
+        { status: 500 }
+      );
+    }
     return NextResponse.json({ error: "Falha ao gerar token de embed" }, { status: 500 });
   }
 }

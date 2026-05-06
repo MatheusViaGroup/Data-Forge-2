@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { query, queryOne } from "@/lib/db";
+import { encryptCredentialValue } from "@/lib/credentialCrypto";
 
 type CredencialRow = {
   id: string;
@@ -30,16 +31,18 @@ type CredencialBody = {
   status?: string;
 };
 
+const SECRET_MASK = "********";
+
 function mapRow(row: CredencialRow) {
   return {
     id: row.id,
     nome: row.nome,
     tenant: row.tenant ?? "",
     clientId: row.client_id,
-    clientSecret: row.client_secret ? "••••••••" : "",
+    clientSecret: row.client_secret ? SECRET_MASK : "",
     tenantId: row.tenant_id,
     usuarioPowerBI: row.master_user,
-    masterPassword: row.master_password ? "••••••••" : "",
+    masterPassword: row.master_password ? SECRET_MASK : "",
     dataRegistro: row.created_at ? new Date(row.created_at).toLocaleDateString("pt-BR") : "",
     dataExpiracao: row.secret_expiration
       ? new Date(`${row.secret_expiration}T12:00:00`).toLocaleDateString("pt-BR")
@@ -48,10 +51,15 @@ function mapRow(row: CredencialRow) {
   };
 }
 
+function parseDateToDb(value?: string): string | null {
+  if (!value) return null;
+  return value.split("/").reverse().join("-");
+}
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
   try {
@@ -67,12 +75,15 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
   const body = (await request.json()) as CredencialBody;
 
   try {
+    const encryptedClientSecret = encryptCredentialValue(body.clientSecret ?? "");
+    const encryptedMasterPassword = encryptCredentialValue(body.masterPassword ?? "");
+
     const data = await queryOne<CredencialRow>(
       `INSERT INTO via_core.credenciais (nome, tenant, client_id, client_secret, tenant_id, master_user, master_password, secret_expiration, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -81,11 +92,11 @@ export async function POST(request: NextRequest) {
         body.nome ?? "",
         body.tenant ?? "",
         body.clientId ?? "",
-        body.clientSecret ?? "",
+        encryptedClientSecret,
         body.tenantId ?? "",
         body.usuarioPowerBI ?? "",
-        body.masterPassword ?? "",
-        body.dataExpiracao ? body.dataExpiracao.split("/").reverse().join("-") : null,
+        encryptedMasterPassword,
+        parseDateToDb(body.dataExpiracao),
         body.status === "Ativo" ? "ativo" : "inativo",
       ]
     );
@@ -93,10 +104,17 @@ export async function POST(request: NextRequest) {
     if (!data) {
       return NextResponse.json({ error: "Erro ao inserir credencial" }, { status: 500 });
     }
+
     return NextResponse.json({ success: true, entry: mapRow(data) });
   } catch (error: unknown) {
     const err = error as Error;
     console.error("[credentials][POST] Erro ao inserir credencial:", err.message);
+    if (err.message.includes("CREDENTIAL_ENCRYPTION_KEY")) {
+      return NextResponse.json(
+        { error: "CREDENTIAL_ENCRYPTION_KEY nao configurada no ambiente." },
+        { status: 500 }
+      );
+    }
     return NextResponse.json({ error: "Erro ao inserir credencial" }, { status: 500 });
   }
 }
@@ -104,7 +122,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
   const body = (await request.json()) as CredencialBody;
@@ -129,18 +147,19 @@ export async function PUT(request: NextRequest) {
   params.push(body.usuarioPowerBI);
 
   setClauses.push(`secret_expiration = $${paramIdx++}`);
-  params.push(body.dataExpiracao ? body.dataExpiracao.split("/").reverse().join("-") : null);
+  params.push(parseDateToDb(body.dataExpiracao));
 
   setClauses.push(`status = $${paramIdx++}`);
   params.push(body.status === "Ativo" ? "ativo" : "inativo");
 
-  if (body.clientSecret && body.clientSecret !== "••••••••") {
+  if (body.clientSecret && body.clientSecret !== SECRET_MASK) {
     setClauses.push(`client_secret = $${paramIdx++}`);
-    params.push(body.clientSecret);
+    params.push(encryptCredentialValue(body.clientSecret));
   }
-  if (body.masterPassword && body.masterPassword !== "••••••••") {
+
+  if (body.masterPassword && body.masterPassword !== SECRET_MASK) {
     setClauses.push(`master_password = $${paramIdx++}`);
-    params.push(body.masterPassword);
+    params.push(encryptCredentialValue(body.masterPassword));
   }
 
   params.push(body.id);
@@ -152,12 +171,19 @@ export async function PUT(request: NextRequest) {
     );
 
     if (!data) {
-      return NextResponse.json({ error: "Credencial não encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Credencial nao encontrada" }, { status: 404 });
     }
+
     return NextResponse.json({ success: true, entry: mapRow(data) });
   } catch (error: unknown) {
     const err = error as Error;
     console.error("[credentials][PUT] Erro ao atualizar credencial:", err.message);
+    if (err.message.includes("CREDENTIAL_ENCRYPTION_KEY")) {
+      return NextResponse.json(
+        { error: "CREDENTIAL_ENCRYPTION_KEY nao configurada no ambiente." },
+        { status: 500 }
+      );
+    }
     return NextResponse.json({ error: "Erro ao atualizar credencial" }, { status: 500 });
   }
 }
@@ -165,12 +191,12 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: "id obrigatorio" }, { status: 400 });
 
   try {
     await query("DELETE FROM via_core.credenciais WHERE id = $1", [id]);
