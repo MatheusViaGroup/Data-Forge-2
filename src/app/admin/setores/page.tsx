@@ -159,10 +159,6 @@ export default function AdminSetoresPage() {
   const toggleMenu = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
     const target = event.currentTarget as HTMLElement;
-<<<<<<< HEAD
-
-=======
->>>>>>> stag
     const rect = target.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const dropdownHeight = 120;

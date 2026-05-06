@@ -64,7 +64,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
 export function useDataStoreContext() {
   const context = useContext(DataStoreContext);
   if (context === undefined) {
-    console.warn("useDataStoreContext used outside DataStoreProvider - returning default values");
+    console.warn("useDataStoreContext usado fora do DataStoreProvider - retornando valores padrão");
     return {
       dashboards: [],
       usuarios: [],
