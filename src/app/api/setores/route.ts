@@ -32,13 +32,13 @@ function normalizeIds(values: unknown): string[] {
 }
 
 function unauthorized() {
-  return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 403 });
+  return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
 }
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   try {
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
   const dashboardIds = normalizeIds(body.dashboardIds);
 
   if (!nome) {
-    return NextResponse.json({ error: "Nome do setor Ã© obrigatÃ³rio" }, { status: 400 });
+    return NextResponse.json({ error: "Nome do setor é obrigatório" }, { status: 400 });
   }
 
   try {
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     console.error("[setores][POST] Erro ao criar setor:", err.message);
 
     if (err.code === "23505") {
-      return NextResponse.json({ error: "Nome de setor jÃ¡ cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Nome de setor já cadastrado" }, { status: 409 });
     }
 
     return NextResponse.json({ error: "Erro ao criar setor" }, { status: 500 });
@@ -119,7 +119,7 @@ export async function PUT(request: NextRequest) {
   const dashboardIds = normalizeIds(body.dashboardIds);
 
   if (!id) {
-    return NextResponse.json({ error: "ID do setor Ã© obrigatÃ³rio" }, { status: 400 });
+    return NextResponse.json({ error: "ID do setor é obrigatório" }, { status: 400 });
   }
 
   try {
@@ -127,7 +127,7 @@ export async function PUT(request: NextRequest) {
 
     if (nome !== undefined) {
       if (!nome) {
-        return NextResponse.json({ error: "Nome do setor Ã© obrigatÃ³rio" }, { status: 400 });
+        return NextResponse.json({ error: "Nome do setor é obrigatório" }, { status: 400 });
       }
 
       await query(
@@ -154,7 +154,7 @@ export async function PUT(request: NextRequest) {
     );
 
     if (!updated) {
-      return NextResponse.json({ error: "Setor nÃ£o encontrado" }, { status: 404 });
+      return NextResponse.json({ error: "Setor não encontrado" }, { status: 404 });
     }
 
     const finalDashboardIds = hasDashboardsPayload
@@ -174,7 +174,7 @@ export async function PUT(request: NextRequest) {
     console.error("[setores][PUT] Erro ao atualizar setor:", err.message);
 
     if (err.code === "23505") {
-      return NextResponse.json({ error: "Nome de setor jÃ¡ cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Nome de setor já cadastrado" }, { status: 409 });
     }
 
     return NextResponse.json({ error: "Erro ao atualizar setor" }, { status: 500 });
@@ -190,7 +190,7 @@ export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id")?.trim() ?? "";
   if (!id) {
-    return NextResponse.json({ error: "id obrigatÃ³rio" }, { status: 400 });
+    return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
   }
 
   try {
