@@ -193,7 +193,11 @@ export async function PUT(request: NextRequest) {
   const body = (await request.json()) as Record<string, unknown>;
   const id = typeof body.id === "string" ? body.id : "";
   if (!id) {
+<<<<<<< HEAD
     return NextResponse.json({ error: "id obrigatÃƒÆ’Ã‚Â³rio" }, { status: 400 });
+=======
+    return NextResponse.json({ error: "id obrigatÃ³rio" }, { status: 400 });
+>>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
   }
 
   const current = await queryOne<UsuarioCurrentRow>(
@@ -205,7 +209,11 @@ export async function PUT(request: NextRequest) {
   );
 
   if (!current) {
+<<<<<<< HEAD
     return NextResponse.json({ error: "UsuÃƒÆ’Ã‚Â¡rio nÃƒÆ’Ã‚Â£o encontrado" }, { status: 404 });
+=======
+    return NextResponse.json({ error: "UsuÃ¡rio nÃ£o encontrado" }, { status: 404 });
+>>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
   }
 
   const setClauses: string[] = [];

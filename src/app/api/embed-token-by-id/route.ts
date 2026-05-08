@@ -4,6 +4,8 @@ import axios from "axios";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { query, queryOne } from "@/lib/db";
+import { decryptCredentialIfNeeded } from "@/lib/credentialCrypto";
+import { resolveDashboardId, userCanAccessDashboard } from "@/lib/dashboardAccess";
 import { registerTokenUsage } from "@/lib/tokenUsage";
 import { decryptCredentialValue } from "@/lib/credentialCrypto";
 
@@ -27,9 +29,16 @@ type CredentialRow = {
   client_secret: string | null;
   master_user: string;
   master_password: string | null;
+<<<<<<< HEAD
+=======
 };
 
-type CredentialsResult = {
+type UserDataRow = {
+  filiais: string[] | null;
+>>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+};
+
+type CredentialResult = {
   id: string | null;
   clientId: string;
   tenantId: string;
@@ -38,6 +47,7 @@ type CredentialsResult = {
   masterPassword: string;
 };
 
+<<<<<<< HEAD
 type DashboardLookupRow = {
   id: string;
 };
@@ -59,6 +69,17 @@ function buildCredentialCacheKey(creds: CredentialsResult): string {
 }
 
 async function getCredentials(): Promise<CredentialsResult> {
+=======
+type InMemoryTokenCacheEntry = {
+  token: string;
+  expiresAt: number;
+};
+
+const TOKEN_EXPIRY_SAFETY_WINDOW_MS = 60_000;
+const accessTokenCache = new Map<string, InMemoryTokenCacheEntry>();
+
+async function getCredentials(): Promise<CredentialResult> {
+>>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
   const data = await queryOne<CredentialRow>(
     `SELECT id, client_id, tenant_id, client_secret, master_user, master_password
      FROM via_core.credenciais
@@ -71,9 +92,15 @@ async function getCredentials(): Promise<CredentialsResult> {
       id: data.id,
       clientId: data.client_id,
       tenantId: data.tenant_id,
+<<<<<<< HEAD
       clientSecret: decryptCredentialValue(data.client_secret ?? ""),
       masterUser: data.master_user,
       masterPassword: decryptCredentialValue(data.master_password ?? ""),
+=======
+      clientSecret: decryptCredentialIfNeeded(data.client_secret ?? ""),
+      masterUser: data.master_user,
+      masterPassword: decryptCredentialIfNeeded(data.master_password ?? ""),
+>>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
     };
   }
 
@@ -87,12 +114,31 @@ async function getCredentials(): Promise<CredentialsResult> {
   };
 }
 
+<<<<<<< HEAD
 async function getAccessToken(creds: CredentialsResult): Promise<string> {
+=======
+function getCredentialCacheKey(creds: CredentialResult): string {
+  if (creds.id) {
+    return `db:${creds.id}`;
+  }
+
+  return `env:${creds.tenantId}:${creds.clientId}:${creds.masterUser}`;
+}
+
+async function getAccessToken(): Promise<string> {
+>>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
   const now = Date.now();
   const cacheKey = buildCredentialCacheKey(creds);
 
+<<<<<<< HEAD
   if (memoryTokenCache && memoryTokenCache.cacheKey === cacheKey && memoryTokenCache.expiresAt > now + 60_000) {
     return memoryTokenCache.token;
+=======
+  const cacheKey = getCredentialCacheKey(creds);
+  const cachedToken = accessTokenCache.get(cacheKey);
+  if (cachedToken && cachedToken.expiresAt > now + TOKEN_EXPIRY_SAFETY_WINDOW_MS) {
+    return cachedToken.token;
+>>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
   }
 
   const msalConfig: msal.Configuration = {
@@ -115,11 +161,15 @@ async function getAccessToken(creds: CredentialsResult): Promise<string> {
   }
 
   const expiresAt = result.expiresOn?.getTime() ?? now + 3_600_000;
+<<<<<<< HEAD
   memoryTokenCache = {
     token: result.accessToken,
     expiresAt,
     cacheKey,
   };
+=======
+  accessTokenCache.set(cacheKey, { token: result.accessToken, expiresAt });
+>>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
 
   return result.accessToken;
 }
@@ -151,6 +201,31 @@ export async function POST(request: NextRequest) {
 
     if (!reportId || !groupId) {
       return NextResponse.json({ error: "Parametros obrigatorios ausentes" }, { status: 400 });
+<<<<<<< HEAD
+=======
+    }
+
+    const resolvedDashboardId = await resolveDashboardId(reportId, groupId);
+    if (!resolvedDashboardId) {
+      return NextResponse.json({ error: "Dashboard nao encontrado" }, { status: 404 });
+    }
+
+    if (dashboardId && dashboardId !== resolvedDashboardId) {
+      return NextResponse.json(
+        { error: "Dashboard informado nao corresponde ao reportId/groupId" },
+        { status: 400 }
+      );
+    }
+
+    const canAccessDashboard = userCanAccessDashboard(
+      session.user.role,
+      session.user.allowedDashboards,
+      resolvedDashboardId
+    );
+
+    if (!canAccessDashboard) {
+      return NextResponse.json({ error: "Acesso negado ao dashboard solicitado" }, { status: 403 });
+>>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
     }
 
     const dashboard = await queryOne<DashboardLookupRow>(
@@ -186,6 +261,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Falha ao gerar token de embed" }, { status: 500 });
     }
 
+<<<<<<< HEAD
     let userFiliais: string[] = [];
     if (rls && !isPrivileged) {
       const userData = await queryOne<UserFiliaisRow>(
@@ -198,6 +274,18 @@ export async function POST(request: NextRequest) {
 
       userFiliais = userData?.filiais ?? [];
     }
+=======
+    const userData = await queryOne<UserDataRow>(
+      `SELECT filiais
+       FROM via_core.usuarios
+       WHERE email = $1
+       LIMIT 1`,
+      [session.user.email]
+    );
+
+    const isRlsBypassUser = session.user.role === "admin" || session.user.role === "matriz";
+    const userFiliais = rls && !isRlsBypassUser ? userData?.filiais ?? [] : [];
+>>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
 
     let resolvedRlsRole = rlsRole;
     let customData = "";
@@ -216,7 +304,11 @@ export async function POST(request: NextRequest) {
       }
 
       const userParam = rlsParams.find(
+<<<<<<< HEAD
         (param) => param.tipo === "Usuario" || param.tipo === "Usuário"
+=======
+        (param) => param.tipo === "UsuÃ¡rio" || param.tipo === "Usuario"
+>>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
       );
       if (userParam && !filialParam) {
         customData = session.user.email;
@@ -257,7 +349,11 @@ export async function POST(request: NextRequest) {
     const customDataFormatado =
       customData || (userFiliais.length > 0 ? userFiliais.map((filial) => `"${filial}"`).join(",") : "");
 
+<<<<<<< HEAD
     if (rls && resolvedRlsRole && datasetId && customDataFormatado && !isPrivileged) {
+=======
+    if (rls && resolvedRlsRole && datasetId && customDataFormatado && !isRlsBypassUser) {
+>>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
       generateTokenBody.identities = [
         {
           username: session.user.email,
@@ -285,7 +381,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Falha ao gerar token de embed" }, { status: 500 });
     }
 
+<<<<<<< HEAD
     if (tokenRes.data.token && creds.id && session.user.id) {
+=======
+    if (tokenRes.data.token && credsData.id && session.user.id) {
+>>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
       try {
         await registerTokenUsage({
           token: tokenRes.data.token as string,

@@ -64,7 +64,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
 export function useDataStoreContext() {
   const context = useContext(DataStoreContext);
   if (context === undefined) {
-    console.warn("useDataStoreContext used outside DataStoreProvider - returning default values");
+    console.warn("useDataStoreContext usado fora do DataStoreProvider - retornando valores padrão");
     return {
       dashboards: [],
       usuarios: [],
@@ -74,10 +74,11 @@ export function useDataStoreContext() {
       setores: [],
       isLoaded: true,
       loadAdminData: async () => {},
-      addDashboard: async () => { throw new Error("Not available"); },
-      updateDashboard: async () => { throw new Error("Not available"); },
-      deleteDashboard: async () => { throw new Error("Not available"); },
+      addDashboard: async () => { throw new Error("Não disponível"); },
+      updateDashboard: async () => { throw new Error("Não disponível"); },
+      deleteDashboard: async () => { throw new Error("Não disponível"); },
       getDashboardById: () => null,
+<<<<<<< HEAD
       addUsuario: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
       updateUsuario: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
       deleteUsuario: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
@@ -93,6 +94,23 @@ export function useDataStoreContext() {
       addSetor: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
       updateSetor: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
       deleteSetor: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
+=======
+      addUsuario: async () => { throw new Error("Não disponível"); },
+      updateUsuario: async () => { throw new Error("Não disponível"); },
+      deleteUsuario: async () => { throw new Error("Não disponível"); },
+      addCredencial: async () => { throw new Error("Não disponível"); },
+      updateCredencial: async () => { throw new Error("Não disponível"); },
+      deleteCredencial: async () => { throw new Error("Não disponível"); },
+      addParametroRLS: async () => { throw new Error("Não disponível"); },
+      updateParametroRLS: async () => { throw new Error("Não disponível"); },
+      deleteParametroRLS: async () => { throw new Error("Não disponível"); },
+      addAcessoEspecial: async () => { throw new Error("Não disponível"); },
+      updateAcessoEspecial: async () => { throw new Error("Não disponível"); },
+      deleteAcessoEspecial: async () => { throw new Error("Não disponível"); },
+      addSetor: async () => { throw new Error("Não disponível"); },
+      updateSetor: async () => { throw new Error("Não disponível"); },
+      deleteSetor: async () => { throw new Error("Não disponível"); },
+>>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
     };
   }
   return context;
