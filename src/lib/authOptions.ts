@@ -92,11 +92,13 @@ export const authOptions: NextAuthOptions = {
           role:
             user.acesso === ADMIN_TENANT_ACCESS
               ? "admin"
-              : user.acesso === "Matriz"
-                ? "matriz"
-                : "user",
+              : user.acesso === "Usuário Total"
+                ? "total"
+                : user.acesso === "Matriz"
+                  ? "matriz"
+                  : "user",
           mustChangePassword: user.must_change_password ?? false,
-          allowedDashboards: user.acesso === ADMIN_TENANT_ACCESS ? [] : (user.dashboards ?? []),
+          allowedDashboards: (user.acesso === ADMIN_TENANT_ACCESS || user.acesso === "Usuário Total") ? [] : (user.dashboards ?? []),
         };
       },
     }),
@@ -125,12 +127,14 @@ export const authOptions: NextAuthOptions = {
         token.role =
           data.acesso === ADMIN_TENANT_ACCESS
             ? "admin"
-            : data.acesso === "Matriz"
-              ? "matriz"
-              : "user";
+            : data.acesso === "Usuário Total"
+              ? "total"
+              : data.acesso === "Matriz"
+                ? "matriz"
+                : "user";
 
         token.allowedDashboards =
-          data.acesso === ADMIN_TENANT_ACCESS
+          (data.acesso === ADMIN_TENANT_ACCESS || data.acesso === "Usuário Total")
             ? []
             : (data.dashboards ?? []);
       }

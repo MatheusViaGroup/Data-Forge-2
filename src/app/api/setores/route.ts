@@ -32,21 +32,13 @@ function normalizeIds(values: unknown): string[] {
 }
 
 function unauthorized() {
-<<<<<<< HEAD
-  return NextResponse.json({ error: "NÃƒÆ’Ã‚Â£o autorizado" }, { status: 403 });
-=======
-  return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+  return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
 }
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
-<<<<<<< HEAD
-    return NextResponse.json({ error: "NÃƒÆ’Ã‚Â£o autorizado" }, { status: 401 });
-=======
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
   try {
@@ -71,11 +63,7 @@ export async function POST(request: NextRequest) {
   const dashboardIds = normalizeIds(body.dashboardIds);
 
   if (!nome) {
-<<<<<<< HEAD
-    return NextResponse.json({ error: "Nome do setor ÃƒÆ’Ã‚Â© obrigatÃƒÆ’Ã‚Â³rio" }, { status: 400 });
-=======
-    return NextResponse.json({ error: "Nome do setor é obrigatório" }, { status: 400 });
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+    return NextResponse.json({ error: "Nome do setor e obrigatorio" }, { status: 400 });
   }
 
   try {
@@ -111,11 +99,7 @@ export async function POST(request: NextRequest) {
     console.error("[setores][POST] Erro ao criar setor:", err.message);
 
     if (err.code === "23505") {
-<<<<<<< HEAD
-      return NextResponse.json({ error: "Nome de setor jÃƒÆ’Ã‚Â¡ cadastrado" }, { status: 409 });
-=======
-      return NextResponse.json({ error: "Nome de setor já cadastrado" }, { status: 409 });
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+      return NextResponse.json({ error: "Nome de setor ja cadastrado" }, { status: 409 });
     }
 
     return NextResponse.json({ error: "Erro ao criar setor" }, { status: 500 });
@@ -135,11 +119,7 @@ export async function PUT(request: NextRequest) {
   const dashboardIds = normalizeIds(body.dashboardIds);
 
   if (!id) {
-<<<<<<< HEAD
-    return NextResponse.json({ error: "ID do setor ÃƒÆ’Ã‚Â© obrigatÃƒÆ’Ã‚Â³rio" }, { status: 400 });
-=======
-    return NextResponse.json({ error: "ID do setor é obrigatório" }, { status: 400 });
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+    return NextResponse.json({ error: "ID do setor e obrigatorio" }, { status: 400 });
   }
 
   try {
@@ -147,11 +127,7 @@ export async function PUT(request: NextRequest) {
 
     if (nome !== undefined) {
       if (!nome) {
-<<<<<<< HEAD
-        return NextResponse.json({ error: "Nome do setor ÃƒÆ’Ã‚Â© obrigatÃƒÆ’Ã‚Â³rio" }, { status: 400 });
-=======
-        return NextResponse.json({ error: "Nome do setor é obrigatório" }, { status: 400 });
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+        return NextResponse.json({ error: "Nome do setor e obrigatorio" }, { status: 400 });
       }
 
       await query(
@@ -178,11 +154,7 @@ export async function PUT(request: NextRequest) {
     );
 
     if (!updated) {
-<<<<<<< HEAD
-      return NextResponse.json({ error: "Setor nÃƒÆ’Ã‚Â£o encontrado" }, { status: 404 });
-=======
-      return NextResponse.json({ error: "Setor não encontrado" }, { status: 404 });
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+      return NextResponse.json({ error: "Setor nao encontrado" }, { status: 404 });
     }
 
     const finalDashboardIds = hasDashboardsPayload
@@ -202,11 +174,7 @@ export async function PUT(request: NextRequest) {
     console.error("[setores][PUT] Erro ao atualizar setor:", err.message);
 
     if (err.code === "23505") {
-<<<<<<< HEAD
-      return NextResponse.json({ error: "Nome de setor jÃƒÆ’Ã‚Â¡ cadastrado" }, { status: 409 });
-=======
-      return NextResponse.json({ error: "Nome de setor já cadastrado" }, { status: 409 });
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+      return NextResponse.json({ error: "Nome de setor ja cadastrado" }, { status: 409 });
     }
 
     return NextResponse.json({ error: "Erro ao atualizar setor" }, { status: 500 });
@@ -222,11 +190,7 @@ export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id")?.trim() ?? "";
   if (!id) {
-<<<<<<< HEAD
-    return NextResponse.json({ error: "id obrigatÃƒÆ’Ã‚Â³rio" }, { status: 400 });
-=======
-    return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+    return NextResponse.json({ error: "id obrigatorio" }, { status: 400 });
   }
 
   try {

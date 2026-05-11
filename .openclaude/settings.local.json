@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -rl [usuarios][PUT] 'C:/Projetos Vercel/Via Core - Visualizador de Power bi/Data-Forge-2')",
+      "Bash(find 'C:/Projetos Vercel/Via Core - Visualizador de Power bi/Data-Forge-2' -type f -name *.sql)",
+      "Bash(find 'C:/Projetos Vercel/Via Core - Visualizador de Power bi/Data-Forge-2' -path */node_modules -prune -o -type f \\\\\\(-name *.sql -o -name *seed* -o -name *migration* -o -name *schema* \\\\\\) -print)",
+      "Bash(grep -rn \"CREATE TABLE\\\\|create table\" 'C:/Projetos Vercel/Via Core - Visualizador de Power bi/Data-Forge-2/' --include=*.ts --include=*.js --include=*.sql)",
+      "Bash(grep -rn \"acesso.*IN\\\\|acesso.*CHECK\\\\|acesso.*ENUM\\\\|acesso.*constraint\" 'C:/Projetos Vercel/Via Core - Visualizador de Power bi/Data-Forge-2/' --include=*.ts --include=*.js --include=*.sql)",
+      "Bash(grep -rn \"CHECK\\\\|check\" 'C:/Projetos Vercel/Via Core - Visualizador de Power bi/Data-Forge-2/src/' --include=*.ts)",
+      "Bash(grep -rn \"acesso_check\\\\|CHECK.*acesso\\\\|check.*acesso\" 'C:/Projetos Vercel/Via Core - Visualizador de Power bi/Data-Forge-2/' --include=*.ts --include=*.js --include=*.sql)",
+      "Bash(grep -rn \"CREATE TABLE.*usuarios\\\\|create table.*usuarios\" 'C:/Projetos Vercel/Via Core - Visualizador de Power bi/Data-Forge-2/' --include=*.ts --include=*.js --include=*.sql)"
+    ]
+  }
+}

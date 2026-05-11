@@ -15,7 +15,6 @@ import { ImportExportXlsx, ImportResult } from "@/components/ImportExportXlsx";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 
 interface Filial {
-  PLANTA_ID: string;
   PLANTA: string;
 }
 
@@ -60,7 +59,6 @@ export default function UsuariosPage() {
   // Filtros
   const [filtroNome, setFiltroNome] = useState("");
   const [filtroEmail, setFiltroEmail] = useState("");
-  const [filtroDepartamento, setFiltroDepartamento] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<"Todos" | "Ativo" | "Excluído">("Todos");
 
   // Paginação
@@ -192,9 +190,8 @@ export default function UsuariosPage() {
   const filtered = usuarios.filter(u => {
     const matchNome = u.nome.toLowerCase().includes(filtroNome.toLowerCase());
     const matchEmail = u.email.toLowerCase().includes(filtroEmail.toLowerCase());
-    const matchDepto = u.departamento.toLowerCase().includes(filtroDepartamento.toLowerCase());
     const matchStatus = filtroStatus === "Todos" || u.status === filtroStatus;
-    return matchNome && matchEmail && matchDepto && matchStatus;
+    return matchNome && matchEmail && matchStatus;
   });
 
   const totalPaginas = Math.ceil(filtered.length / itensPorPagina);
@@ -230,7 +227,6 @@ export default function UsuariosPage() {
     if (!form.nome.trim()) novosErros.nome = "Nome é obrigatório";
     if (!form.email.trim()) novosErros.email = "Email é obrigatório";
     else if (!/\S+@\S+\.\S+/.test(form.email)) novosErros.email = "Email inválido";
-    if (!form.departamento.trim()) novosErros.departamento = "Departamento é obrigatório";
     if (!isEdit && !senhaEdicao) novosErros.senhaEdicao = "Senha é obrigatória para novo usuário";
     if (!isEdit && senhaEdicao && senhaEdicao.length < 6) novosErros.senhaEdicao = "A senha deve ter pelo menos 6 caracteres";
     setErros(novosErros);
@@ -246,19 +242,19 @@ export default function UsuariosPage() {
         await updateUsuario(form.id, {
           nome: form.nome,
           email: form.email,
-          departamento: form.departamento,
+          departamento: "",
           acesso: form.acesso,
           status: form.status,
-          filiais: form.filiais,
-          dashboards: form.dashboards,
-          setorId: form.setorId,
+          filiais: form.acesso === "Usuário Total" ? [] : form.filiais,
+          dashboards: form.acesso === "Usuário Total" ? [] : form.dashboards,
+          setorId: form.acesso === "Usuário Total" ? "" : form.setorId,
         });
         setFeedback({ type: "success", msg: "Usuário atualizado com sucesso!" });
       } else {
         await addUsuario({
           nome: form.nome,
           email: form.email,
-          departamento: form.departamento,
+          departamento: "",
           acesso: form.acesso,
           status: form.status,
           filiais: form.filiais,
@@ -369,8 +365,7 @@ export default function UsuariosPage() {
                 { key: "nome",        header: "nome",        instrucao: "Nome completo do usuário",              exemplo: "João Silva" },
                 { key: "email",       header: "email",       instrucao: "E-mail corporativo",                    exemplo: "joao.silva@viagroup.com" },
                 { key: "senha",       header: "senha",       instrucao: "Senha inicial (mín. 6 caracteres)",     exemplo: "Senha@123" },
-                { key: "departamento",header: "departamento",instrucao: "Departamento do usuário",               exemplo: "TI" },
-                { key: "acesso",      header: "acesso",      instrucao: "Usuário  ou  Administrador do Locatário",exemplo: "Usuário" },
+                { key: "acesso",      header: "acesso",      instrucao: "Usuário, Usuário Total, Matriz ou Administrador do Locatário",exemplo: "Usuário" },
                 { key: "filiais",     header: "filiais",     instrucao: "Códigos de filiais separados por vírgula",exemplo: "AB01,AB02" },
               ]}
               onImport={async (rows): Promise<ImportResult> => {
@@ -386,8 +381,8 @@ export default function UsuariosPage() {
                       nome: row.nome,
                       email: row.email,
                       senha: row.senha,
-                      departamento: (row.departamento || "").toUpperCase(),
-                      acesso: (row.acesso === "Administrador do Locatário" ? "Administrador do Locatário" : "Usuário") as Usuario["acesso"],
+                      departamento: "",
+                      acesso: (row.acesso === "Administrador do Locatário" ? "Administrador do Locatário" : row.acesso === "Usuário Total" ? "Usuário Total" : row.acesso === "Matriz" ? "Matriz" : "Usuário") as Usuario["acesso"],
                       status: "Ativo",
                       filiais: row.filiais ? row.filiais.split(",").map(s => s.trim()).filter(Boolean) : [],
                       dashboards: [],
@@ -426,8 +421,6 @@ export default function UsuariosPage() {
               className="flex-1 min-w-[200px] px-5 py-2.5 bg-[var(--bg-input)] border-0 rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all" />
             <input type="text" value={filtroEmail} onChange={(e) => setFiltroEmail(e.target.value)} placeholder="Filtrar por Email"
               className="flex-1 min-w-[200px] px-5 py-2.5 bg-[var(--bg-input)] border-0 rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all" />
-            <input type="text" value={filtroDepartamento} onChange={(e) => setFiltroDepartamento(e.target.value)} placeholder="Filtrar por Departamento"
-              className="flex-1 min-w-[200px] px-5 py-2.5 bg-[var(--bg-input)] border-0 rounded-full text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all" />
             <CustomSelect
               value={filtroStatus}
               onValueChange={(v) => setFiltroStatus(v as "Todos" | "Ativo" | "Excluído")}
@@ -449,7 +442,6 @@ export default function UsuariosPage() {
                 <tr className="bg-[var(--bg-input)]">
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Nome</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Email</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Departamento</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Setor</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Filiais</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Dashboards</th>
@@ -460,15 +452,14 @@ export default function UsuariosPage() {
               </thead>
               <tbody className="divide-y divide-[var(--border-soft)]">
                 {!isLoaded ? (
-                  <tr><td colSpan={9} className="px-5 py-12 text-center"><Loader2 size={24} className="animate-spin text-[var(--brand-primary)] mx-auto" /></td></tr>
+                  <tr><td colSpan={8} className="px-5 py-12 text-center"><Loader2 size={24} className="animate-spin text-[var(--brand-primary)] mx-auto" /></td></tr>
                 ) : paginated.length === 0 ? (
-                  <tr><td colSpan={9} className="px-5 py-12 text-center text-[var(--text-secondary)]">Nenhum usuário encontrado</td></tr>
+                  <tr><td colSpan={8} className="px-5 py-12 text-center text-[var(--text-secondary)]">Nenhum usuário encontrado</td></tr>
                 ) : (
                   paginated.map((u, idx) => (
                     <tr key={u.id} className={idx % 2 === 0 ? "bg-[var(--bg-panel)]" : "bg-[var(--bg-panel-soft)]"}>
                       <td className="px-5 py-4 text-sm font-medium text-[var(--text-primary)]">{u.nome}</td>
                       <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">{u.email}</td>
-                      <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">{u.departamento}</td>
                       <td className="px-5 py-4 text-sm text-[var(--text-secondary)]">
                         {u.setorId ? setorLabelById.get(u.setorId) ?? "—" : "—"}
                       </td>
@@ -601,14 +592,6 @@ export default function UsuariosPage() {
                 {erros.email && <p className="text-red-500 text-xs mt-1 ml-3">{erros.email}</p>}
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Departamento *</label>
-                <input type="text" value={form.departamento} onChange={(e) => setForm({ ...form, departamento: e.target.value.toUpperCase() })}
-                  className={`w-full px-5 py-2.5 bg-[var(--bg-input)] border rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[#4B5FBF] transition-all ${erros.departamento ? "border-red-500" : "border-transparent"}`}
-                  placeholder="ex: TI, RH, Frota" />
-                {erros.departamento && <p className="text-red-500 text-xs mt-1 ml-3">{erros.departamento}</p>}
-              </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Nível de Acesso *</label>
@@ -617,22 +600,29 @@ export default function UsuariosPage() {
                     onValueChange={(v) =>
                       setForm((prev) => {
                         const acesso = v as Usuario["acesso"];
-                        if (acesso === "Administrador do Locatário") {
-                          return { ...prev, acesso, setorId: "", dashboards: [] };
+                        if (acesso === "Administrador do Locatário" || acesso === "Usuário Total") {
+                          return { ...prev, acesso, setorId: "", dashboards: [], filiais: [] };
                         }
                         return { ...prev, acesso };
                       })
                     }
                     options={[
                       { value: "Usuário", label: "Usuário" },
+                      { value: "Usuário Total", label: "Usuário Total" },
                       { value: "Matriz", label: "Matriz" },
                       { value: "Administrador do Locatário", label: "Administrador do Locatário" },
                     ]}
                   />
+                  {form.acesso === "Usuário Total" && (
+                    <p className="text-xs text-[var(--brand-primary)] mt-1.5 ml-1 flex items-center gap-1">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                      Acesso total a todos os dashboards e filiais automaticamente.
+                    </p>
+                  )}
                   {form.acesso === "Matriz" && (
                     <p className="text-xs text-[var(--brand-primary)] mt-1.5 ml-1 flex items-center gap-1">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
-                      Acesso a todas as filiais automaticamente. Selecione os B&apos;Is liberados abaixo.
+                      Acesso a todas as filiais automaticamente. Selecione os B'Is liberados abaixo.
                     </p>
                   )}
                 </div>
@@ -651,7 +641,7 @@ export default function UsuariosPage() {
                 )}
               </div>
 
-              {form.acesso !== "Administrador do Locatário" && (
+              {form.acesso !== "Administrador do Locatário" && form.acesso !== "Usuário Total" && (
                 <div>
                   <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Setor</label>
                   <CustomSelect
@@ -692,8 +682,8 @@ export default function UsuariosPage() {
                 </div>
               )}
 
-              {/* Filiais (apenas para não-admins) */}
-              {form.acesso !== "Administrador do Locatário" && form.acesso !== "Matriz" && (
+              {/* Filiais (apenas para Usuário comum) */}
+              {form.acesso !== "Administrador do Locatário" && form.acesso !== "Matriz" && form.acesso !== "Usuário Total" && (
                 <div>
                   {/* Acesso Especial */}
                   <div className="mb-4">
@@ -771,8 +761,8 @@ export default function UsuariosPage() {
                 </div>
               )}
 
-              {/* Dashboards (apenas para não-admins) */}
-              {form.acesso !== "Administrador do Locatário" && (
+              {/* Dashboards (apenas para não-admins e não-Usuário Total) */}
+              {form.acesso !== "Administrador do Locatário" && form.acesso !== "Usuário Total" && (
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-xs font-semibold text-[var(--text-secondary)]">Dashboards</label>

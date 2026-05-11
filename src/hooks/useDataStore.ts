@@ -26,7 +26,7 @@ export interface Usuario {
   nome: string;
   email: string;
   departamento: string;
-  acesso: "Administrador do Locatário" | "Usuário" | "Matriz";
+  acesso: "Administrador do Locatário" | "Usuário" | "Usuário Total" | "Matriz";
   status: "Ativo" | "Excluído";
   filiais: string[];
   dashboards: string[];
@@ -155,7 +155,7 @@ export function useDataStore() {
       body: JSON.stringify(usuario),
     });
     const json = (await res.json()) as { error?: string; entry: Usuario };
-    if (!res.ok) throw new Error(json.error ?? "Erro ao criar usuÃƒÂ¡rio");
+    if (!res.ok) throw new Error(json.error ?? "Erro ao criar usuário");
     setUsuarios((prev) => [...prev, json.entry]);
     return json.entry;
   }, []);
@@ -168,7 +168,7 @@ export function useDataStore() {
         body: JSON.stringify({ id, ...updates }),
       });
       const json = (await res.json()) as { error?: string; entry: Usuario };
-      if (!res.ok) throw new Error(json.error ?? "Erro ao atualizar usuÃƒÂ¡rio");
+      if (!res.ok) throw new Error(json.error ?? "Erro ao atualizar usuário");
       setUsuarios((prev) => prev.map((usuario) => (usuario.id === id ? json.entry : usuario)));
     },
     []
@@ -176,7 +176,7 @@ export function useDataStore() {
 
   const deleteUsuario = useCallback(async (id: string) => {
     const res = await fetch(`/api/usuarios?id=${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("Erro ao excluir usuÃƒÂ¡rio");
+    if (!res.ok) throw new Error("Erro ao excluir usuário");
     setUsuarios((prev) => prev.filter((usuario) => usuario.id !== id));
   }, []);
 
@@ -187,7 +187,7 @@ export function useDataStore() {
       body: JSON.stringify(parametro),
     });
     const json = (await res.json()) as { error?: string; entry: ParametroRLS };
-    if (!res.ok) throw new Error(json.error ?? "Erro ao criar parÃƒÂ¢metro RLS");
+    if (!res.ok) throw new Error(json.error ?? "Erro ao criar parâmetro RLS");
     setParametrosRLS((prev) => [...prev, json.entry]);
     return json.entry;
   }, []);
@@ -199,13 +199,13 @@ export function useDataStore() {
       body: JSON.stringify({ id, ...updates }),
     });
     const json = (await res.json()) as { error?: string; entry: ParametroRLS };
-    if (!res.ok) throw new Error(json.error ?? "Erro ao atualizar parÃƒÂ¢metro RLS");
+    if (!res.ok) throw new Error(json.error ?? "Erro ao atualizar parâmetro RLS");
     setParametrosRLS((prev) => prev.map((parametro) => (parametro.id === id ? json.entry : parametro)));
   }, []);
 
   const deleteParametroRLS = useCallback(async (id: string) => {
     const res = await fetch(`/api/parametros-rls?id=${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("Erro ao excluir parÃƒÂ¢metro RLS");
+    if (!res.ok) throw new Error("Erro ao excluir parâmetro RLS");
     setParametrosRLS((prev) => prev.filter((parametro) => parametro.id !== id));
   }, []);
 

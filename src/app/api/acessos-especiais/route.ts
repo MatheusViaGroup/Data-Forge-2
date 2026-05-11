@@ -11,8 +11,6 @@ type AcessoEspecialRow = {
   status: string | null;
 };
 
-<<<<<<< HEAD
-=======
 type AcessoEspecialBody = {
   id?: string;
   nome?: string;
@@ -21,13 +19,6 @@ type AcessoEspecialBody = {
   status?: string;
 };
 
-type SessionLike = {
-  user?: {
-    role?: string;
-  };
-} | null;
-
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
 function mapRow(row: AcessoEspecialRow) {
   return {
     id: row.id,
@@ -38,19 +29,13 @@ function mapRow(row: AcessoEspecialRow) {
   };
 }
 
-<<<<<<< HEAD
-export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session || session.user?.role !== "admin") {
-=======
-function ensureAdmin(session: SessionLike) {
+function ensureAdmin(session: { user?: { role?: string } } | null) {
   return session?.user?.role === "admin";
 }
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!ensureAdmin(session)) {
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
     return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
@@ -58,10 +43,6 @@ export async function GET() {
     const { rows } = await query<AcessoEspecialRow>(
       "SELECT * FROM via_core.acessos_especiais ORDER BY nome"
     );
-<<<<<<< HEAD
-
-=======
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
     return NextResponse.json({ entries: rows.map(mapRow) });
   } catch (error: unknown) {
     const err = error as Error;
@@ -72,19 +53,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
-<<<<<<< HEAD
-  if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
-  }
-
-  const body = (await request.json()) as Record<string, unknown>;
-=======
   if (!ensureAdmin(session)) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
   const body = (await request.json()) as AcessoEspecialBody;
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
 
   try {
     const data = await queryOne<AcessoEspecialRow>(
@@ -92,10 +65,10 @@ export async function POST(request: NextRequest) {
        VALUES ($1, $2, $3::jsonb, $4)
        RETURNING *`,
       [
-        (body.nome as string) ?? "",
-        (body.descricao as string) ?? "",
-        JSON.stringify((body.filiais as string[]) ?? []),
-        (body.status as string) ?? "Ativo",
+        body.nome ?? "",
+        body.descricao ?? "",
+        JSON.stringify(body.filiais ?? []),
+        body.status ?? "Ativo",
       ]
     );
 
@@ -112,19 +85,11 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions);
-<<<<<<< HEAD
-  if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
-  }
-
-  const body = (await request.json()) as Record<string, unknown>;
-=======
   if (!ensureAdmin(session)) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
   const body = (await request.json()) as AcessoEspecialBody;
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
 
   try {
     const data = await queryOne<AcessoEspecialRow>(
@@ -154,11 +119,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const session = await getServerSession(authOptions);
-<<<<<<< HEAD
-  if (!session || session.user?.role !== "admin") {
-=======
   if (!ensureAdmin(session)) {
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
     return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 

@@ -21,29 +21,23 @@ interface DataStoreContextType {
   acessosEspeciais: AcessoEspecial[];
   setores: Setor[];
   isLoaded: boolean;
-
   loadAdminData: () => Promise<void>;
   addDashboard: (dashboard: Omit<Dashboard, "id">) => Promise<Dashboard>;
   updateDashboard: (id: string, updates: Partial<Dashboard>) => Promise<void>;
   deleteDashboard: (id: string) => Promise<void>;
   getDashboardById: (id: string) => Dashboard | null;
-
   addUsuario: (usuario: Omit<Usuario, "id"> & { senha?: string }) => Promise<Usuario>;
   updateUsuario: (id: string, updates: Partial<Usuario> & { senha?: string; must_change_password?: boolean }) => Promise<void>;
   deleteUsuario: (id: string) => Promise<void>;
-
   addCredencial: (credencial: Omit<Credencial, "id">) => Promise<Credencial>;
   updateCredencial: (id: string, updates: Partial<Credencial>) => Promise<void>;
   deleteCredencial: (id: string) => Promise<void>;
-
   addParametroRLS: (parametro: Omit<ParametroRLS, "id">) => Promise<ParametroRLS>;
   updateParametroRLS: (id: string, updates: Partial<ParametroRLS>) => Promise<void>;
   deleteParametroRLS: (id: string) => Promise<void>;
-
   addAcessoEspecial: (acesso: Omit<AcessoEspecial, "id">) => Promise<AcessoEspecial>;
   updateAcessoEspecial: (id: string, updates: Partial<AcessoEspecial>) => Promise<void>;
   deleteAcessoEspecial: (id: string) => Promise<void>;
-
   addSetor: (setor: Omit<Setor, "id">) => Promise<Setor>;
   updateSetor: (id: string, updates: Partial<Setor>) => Promise<void>;
   deleteSetor: (id: string) => Promise<void>;
@@ -53,7 +47,6 @@ const DataStoreContext = createContext<DataStoreContextType | undefined>(undefin
 
 export function DataStoreProvider({ children }: { children: ReactNode }) {
   const dataStore = useDataStore();
-
   return (
     <DataStoreContext.Provider value={dataStore}>
       {children}
@@ -64,7 +57,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
 export function useDataStoreContext() {
   const context = useContext(DataStoreContext);
   if (context === undefined) {
-    console.warn("useDataStoreContext usado fora do DataStoreProvider - retornando valores padrão");
+    console.warn("useDataStoreContext usado fora do DataStoreProvider - retornando valores padrao");
     return {
       dashboards: [],
       usuarios: [],
@@ -74,43 +67,25 @@ export function useDataStoreContext() {
       setores: [],
       isLoaded: true,
       loadAdminData: async () => {},
-      addDashboard: async () => { throw new Error("Não disponível"); },
-      updateDashboard: async () => { throw new Error("Não disponível"); },
-      deleteDashboard: async () => { throw new Error("Não disponível"); },
+      addDashboard: async () => { throw new Error("Nao disponivel"); },
+      updateDashboard: async () => { throw new Error("Nao disponivel"); },
+      deleteDashboard: async () => { throw new Error("Nao disponivel"); },
       getDashboardById: () => null,
-<<<<<<< HEAD
-      addUsuario: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-      updateUsuario: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-      deleteUsuario: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-      addCredencial: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-      updateCredencial: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-      deleteCredencial: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-      addParametroRLS: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-      updateParametroRLS: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-      deleteParametroRLS: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-      addAcessoEspecial: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-      updateAcessoEspecial: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-      deleteAcessoEspecial: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-      addSetor: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-      updateSetor: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-      deleteSetor: async () => { throw new Error("NÃƒÂ£o disponÃƒÂ­vel"); },
-=======
-      addUsuario: async () => { throw new Error("Não disponível"); },
-      updateUsuario: async () => { throw new Error("Não disponível"); },
-      deleteUsuario: async () => { throw new Error("Não disponível"); },
-      addCredencial: async () => { throw new Error("Não disponível"); },
-      updateCredencial: async () => { throw new Error("Não disponível"); },
-      deleteCredencial: async () => { throw new Error("Não disponível"); },
-      addParametroRLS: async () => { throw new Error("Não disponível"); },
-      updateParametroRLS: async () => { throw new Error("Não disponível"); },
-      deleteParametroRLS: async () => { throw new Error("Não disponível"); },
-      addAcessoEspecial: async () => { throw new Error("Não disponível"); },
-      updateAcessoEspecial: async () => { throw new Error("Não disponível"); },
-      deleteAcessoEspecial: async () => { throw new Error("Não disponível"); },
-      addSetor: async () => { throw new Error("Não disponível"); },
-      updateSetor: async () => { throw new Error("Não disponível"); },
-      deleteSetor: async () => { throw new Error("Não disponível"); },
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+      addUsuario: async () => { throw new Error("Nao disponivel"); },
+      updateUsuario: async () => { throw new Error("Nao disponivel"); },
+      deleteUsuario: async () => { throw new Error("Nao disponivel"); },
+      addCredencial: async () => { throw new Error("Nao disponivel"); },
+      updateCredencial: async () => { throw new Error("Nao disponivel"); },
+      deleteCredencial: async () => { throw new Error("Nao disponivel"); },
+      addParametroRLS: async () => { throw new Error("Nao disponivel"); },
+      updateParametroRLS: async () => { throw new Error("Nao disponivel"); },
+      deleteParametroRLS: async () => { throw new Error("Nao disponivel"); },
+      addAcessoEspecial: async () => { throw new Error("Nao disponivel"); },
+      updateAcessoEspecial: async () => { throw new Error("Nao disponivel"); },
+      deleteAcessoEspecial: async () => { throw new Error("Nao disponivel"); },
+      addSetor: async () => { throw new Error("Nao disponivel"); },
+      updateSetor: async () => { throw new Error("Nao disponivel"); },
+      deleteSetor: async () => { throw new Error("Nao disponivel"); },
     };
   }
   return context;
