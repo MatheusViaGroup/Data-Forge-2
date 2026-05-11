@@ -26,7 +26,7 @@ export interface Usuario {
   nome: string;
   email: string;
   departamento: string;
-  acesso: "Administrador do Locatário" | "Usuário" | "Matriz";
+  acesso: "Administrador do Locatário" | "Usuário" | "Usuário Total" | "Matriz";
   status: "Ativo" | "Excluído";
   filiais: string[];
   dashboards: string[];

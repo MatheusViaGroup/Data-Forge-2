@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
       [session.user.email]
     );
 
-    const isRlsBypassUser = session.user.role === "admin" || session.user.role === "matriz";
+    const isRlsBypassUser = session.user.role === "admin" || session.user.role === "matriz" || session.user.role === "total";
     const userFiliais = rls && !isRlsBypassUser ? userData?.filiais ?? [] : [];
 
     let resolvedRlsRole = rlsRole;

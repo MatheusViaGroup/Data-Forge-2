@@ -22,7 +22,7 @@ export function userCanAccessDashboard(
   allowedDashboards: string[] | undefined,
   dashboardId: string
 ): boolean {
-  if (role === "admin") {
+  if (role === "admin" || role === "total") {
     return true;
   }
 

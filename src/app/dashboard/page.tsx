@@ -125,7 +125,7 @@ export default function DashboardPage() {
   const { dashboards, isLoaded } = useDataStoreContext();
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const isAdmin = session?.user?.role === "admin";
+  const isAdmin = session?.user?.role === "admin" || session?.user?.role === "total";
   const userName = session?.user?.name ?? "Usuário";
   const allowedDashboards: string[] = (session?.user as { allowedDashboards?: string[] })?.allowedDashboards ?? [];
 

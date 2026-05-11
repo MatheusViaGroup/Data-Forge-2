@@ -71,7 +71,7 @@ export default function DashboardViewPage() {
 
     // ─── Verificar cache no sessionStorage ─────────────────────────────────────────────
     const cacheKey = `pbi-embed-token:${dashboard.id}:${session?.user?.email || 'anonymous'}`;
-    const canUseCache = !opts?.forceNewToken && (session?.user?.role === "admin" || !(dashboard.rls ?? false));
+    const canUseCache = !opts?.forceNewToken && (session?.user?.role === "admin" || session?.user?.role === "total" || !(dashboard.rls ?? false));
     const cached = canUseCache ? sessionStorage.getItem(cacheKey) : null;
 
     if (!canUseCache) {

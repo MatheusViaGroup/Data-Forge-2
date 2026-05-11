@@ -16,6 +16,7 @@ import {
   Moon,
   Sun,
   Power,
+  Building2,
 } from "lucide-react";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -25,6 +26,7 @@ const navItems = [
   { label: "Usuários", href: "/admin/usuarios", icon: Users, roles: ["admin"] },
   { label: "Dashboards", href: "/admin/dashboards", icon: LayoutGrid, roles: ["admin"] },
   { label: "Setores", href: "/admin/setores", icon: Layers3, roles: ["admin"] },
+  { label: "Plantas", href: "/admin/plantas", icon: Building2, roles: ["admin"] },
   { label: "Credenciais", href: "/admin/credenciais", icon: KeyRound, roles: ["admin"] },
   { label: "Acessos", href: "/admin/acessos-especiais", icon: UserCheck, roles: ["admin"] },
   { label: "RLS", href: "/admin/parametros-rls", icon: ShieldCheck, roles: ["admin"] },
@@ -96,7 +98,7 @@ export default function Sidebar() {
             <div className="min-w-0">
               <p className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>{userName}</p>
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                {userRole === "admin" ? "Administrador" : "Usuário"}
+                {userRole === "admin" ? "Administrador" : userRole === "total" ? "Usuário Total" : userRole === "matriz" ? "Matriz" : "Usuário"}
               </p>
             </div>
           </div>
@@ -212,7 +214,7 @@ export default function Sidebar() {
               <div className="min-w-0">
                 <p className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>{userName}</p>
                 <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                  {userRole === "admin" ? "Administrador" : "Usuário"}
+                  {userRole === "admin" ? "Administrador" : userRole === "total" ? "Usuário Total" : userRole === "matriz" ? "Matriz" : "Usuário"}
                 </p>
               </div>
             )}

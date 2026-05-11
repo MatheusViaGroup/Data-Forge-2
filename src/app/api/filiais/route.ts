@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-
-export interface Filial {
-  PLANTA_ID: string;
-  PLANTA: string;
-  COD_CENTRO_CUSTO: string | null;
-  DATA_INICIO: string | null;
-}
+import { query } from "@/lib/db";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -15,26 +9,17 @@ export async function GET() {
     return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
   }
 
-  let response: Response;
   try {
-    response = await fetch("https://n8n.datastack.viagroup.com.br/webhook/filial", {
-      next: { revalidate: 300 },
-      signal: AbortSignal.timeout(5000),
-    });
+    const result = await query<{ planta: string }>(
+      `SELECT planta FROM via_core.plantas ORDER BY planta`
+    );
+    const filiais = result.rows.map((r) => ({
+      PLANTA: r.planta,
+    }));
+    return NextResponse.json({ filiais });
   } catch (error: unknown) {
     const err = error as Error;
-    console.error("[filiais] Erro ao consultar webhook:", err.message);
+    console.error("[filiais] Erro ao consultar plantas:", err.message);
     return NextResponse.json({ filiais: [] }, { status: 502 });
   }
-
-  if (!response.ok) {
-    return NextResponse.json({ filiais: [] }, { status: 502 });
-  }
-
-  const data: Filial[] = await response.json();
-  const filiais = data
-    .filter((filial) => filial.PLANTA_ID && filial.PLANTA)
-    .sort((a, b) => a.PLANTA.localeCompare(b.PLANTA));
-
-  return NextResponse.json({ filiais });
 }
