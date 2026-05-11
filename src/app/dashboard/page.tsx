@@ -157,7 +157,7 @@ export default function DashboardPage() {
   });
 
   return (
-    <AppShell>
+    <AppShell title="Dashboard">
       <div className="p-4 sm:p-6 lg:p-8 max-w-[1920px] mx-auto">
         {/* Boas-vindas */}
         <div className="mb-8">
