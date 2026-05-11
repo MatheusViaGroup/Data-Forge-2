@@ -8,10 +8,12 @@ import { useSidebar } from "@/contexts/SidebarContext";
 interface AppShellProps {
   title: string;
   subtitle?: string;
+  fullHeight?: boolean;
+  topBar?: ReactNode;
   children: ReactNode;
 }
 
-export default function AppShell({ title, subtitle, children }: AppShellProps) {
+export default function AppShell({ title, subtitle, fullHeight, topBar, children }: AppShellProps) {
   const { collapsed } = useSidebar();
 
   return (
@@ -22,7 +24,8 @@ export default function AppShell({ title, subtitle, children }: AppShellProps) {
         style={{ marginLeft: collapsed ? 68 : 230 }}
       >
         <Header title={title} subtitle={subtitle} />
-        <main className="flex-1 overflow-y-auto">
+        {topBar}
+        <main className={`flex-1 ${fullHeight ? "h-full" : "overflow-y-auto"}`}>
           {children}
         </main>
       </div>
