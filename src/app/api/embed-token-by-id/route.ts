@@ -7,7 +7,6 @@ import { query, queryOne } from "@/lib/db";
 import { decryptCredentialIfNeeded } from "@/lib/credentialCrypto";
 import { resolveDashboardId, userCanAccessDashboard } from "@/lib/dashboardAccess";
 import { registerTokenUsage } from "@/lib/tokenUsage";
-import { decryptCredentialValue } from "@/lib/credentialCrypto";
 
 type EmbedRequestBody = {
   reportId?: string;
@@ -29,13 +28,10 @@ type CredentialRow = {
   client_secret: string | null;
   master_user: string;
   master_password: string | null;
-<<<<<<< HEAD
-=======
 };
 
 type UserDataRow = {
   filiais: string[] | null;
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
 };
 
 type CredentialResult = {
@@ -47,29 +43,6 @@ type CredentialResult = {
   masterPassword: string;
 };
 
-<<<<<<< HEAD
-type DashboardLookupRow = {
-  id: string;
-};
-
-type UserFiliaisRow = {
-  filiais: string[] | null;
-};
-
-type MemoryTokenCache = {
-  token: string;
-  expiresAt: number;
-  cacheKey: string;
-};
-
-let memoryTokenCache: MemoryTokenCache | null = null;
-
-function buildCredentialCacheKey(creds: CredentialsResult): string {
-  return `${creds.id ?? "env"}|${creds.clientId}|${creds.tenantId}|${creds.masterUser}`;
-}
-
-async function getCredentials(): Promise<CredentialsResult> {
-=======
 type InMemoryTokenCacheEntry = {
   token: string;
   expiresAt: number;
@@ -79,7 +52,6 @@ const TOKEN_EXPIRY_SAFETY_WINDOW_MS = 60_000;
 const accessTokenCache = new Map<string, InMemoryTokenCacheEntry>();
 
 async function getCredentials(): Promise<CredentialResult> {
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
   const data = await queryOne<CredentialRow>(
     `SELECT id, client_id, tenant_id, client_secret, master_user, master_password
      FROM via_core.credenciais
@@ -92,15 +64,9 @@ async function getCredentials(): Promise<CredentialResult> {
       id: data.id,
       clientId: data.client_id,
       tenantId: data.tenant_id,
-<<<<<<< HEAD
-      clientSecret: decryptCredentialValue(data.client_secret ?? ""),
-      masterUser: data.master_user,
-      masterPassword: decryptCredentialValue(data.master_password ?? ""),
-=======
       clientSecret: decryptCredentialIfNeeded(data.client_secret ?? ""),
       masterUser: data.master_user,
       masterPassword: decryptCredentialIfNeeded(data.master_password ?? ""),
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
     };
   }
 
@@ -114,31 +80,19 @@ async function getCredentials(): Promise<CredentialResult> {
   };
 }
 
-<<<<<<< HEAD
-async function getAccessToken(creds: CredentialsResult): Promise<string> {
-=======
 function getCredentialCacheKey(creds: CredentialResult): string {
   if (creds.id) {
     return `db:${creds.id}`;
   }
-
   return `env:${creds.tenantId}:${creds.clientId}:${creds.masterUser}`;
 }
 
-async function getAccessToken(): Promise<string> {
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+async function getAccessToken(creds: CredentialResult): Promise<string> {
   const now = Date.now();
-  const cacheKey = buildCredentialCacheKey(creds);
-
-<<<<<<< HEAD
-  if (memoryTokenCache && memoryTokenCache.cacheKey === cacheKey && memoryTokenCache.expiresAt > now + 60_000) {
-    return memoryTokenCache.token;
-=======
   const cacheKey = getCredentialCacheKey(creds);
   const cachedToken = accessTokenCache.get(cacheKey);
   if (cachedToken && cachedToken.expiresAt > now + TOKEN_EXPIRY_SAFETY_WINDOW_MS) {
     return cachedToken.token;
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
   }
 
   const msalConfig: msal.Configuration = {
@@ -161,15 +115,7 @@ async function getAccessToken(): Promise<string> {
   }
 
   const expiresAt = result.expiresOn?.getTime() ?? now + 3_600_000;
-<<<<<<< HEAD
-  memoryTokenCache = {
-    token: result.accessToken,
-    expiresAt,
-    cacheKey,
-  };
-=======
   accessTokenCache.set(cacheKey, { token: result.accessToken, expiresAt });
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
 
   return result.accessToken;
 }
@@ -201,8 +147,6 @@ export async function POST(request: NextRequest) {
 
     if (!reportId || !groupId) {
       return NextResponse.json({ error: "Parametros obrigatorios ausentes" }, { status: 400 });
-<<<<<<< HEAD
-=======
     }
 
     const resolvedDashboardId = await resolveDashboardId(reportId, groupId);
@@ -217,42 +161,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const canAccessDashboard = userCanAccessDashboard(
+    const canAccess = userCanAccessDashboard(
       session.user.role,
       session.user.allowedDashboards,
       resolvedDashboardId
     );
 
-    if (!canAccessDashboard) {
+    if (!canAccess) {
       return NextResponse.json({ error: "Acesso negado ao dashboard solicitado" }, { status: 403 });
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
-    }
-
-    const dashboard = await queryOne<DashboardLookupRow>(
-      `SELECT id
-       FROM via_core.dashboards
-       WHERE report_id = $1 AND workspace_id = $2
-       LIMIT 1`,
-      [reportId, groupId]
-    );
-
-    if (!dashboard) {
-      return NextResponse.json({ error: "Dashboard nao encontrado" }, { status: 404 });
-    }
-
-    const resolvedDashboardId = dashboard.id;
-
-    if (dashboardId && dashboardId !== resolvedDashboardId) {
-      return NextResponse.json({ error: "Requisicao inconsistente para o dashboard" }, { status: 403 });
-    }
-
-    const isPrivileged = session.user.role === "admin" || session.user.role === "matriz";
-
-    if (!isPrivileged) {
-      const allowed = new Set(session.user.allowedDashboards ?? []);
-      if (!allowed.has(resolvedDashboardId)) {
-        return NextResponse.json({ error: "Sem permissao para este dashboard" }, { status: 403 });
-      }
     }
 
     const creds = await getCredentials();
@@ -261,20 +177,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Falha ao gerar token de embed" }, { status: 500 });
     }
 
-<<<<<<< HEAD
-    let userFiliais: string[] = [];
-    if (rls && !isPrivileged) {
-      const userData = await queryOne<UserFiliaisRow>(
-        `SELECT filiais
-         FROM via_core.usuarios
-         WHERE email = $1
-         LIMIT 1`,
-        [session.user.email]
-      );
-
-      userFiliais = userData?.filiais ?? [];
-    }
-=======
     const userData = await queryOne<UserDataRow>(
       `SELECT filiais
        FROM via_core.usuarios
@@ -285,7 +187,6 @@ export async function POST(request: NextRequest) {
 
     const isRlsBypassUser = session.user.role === "admin" || session.user.role === "matriz";
     const userFiliais = rls && !isRlsBypassUser ? userData?.filiais ?? [] : [];
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
 
     let resolvedRlsRole = rlsRole;
     let customData = "";
@@ -304,11 +205,7 @@ export async function POST(request: NextRequest) {
       }
 
       const userParam = rlsParams.find(
-<<<<<<< HEAD
-        (param) => param.tipo === "Usuario" || param.tipo === "Usuário"
-=======
-        (param) => param.tipo === "UsuÃ¡rio" || param.tipo === "Usuario"
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+        (param) => param.tipo === "Usuario" || param.tipo === "Usu\u00e1rio"
       );
       if (userParam && !filialParam) {
         customData = session.user.email;
@@ -349,11 +246,7 @@ export async function POST(request: NextRequest) {
     const customDataFormatado =
       customData || (userFiliais.length > 0 ? userFiliais.map((filial) => `"${filial}"`).join(",") : "");
 
-<<<<<<< HEAD
-    if (rls && resolvedRlsRole && datasetId && customDataFormatado && !isPrivileged) {
-=======
     if (rls && resolvedRlsRole && datasetId && customDataFormatado && !isRlsBypassUser) {
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
       generateTokenBody.identities = [
         {
           username: session.user.email,
@@ -381,11 +274,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Falha ao gerar token de embed" }, { status: 500 });
     }
 
-<<<<<<< HEAD
     if (tokenRes.data.token && creds.id && session.user.id) {
-=======
-    if (tokenRes.data.token && credsData.id && session.user.id) {
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
       try {
         await registerTokenUsage({
           token: tokenRes.data.token as string,

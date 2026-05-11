@@ -4,31 +4,6 @@ import axios from "axios";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { queryOne } from "@/lib/db";
-<<<<<<< HEAD
-import { decryptCredentialValue } from "@/lib/credentialCrypto";
-
-type CredentialRow = {
-  client_id: string;
-  tenant_id: string;
-  client_secret: string | null;
-  master_user: string;
-  master_password: string | null;
-};
-
-type CredentialsResult = {
-  clientId: string;
-  tenantId: string;
-  clientSecret: string;
-  masterUser: string;
-  masterPassword: string;
-};
-
-type DashboardLookupRow = {
-  id: string;
-};
-
-async function getCredentials(): Promise<CredentialsResult> {
-=======
 import { decryptCredentialIfNeeded } from "@/lib/credentialCrypto";
 import { resolveDashboardId, userCanAccessDashboard } from "@/lib/dashboardAccess";
 
@@ -41,7 +16,6 @@ type CredentialRow = {
 };
 
 async function getCredentials() {
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
   const data = await queryOne<CredentialRow>(
     `SELECT client_id, tenant_id, client_secret, master_user, master_password
      FROM via_core.credenciais
@@ -53,15 +27,9 @@ async function getCredentials() {
     return {
       clientId: data.client_id,
       tenantId: data.tenant_id,
-<<<<<<< HEAD
-      clientSecret: decryptCredentialValue(data.client_secret ?? ""),
-      masterUser: data.master_user,
-      masterPassword: decryptCredentialValue(data.master_password ?? ""),
-=======
       clientSecret: decryptCredentialIfNeeded(data.client_secret ?? ""),
       masterUser: data.master_user,
       masterPassword: decryptCredentialIfNeeded(data.master_password ?? ""),
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
     };
   }
 
@@ -103,37 +71,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "reportId e groupId sao obrigatorios" }, { status: 400 });
     }
 
-    const dashboard = await queryOne<DashboardLookupRow>(
-      `SELECT id
-       FROM via_core.dashboards
-       WHERE report_id = $1 AND workspace_id = $2
-       LIMIT 1`,
-      [reportId, groupId]
-    );
-
-    if (!dashboard) {
+    const requestedDashboardId = await resolveDashboardId(reportId, groupId);
+    if (!requestedDashboardId) {
       return NextResponse.json({ error: "Dashboard nao encontrado" }, { status: 404 });
     }
 
-    const isPrivileged = session.user.role === "admin" || session.user.role === "matriz";
-    if (!isPrivileged) {
-      const allowed = new Set(session.user.allowedDashboards ?? []);
-      if (!allowed.has(dashboard.id)) {
-        return NextResponse.json({ error: "Sem permissao para este dashboard" }, { status: 403 });
-      }
-    }
-
-    const requestedDashboardId = await resolveDashboardId(reportId, groupId);
-    if (!requestedDashboardId) {
-      return NextResponse.json({ error: "Dashboard nÃ£o encontrado" }, { status: 404 });
-    }
-
-    const canAccessDashboard = userCanAccessDashboard(
+    const canAccess = userCanAccessDashboard(
       session.user.role,
       session.user.allowedDashboards,
       requestedDashboardId
     );
-    if (!canAccessDashboard) {
+    if (!canAccess) {
       return NextResponse.json({ error: "Acesso negado ao dashboard solicitado" }, { status: 403 });
     }
 

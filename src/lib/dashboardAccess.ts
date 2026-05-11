@@ -1,4 +1,3 @@
-import "server-only";
 import { queryOne } from "@/lib/db";
 
 type DashboardLookupRow = {

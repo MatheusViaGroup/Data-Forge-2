@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { query, queryOne } from "@/lib/db";
-<<<<<<< HEAD
-import { encryptCredentialValue } from "@/lib/credentialCrypto";
-=======
 import { encryptCredentialIfNeeded } from "@/lib/credentialCrypto";
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
 
 type CredencialRow = {
   id: string;
@@ -85,9 +81,6 @@ export async function POST(request: NextRequest) {
   const body = (await request.json()) as CredencialBody;
 
   try {
-    const encryptedClientSecret = encryptCredentialValue(body.clientSecret ?? "");
-    const encryptedMasterPassword = encryptCredentialValue(body.masterPassword ?? "");
-
     const data = await queryOne<CredencialRow>(
       `INSERT INTO via_core.credenciais (nome, tenant, client_id, client_secret, tenant_id, master_user, master_password, secret_expiration, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -96,19 +89,11 @@ export async function POST(request: NextRequest) {
         body.nome ?? "",
         body.tenant ?? "",
         body.clientId ?? "",
-<<<<<<< HEAD
-        encryptedClientSecret,
-        body.tenantId ?? "",
-        body.usuarioPowerBI ?? "",
-        encryptedMasterPassword,
-        parseDateToDb(body.dataExpiracao),
-=======
         body.clientSecret ? encryptCredentialIfNeeded(body.clientSecret) : "",
         body.tenantId ?? "",
         body.usuarioPowerBI ?? "",
         body.masterPassword ? encryptCredentialIfNeeded(body.masterPassword) : "",
-        body.dataExpiracao ? body.dataExpiracao.split("/").reverse().join("-") : null,
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+        parseDateToDb(body.dataExpiracao),
         body.status === "Ativo" ? "ativo" : "inativo",
       ]
     );
@@ -166,20 +151,12 @@ export async function PUT(request: NextRequest) {
 
   if (body.clientSecret && body.clientSecret !== SECRET_MASK) {
     setClauses.push(`client_secret = $${paramIdx++}`);
-<<<<<<< HEAD
-    params.push(encryptCredentialValue(body.clientSecret));
-=======
     params.push(encryptCredentialIfNeeded(body.clientSecret));
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
   }
 
   if (body.masterPassword && body.masterPassword !== SECRET_MASK) {
     setClauses.push(`master_password = $${paramIdx++}`);
-<<<<<<< HEAD
-    params.push(encryptCredentialValue(body.masterPassword));
-=======
     params.push(encryptCredentialIfNeeded(body.masterPassword));
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
   }
 
   params.push(body.id);
