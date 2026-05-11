@@ -22,7 +22,7 @@ import { useSidebar } from "@/contexts/SidebarContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const navItems = [
-  { label: "Início", href: "/dashboard", icon: Home, roles: ["admin", "user"] },
+  { label: "Início", href: "/dashboard", icon: Home, roles: ["admin", "user", "total", "matriz"] },
   { label: "Usuários", href: "/admin/usuarios", icon: Users, roles: ["admin"] },
   { label: "Dashboards", href: "/admin/dashboards", icon: LayoutGrid, roles: ["admin"] },
   { label: "Setores", href: "/admin/setores", icon: Layers3, roles: ["admin"] },
