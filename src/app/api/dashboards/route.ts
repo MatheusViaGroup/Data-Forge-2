@@ -208,8 +208,9 @@ export async function GET() {
     });
 
     const isAdmin = session.user.role === "admin";
+    const isTotal = session.user.role === "total";
     const allowedDashboards = new Set(session.user.allowedDashboards ?? []);
-    const visibleDashboards = isAdmin
+    const visibleDashboards = (isAdmin || isTotal)
       ? all
       : all.filter((dashboard) => allowedDashboards.has(dashboard.id));
 
