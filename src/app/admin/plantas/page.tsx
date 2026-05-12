@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { ImportExportXlsx, ImportResult } from "@/components/ImportExportXlsx";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
@@ -37,6 +39,8 @@ export default function PlantasPage() {
   // Paginação
   const [itensPorPagina, setItensPorPagina] = useState(10);
   const [paginaAtual, setPaginaAtual] = useState(1);
+
+  const { confirm, dialogProps } = useConfirmDialog();
 
   useEffect(() => {
     if (authStatus === "authenticated" && session?.user?.role !== "admin") router.push("/dashboard");
@@ -127,7 +131,7 @@ export default function PlantasPage() {
   };
 
   const handleDelete = async (nome: string) => {
-    if (!confirm(`Tem certeza que deseja excluir a planta "${nome}"?`)) return;
+    if (!await confirm({ title: "Excluir Planta", message: `Tem certeza que deseja excluir a planta "${nome}"?`, confirmLabel: "Excluir", variant: "danger" })) return;
     setDeleting(nome);
     try {
       const res = await fetch(`/api/plantas?planta=${encodeURIComponent(nome)}`, { method: "DELETE" });
@@ -336,6 +340,7 @@ export default function PlantasPage() {
           </div>
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </AppShell>
   );
 }

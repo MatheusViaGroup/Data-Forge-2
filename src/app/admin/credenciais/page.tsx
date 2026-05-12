@@ -12,6 +12,8 @@ import {
 import { useDataStoreContext, Credencial } from "@/contexts/DataStoreContext";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { DatePicker } from "@/components/ui/DatePicker";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
@@ -70,6 +72,8 @@ export default function CredenciaisPage() {
     clientSecret: "",
     masterPassword: "",
   });
+
+  const { confirm, dialogProps } = useConfirmDialog();
 
   useEffect(() => {
     if (authStatus === "authenticated" && session?.user?.role !== "admin") router.push("/dashboard");
@@ -170,7 +174,7 @@ export default function CredenciaisPage() {
 
   const handleDelete = async (id: string) => {
     const credencial = credenciais.find(c => c.id === id);
-    if (!confirm(`Tem certeza que deseja excluir a credencial "${credencial?.nome}"? Esta ação não pode ser desfeita.`)) return;
+    if (!await confirm({ title: "Excluir Credencial", message: `Tem certeza que deseja excluir a credencial "${credencial?.nome}"? Esta ação não pode ser desfeita.`, confirmLabel: "Excluir", variant: "danger" })) return;
 
     setDeleting(id);
     try {
@@ -561,6 +565,7 @@ export default function CredenciaisPage() {
           </div>
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </AppShell>
   );
 }
