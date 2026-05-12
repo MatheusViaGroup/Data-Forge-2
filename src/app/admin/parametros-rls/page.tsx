@@ -11,6 +11,8 @@ import {
 import { useDataStoreContext, ParametroRLS } from "@/contexts/DataStoreContext";
 import { ImportExportXlsx, ImportResult } from "@/components/ImportExportXlsx";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
@@ -46,6 +48,8 @@ export default function ParametrosRLSPage() {
   const [filtroNome, setFiltroNome] = useState("");
   const [form, setForm] = useState(emptyForm());
   const [erros, setErros] = useState<Record<string, string>>({});
+
+  const { confirm, dialogProps } = useConfirmDialog();
 
   // Carrega dados admin quando a página monta
   useEffect(() => {
@@ -113,7 +117,7 @@ export default function ParametrosRLSPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Excluir este parâmetro RLS?")) return;
+    if (!await confirm({ title: "Excluir Parâmetro RLS", message: "Excluir este parâmetro RLS?", confirmLabel: "Excluir", variant: "danger" })) return;
     try {
       await deleteParametroRLS(id);
       setFeedback({ type: "success", msg: "Parâmetro excluído com sucesso!" });
@@ -424,6 +428,7 @@ export default function ParametrosRLSPage() {
           </div>
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </AppShell>
   );
 }

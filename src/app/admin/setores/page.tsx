@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { useDataStoreContext, Setor } from "@/contexts/DataStoreContext";
 import { CustomMultiSelect } from "@/components/ui/CustomMultiSelect";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
@@ -49,6 +51,8 @@ export default function AdminSetoresPage() {
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
   const [form, setForm] = useState<SetorForm>({ id: "", nome: "", dashboardIds: [] });
+
+  const { confirm, dialogProps } = useConfirmDialog();
 
   const dashboardMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -142,7 +146,7 @@ export default function AdminSetoresPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Excluir este setor? Os usuários vinculados perderão o vínculo de setor.")) return;
+    if (!await confirm({ title: "Excluir Setor", message: "Excluir este setor? Os usuários vinculados perderão o vínculo de setor.", confirmLabel: "Excluir", variant: "danger" })) return;
 
     setDeleting(id);
     try {
@@ -398,6 +402,7 @@ export default function AdminSetoresPage() {
           </div>
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </AppShell>
   );
 }

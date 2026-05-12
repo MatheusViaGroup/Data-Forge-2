@@ -11,6 +11,8 @@ import {
 import { useDataStoreContext, AcessoEspecial } from "@/contexts/DataStoreContext";
 import { ImportExportXlsx, ImportResult } from "@/components/ImportExportXlsx";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 interface Filial {
   PLANTA_ID: string;
@@ -42,6 +44,8 @@ export default function AcessosEspeciaisPage() {
   const [form, setForm] = useState<Omit<AcessoEspecial, "id"> & { id: string }>({
     id: "", nome: "", descricao: "", filiais: [], status: "Ativo",
   });
+
+  const { confirm, dialogProps } = useConfirmDialog();
 
   useEffect(() => {
     if (authStatus === "authenticated" && session?.user?.role !== "admin") router.push("/dashboard");
@@ -135,7 +139,7 @@ export default function AcessosEspeciaisPage() {
 
   const handleDelete = async (id: string) => {
     const acesso = acessosEspeciais.find(a => a.id === id);
-    if (!confirm(`Tem certeza que deseja excluir o acesso "${acesso?.nome}"?`)) return;
+    if (!await confirm({ title: "Excluir Acesso Especial", message: `Tem certeza que deseja excluir o acesso "${acesso?.nome}"?`, confirmLabel: "Excluir", variant: "danger" })) return;
 
     setDeleting(id);
     try {
@@ -498,6 +502,7 @@ export default function AcessosEspeciaisPage() {
           </div>
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </AppShell>
   );
 }

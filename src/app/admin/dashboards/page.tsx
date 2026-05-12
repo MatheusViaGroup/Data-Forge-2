@@ -20,6 +20,8 @@ import { useDataStoreContext, Dashboard } from "@/contexts/DataStoreContext";
 import { ImportExportXlsx, ImportResult } from "@/components/ImportExportXlsx";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { CustomMultiSelect } from "@/components/ui/CustomMultiSelect";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
@@ -94,6 +96,8 @@ export default function AdminDashboardsPage() {
     setores: [],
     setorIds: [],
   });
+
+  const { confirm, dialogProps } = useConfirmDialog();
 
   useEffect(() => {
     if (authStatus === "authenticated" && session?.user?.role !== "admin") {
@@ -234,7 +238,7 @@ export default function AdminDashboardsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Excluir este dashboard?")) return;
+    if (!await confirm({ title: "Excluir Dashboard", message: "Excluir este dashboard?", confirmLabel: "Excluir", variant: "danger" })) return;
 
     setDeleting(id);
     try {
@@ -686,6 +690,7 @@ export default function AdminDashboardsPage() {
           </div>
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </AppShell>
   );
 }

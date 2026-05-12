@@ -13,6 +13,8 @@ import {
 import { useDataStoreContext, Usuario } from "@/contexts/DataStoreContext";
 import { ImportExportXlsx, ImportResult } from "@/components/ImportExportXlsx";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 interface Filial {
   PLANTA: string;
@@ -73,6 +75,8 @@ export default function UsuariosPage() {
   const [showSenhaEdicao, setShowSenhaEdicao] = useState(false);
 
   const [erros, setErros] = useState<Record<string, string>>({});
+
+  const { confirm, dialogProps } = useConfirmDialog();
 
   useEffect(() => {
     if (authStatus === "authenticated" && session?.user?.role !== "admin") router.push("/dashboard");
@@ -274,7 +278,7 @@ export default function UsuariosPage() {
 
   const handleDelete = async (id: string) => {
     const usuario = usuarios.find(u => u.id === id);
-    if (!confirm(`Tem certeza que deseja excluir o usuário "${usuario?.nome}"? Esta ação não pode ser desfeita.`)) return;
+    if (!await confirm({ title: "Excluir Usuário", message: `Tem certeza que deseja excluir o usuário "${usuario?.nome}"? Esta ação não pode ser desfeita.`, confirmLabel: "Excluir", variant: "danger" })) return;
     
     setDeleting(id);
     try {
@@ -922,6 +926,7 @@ export default function UsuariosPage() {
           </div>
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </AppShell>
   );
 }
