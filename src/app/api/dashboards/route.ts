@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { query, queryOne } from "@/lib/db";
+import { pool, query, queryOne } from "@/lib/db";
+import type { PoolClient } from "pg";
 import {
   ensureSetoresSchema,
   findSetorByNome,
   getDashboardSetorMap,
   replaceDashboardSectorLinks,
-  removeDashboardSectorLinksByDashboardId,
   syncUsersDashboardsBySetorId,
 } from "@/lib/setores";
 
@@ -50,6 +50,17 @@ type DashboardRequestBody = {
 type PgError = Error & {
   code?: string;
   detail?: string;
+};
+
+type SetorLinkRow = {
+  setor_id: string;
+};
+
+type DashboardForeignKeyReferenceRow = {
+  constraint_name: string;
+  schema_name: string;
+  table_name: string;
+  column_name: string;
 };
 
 function getPgError(error: unknown): PgError {
@@ -99,6 +110,54 @@ function logPgError(context: string, error: unknown) {
   const code = pgError.code ? ` (code: ${pgError.code})` : "";
   const detail = pgError.detail ? ` | detail: ${pgError.detail}` : "";
   console.error(`${context}${code}: ${pgError.message}${detail}`);
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return Array.from(new Set(values));
+}
+
+function quoteIdentifier(value: string): string {
+  return `"${value.replace(/"/g, "\"\"")}"`;
+}
+
+async function deleteDashboardForeignKeyReferences(client: PoolClient, dashboardId: string): Promise<void> {
+  const { rows } = await client.query<DashboardForeignKeyReferenceRow>(
+    `SELECT DISTINCT
+        con.conname AS constraint_name,
+        fk_nsp.nspname AS schema_name,
+        fk_rel.relname AS table_name,
+        fk_att.attname AS column_name
+      FROM pg_constraint con
+      INNER JOIN pg_class fk_rel ON fk_rel.oid = con.conrelid
+      INNER JOIN pg_namespace fk_nsp ON fk_nsp.oid = fk_rel.relnamespace
+      INNER JOIN pg_class pk_rel ON pk_rel.oid = con.confrelid
+      INNER JOIN pg_namespace pk_nsp ON pk_nsp.oid = pk_rel.relnamespace
+      INNER JOIN LATERAL unnest(con.conkey) WITH ORDINALITY AS fk_col(attnum, ordinality) ON TRUE
+      INNER JOIN LATERAL unnest(con.confkey) WITH ORDINALITY AS pk_col(attnum, ordinality)
+        ON pk_col.ordinality = fk_col.ordinality
+      INNER JOIN pg_attribute fk_att
+        ON fk_att.attrelid = con.conrelid
+       AND fk_att.attnum = fk_col.attnum
+      INNER JOIN pg_attribute pk_att
+        ON pk_att.attrelid = con.confrelid
+       AND pk_att.attnum = pk_col.attnum
+      WHERE con.contype = 'f'
+        AND pk_nsp.nspname = 'via_core'
+        AND pk_rel.relname = 'dashboards'
+        AND pk_att.attname = 'id'`
+  );
+
+  for (const reference of rows) {
+    const schema = quoteIdentifier(reference.schema_name);
+    const table = quoteIdentifier(reference.table_name);
+    const column = quoteIdentifier(reference.column_name);
+
+    await client.query(
+      `DELETE FROM ${schema}.${table}
+       WHERE ${column} = $1`,
+      [dashboardId]
+    );
+  }
 }
 
 async function tryEnsureSetoresSchema(context: string): Promise<boolean> {
@@ -434,9 +493,46 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const setoresEnabled = await tryEnsureSetoresSchema("DELETE");
-    const affectedSetores = setoresEnabled ? await removeDashboardSectorLinksByDashboardId(id) : [];
-    await query("DELETE FROM via_core.parametros_rls WHERE dashboard_id = $1", [id]);
-    await query("DELETE FROM via_core.dashboards WHERE id = $1", [id]);
+    const client = await pool.connect();
+    let affectedSetores: string[] = [];
+
+    try {
+      await client.query("BEGIN");
+
+      if (setoresEnabled) {
+        const { rows } = await client.query<SetorLinkRow>(
+          `SELECT setor_id
+           FROM via_core.dashboard_setores
+           WHERE dashboard_id = $1`,
+          [id]
+        );
+        affectedSetores = uniqueStrings(rows.map((row) => row.setor_id));
+
+        await client.query(
+          `DELETE FROM via_core.dashboard_setores
+           WHERE dashboard_id = $1`,
+          [id]
+        );
+      }
+
+      await deleteDashboardForeignKeyReferences(client, id);
+      const deleteDashboardResult = await client.query(
+        "DELETE FROM via_core.dashboards WHERE id = $1",
+        [id]
+      );
+
+      if ((deleteDashboardResult.rowCount ?? 0) === 0) {
+        await client.query("ROLLBACK");
+        return NextResponse.json({ error: "Dashboard nao encontrado" }, { status: 404 });
+      }
+
+      await client.query("COMMIT");
+    } catch (error: unknown) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
 
     if (setoresEnabled) {
       for (const setorId of affectedSetores) {
