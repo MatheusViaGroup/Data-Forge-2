@@ -434,6 +434,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const setoresEnabled = await tryEnsureSetoresSchema("DELETE");
     const affectedSetores = setoresEnabled ? await removeDashboardSectorLinksByDashboardId(id) : [];
+    await query("DELETE FROM via_core.parametros_rls WHERE dashboard_id = $1", [id]);
     await query("DELETE FROM via_core.dashboards WHERE id = $1", [id]);
 
     if (setoresEnabled) {
