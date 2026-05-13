@@ -301,8 +301,8 @@ export default function AcessosEspeciaisPage() {
                                 const DROPDOWN_HEIGHT = 120;
                                 const openAbove = spaceBelow < DROPDOWN_HEIGHT;
                                 menu.style.top = openAbove
-                                  ? `${rect.top + window.scrollY - DROPDOWN_HEIGHT - 4}px`
-                                  : `${rect.bottom + window.scrollY + 4}px`;
+                                  ? `${rect.top - DROPDOWN_HEIGHT - 4}px`
+                                  : `${rect.bottom + 4}px`;
                                 menu.style.right = `${window.innerWidth - rect.right}px`;
                                 menu.style.display = menu.style.display === "block" ? "none" : "block";
                               }

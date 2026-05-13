@@ -31,6 +31,8 @@ type DashboardForm = Omit<Dashboard, "id"> & {
   setorIds: string[];
 };
 
+const NO_SETOR_LABEL = "Sem setor";
+
 function unique(values: string[]): string[] {
   return Array.from(new Set(values));
 }
@@ -164,6 +166,14 @@ export default function AdminDashboardsPage() {
       .map((id) => setorLabelById.get(id))
       .filter((name): name is string => typeof name === "string");
 
+  const getSetorLabelForSave = (ids: string[]) => {
+    const names = getSelectedSetorNames(ids);
+    return {
+      names,
+      label: names.length > 0 ? names.join(", ") : NO_SETOR_LABEL,
+    };
+  };
+
   const parseImportedSetorIds = (rawValue: string | undefined): string[] => {
     if (!rawValue) return [];
     const names = rawValue
@@ -187,8 +197,7 @@ export default function AdminDashboardsPage() {
     setSaving(true);
     setFeedback(null);
 
-    const setorNames = getSelectedSetorNames(form.setorIds);
-    const setorLabel = setorNames.join(", ");
+    const { names: setorNames, label: setorLabel } = getSetorLabelForSave(form.setorIds);
 
     try {
       if (isEdit) {
@@ -203,7 +212,7 @@ export default function AdminDashboardsPage() {
           rls: form.rls,
           rlsRole: form.rlsRole ?? "",
           status: form.status,
-          setor: setorLabel || undefined,
+          setor: setorLabel,
           setorIds: form.setorIds,
           urlCapa: form.urlCapa || undefined,
         });
@@ -261,8 +270,8 @@ export default function AdminDashboardsPage() {
 
     setMenuPosition({
       top: openAbove
-        ? rect.top + window.scrollY - dropdownHeight - 4
-        : rect.bottom + window.scrollY + 4,
+        ? rect.top - dropdownHeight - 4
+        : rect.bottom + 4,
       right: window.innerWidth - rect.right,
     });
     setMenuOpenId(menuOpenId === id ? null : id);
@@ -331,7 +340,7 @@ export default function AdminDashboardsPage() {
                       workspaceId: row.workspaceId,
                       reportId: row.reportId,
                       datasetId: row.datasetId || "",
-                      setor: row.setor || "",
+                      setor: row.setor || NO_SETOR_LABEL,
                       setorIds,
                       ativo: row.ativo?.toUpperCase() !== "FALSE",
                       rls: row.rls?.toUpperCase() === "TRUE",
@@ -420,7 +429,7 @@ export default function AdminDashboardsPage() {
                       <td className="px-5 py-4 text-sm font-medium text-[var(--text-primary)] max-w-[200px] truncate">{dashboard.nome}</td>
                       <td className="px-5 py-4 text-sm text-[var(--text-secondary)] max-w-[250px] truncate">{dashboard.descricao}</td>
                       <td className="px-5 py-4 text-sm text-[var(--text-secondary)] max-w-[260px] truncate">
-                        {dashboard.setores && dashboard.setores.length > 0 ? dashboard.setores.join(", ") : "—"}
+                        {dashboard.setores && dashboard.setores.length > 0 ? dashboard.setores.join(", ") : NO_SETOR_LABEL}
                       </td>
                       <td className="px-5 py-4 text-sm">
                         <span className={dashboard.rls ? "text-[var(--brand-primary)] font-medium" : "text-[var(--text-secondary)]"}>
