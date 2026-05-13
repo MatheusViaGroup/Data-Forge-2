@@ -156,6 +156,22 @@ export default function UsuariosPage() {
     return map;
   }, [setores]);
 
+  const setorIdByName = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const setor of setores) {
+      map.set(setor.nome.toLowerCase(), setor.id);
+    }
+    return map;
+  }, [setores]);
+
+  const dashboardIdByName = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const dashboard of dashboards) {
+      map.set(dashboard.nome.toLowerCase(), dashboard.id);
+    }
+    return map;
+  }, [dashboards]);
+
   const setorOptions = useMemo(
     () => [
       { value: "", label: "Sem setor" },
@@ -370,7 +386,10 @@ export default function UsuariosPage() {
                 { key: "email",       header: "email",       instrucao: "E-mail corporativo",                    exemplo: "joao.silva@viagroup.com" },
                 { key: "senha",       header: "senha",       instrucao: "Senha inicial (mín. 6 caracteres)",     exemplo: "Senha@123" },
                 { key: "acesso",      header: "acesso",      instrucao: "Usuário, Usuário Total, Matriz ou Administrador do Locatário",exemplo: "Usuário" },
-                { key: "filiais",     header: "filiais",     instrucao: "Códigos de filiais separados por vírgula",exemplo: "AB01,AB02" },
+                { key: "setor",       header: "setor",       instrucao: "Nome exato do setor cadastrado (opcional)", exemplo: "Logística" },
+                { key: "dashboards",  header: "dashboards",  instrucao: "Nomes de dashboards separados por vírgula (opcional)", exemplo: "Torre de Compras, Auditoria" },
+                { key: "filiais",     header: "filiais",     instrucao: "Códigos de filiais separados por vírgula (opcional)",exemplo: "AB01,AB02" },
+                { key: "status",      header: "status",      instrucao: "Ativo ou Excluído (opcional; padrão Ativo)", exemplo: "Ativo" },
               ]}
               onImport={async (rows): Promise<ImportResult> => {
                 let success = 0;
@@ -380,16 +399,52 @@ export default function UsuariosPage() {
                     errors.push(`Linha ignorada: nome, email e senha são obrigatórios (email: ${row.email || "?"}).`);
                     continue;
                   }
+
+                  const setorRaw = row.setor?.trim();
+                  const setorId = setorRaw ? setorIdByName.get(setorRaw.toLowerCase()) ?? "" : "";
+                  if (setorRaw && !setorId) {
+                    errors.push(`Linha ignorada (${row.email}): setor "${setorRaw}" não encontrado.`);
+                    continue;
+                  }
+
+                  const dashboardNames = row.dashboards
+                    ? row.dashboards.split(",").map((s) => s.trim()).filter(Boolean)
+                    : [];
+
+                  const dashboardIdsFromNames = dashboardNames
+                    .map((name) => dashboardIdByName.get(name.toLowerCase()) ?? "")
+                    .filter(Boolean);
+
+                  if (dashboardNames.length > 0 && dashboardIdsFromNames.length !== dashboardNames.length) {
+                    const missing = dashboardNames.filter((name) => !dashboardIdByName.get(name.toLowerCase()));
+                    errors.push(`Linha ignorada (${row.email}): dashboard(s) não encontrado(s): ${missing.join(", ")}.`);
+                    continue;
+                  }
+
+                  const dashboardsDoSetor = setorId ? dashboardsBySetorId.get(setorId) ?? [] : [];
+                  const dashboardsImportados = dashboardIdsFromNames.length > 0 ? dashboardIdsFromNames : dashboardsDoSetor;
+                  const acessoImportado = (row.acesso === "Administrador do Locatário"
+                    ? "Administrador do Locatário"
+                    : row.acesso === "Usuário Total"
+                      ? "Usuário Total"
+                      : row.acesso === "Matriz"
+                        ? "Matriz"
+                        : "Usuário") as Usuario["acesso"];
+
+                  const statusNormalizado = (row.status ?? "").trim().toLowerCase();
+                  const statusImportado = statusNormalizado === "excluído" || statusNormalizado === "excluido" ? "Excluído" : "Ativo";
+
                   try {
                     await addUsuario({
                       nome: row.nome,
                       email: row.email,
                       senha: row.senha,
                       departamento: "",
-                      acesso: (row.acesso === "Administrador do Locatário" ? "Administrador do Locatário" : row.acesso === "Usuário Total" ? "Usuário Total" : row.acesso === "Matriz" ? "Matriz" : "Usuário") as Usuario["acesso"],
-                      status: "Ativo",
-                      filiais: row.filiais ? row.filiais.split(",").map(s => s.trim()).filter(Boolean) : [],
-                      dashboards: [],
+                      acesso: acessoImportado,
+                      status: statusImportado,
+                      filiais: acessoImportado === "Usuário Total" ? [] : (row.filiais ? row.filiais.split(",").map(s => s.trim()).filter(Boolean) : []),
+                      dashboards: acessoImportado === "Usuário Total" ? [] : unique(dashboardsImportados),
+                      setorId: acessoImportado === "Usuário Total" ? "" : setorId,
                     });
                     success++;
                   } catch (e) {
