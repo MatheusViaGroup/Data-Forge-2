@@ -63,6 +63,8 @@ type DashboardForeignKeyReferenceRow = {
   column_name: string;
 };
 
+const NO_SETOR_LABEL = "Sem setor";
+
 function getPgError(error: unknown): PgError {
   if (error instanceof Error) {
     return error as PgError;
@@ -114,6 +116,22 @@ function logPgError(context: string, error: unknown) {
 
 function uniqueStrings(values: string[]): string[] {
   return Array.from(new Set(values));
+}
+
+function isNoSetorValue(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  return normalized === "sem setor" || normalized === "sem-setor" || normalized === "sem_setor";
+}
+
+function normalizeSetorForStorage(value: string | undefined | null): string {
+  if (typeof value !== "string") return NO_SETOR_LABEL;
+  const trimmed = value.trim();
+  if (!trimmed || isNoSetorValue(trimmed)) return NO_SETOR_LABEL;
+  return trimmed;
+}
+
+function normalizeSetorForResponse(value: string | undefined | null): string {
+  return normalizeSetorForStorage(value);
 }
 
 function quoteIdentifier(value: string): string {
@@ -190,7 +208,7 @@ function normalizeSetorNames(value: string | undefined): string[] {
       value
         .split(",")
         .map((item) => item.trim())
-        .filter((item) => item.length > 0)
+        .filter((item) => item.length > 0 && !isNoSetorValue(item))
     )
   );
 }
@@ -224,7 +242,7 @@ function mapRow(row: DashboardRow) {
     datasetId: row.dataset_id ?? "",
     ativo: row.ativo,
     prioridade: row.prioridade ?? "media",
-    setor: row.setor ?? "",
+    setor: normalizeSetorForResponse(row.setor),
     rls: row.rls ?? false,
     rlsRole: row.rls_role ?? "",
     status: row.status ?? "Ativo",
@@ -291,6 +309,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = (await request.json()) as DashboardRequestBody;
+  const setorForStorage = normalizeSetorForStorage(body.setor);
 
   try {
     const setoresEnabled = await tryEnsureSetoresSchema("POST");
@@ -310,7 +329,7 @@ export async function POST(request: NextRequest) {
         body.datasetId ?? "",
         body.ativo ?? true,
         body.prioridade ?? "media",
-        body.setor ?? "",
+        setorForStorage,
         body.rls ?? false,
         body.rlsRole ?? "",
         body.status ?? "Ativo",
@@ -353,7 +372,9 @@ export async function POST(request: NextRequest) {
         ...entry,
         setorIds: setorInfo?.setorIds ?? [],
         setores: setorInfo?.setorNomes ?? [],
-        setor: setorInfo?.setorNomes.join(", ") ?? "",
+        setor: setorInfo && setorInfo.setorNomes.length > 0
+          ? setorInfo.setorNomes.join(", ")
+          : entry.setor,
       },
     });
   } catch (error: unknown) {
@@ -372,6 +393,7 @@ export async function PUT(request: NextRequest) {
   }
 
   const body = (await request.json()) as DashboardRequestBody;
+  const setorForStorage = normalizeSetorForStorage(body.setor);
 
   try {
     const setoresEnabled = await tryEnsureSetoresSchema("PUT");
@@ -394,7 +416,7 @@ export async function PUT(request: NextRequest) {
         body.datasetId,
         body.ativo,
         body.prioridade,
-        body.setor,
+        setorForStorage,
         body.rls,
         body.rlsRole ?? "",
         body.status,
@@ -469,7 +491,7 @@ export async function PUT(request: NextRequest) {
         ...entry,
         setorIds: setorInfo.setorIds,
         setores: setorInfo.setorNomes,
-        setor: setorInfo.setorNomes.join(", "),
+        setor: setorInfo.setorNomes.length > 0 ? setorInfo.setorNomes.join(", ") : entry.setor,
       },
     });
   } catch (error: unknown) {

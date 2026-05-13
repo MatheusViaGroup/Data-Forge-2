@@ -170,8 +170,8 @@ export default function AdminSetoresPage() {
 
     setMenuPosition({
       top: openAbove
-        ? rect.top + window.scrollY - dropdownHeight - 4
-        : rect.bottom + window.scrollY + 4,
+        ? rect.top - dropdownHeight - 4
+        : rect.bottom + 4,
       right: window.innerWidth - rect.right,
     });
     setMenuOpenId(menuOpenId === id ? null : id);

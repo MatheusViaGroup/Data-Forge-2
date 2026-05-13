@@ -189,15 +189,15 @@ export default function CredenciaisPage() {
   };
 
   const toggleMenu = (id: string, event: React.MouseEvent) => {
-    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const DROPDOWN_HEIGHT = 120;
     const openAbove = spaceBelow < DROPDOWN_HEIGHT;
 
     setMenuPosition({
       top: openAbove
-        ? rect.top + window.scrollY - DROPDOWN_HEIGHT - 4
-        : rect.bottom + window.scrollY + 4,
+        ? rect.top - DROPDOWN_HEIGHT - 4
+        : rect.bottom + 4,
       right: window.innerWidth - rect.right,
     });
     setMenuOpenId(menuOpenId === id ? null : id);
