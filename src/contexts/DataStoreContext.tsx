@@ -26,7 +26,7 @@ interface DataStoreContextType {
   updateDashboard: (id: string, updates: Partial<Dashboard>) => Promise<void>;
   deleteDashboard: (id: string) => Promise<void>;
   getDashboardById: (id: string) => Dashboard | null;
-  addUsuario: (usuario: Omit<Usuario, "id"> & { senha?: string }) => Promise<Usuario>;
+  addUsuario: (usuario: Omit<Usuario, "id"> & { senha?: string; must_change_password?: boolean }) => Promise<Usuario>;
   updateUsuario: (id: string, updates: Partial<Usuario> & { senha?: string; must_change_password?: boolean }) => Promise<void>;
   deleteUsuario: (id: string) => Promise<void>;
   addCredencial: (credencial: Omit<Credencial, "id">) => Promise<Credencial>;

@@ -69,7 +69,7 @@ export default function UsuariosPage() {
 
   // Formulário
   const [form, setForm] = useState<Omit<Usuario, "id"> & { id: string }>({
-    id: "", nome: "", email: "", departamento: "", acesso: "Usuário", status: "Ativo", filiais: [], dashboards: [], setorId: "",
+    id: "", nome: "", email: "", departamento: "", acesso: "Usuário", status: "Ativo", filiais: [], dashboards: [], setorId: "", mustChangePassword: true,
   });
   const [senhaEdicao, setSenhaEdicao] = useState("");
   const [showSenhaEdicao, setShowSenhaEdicao] = useState(false);
@@ -220,7 +220,7 @@ export default function UsuariosPage() {
   const paginated = filtered.slice(inicio, fim);
 
   const openCreate = () => {
-    setForm({ id: "", nome: "", email: "", departamento: "", acesso: "Usuário", status: "Ativo", filiais: [], dashboards: [], setorId: "" });
+    setForm({ id: "", nome: "", email: "", departamento: "", acesso: "Usuário", status: "Ativo", filiais: [], dashboards: [], setorId: "", mustChangePassword: true });
     setErros({});
     setSenhaEdicao("");
     setShowSenhaEdicao(false);
@@ -232,7 +232,7 @@ export default function UsuariosPage() {
   };
 
   const openEdit = (u: Usuario) => {
-    setForm({ ...u, id: u.id, dashboards: u.dashboards ?? [], setorId: u.setorId ?? "" });
+    setForm({ ...u, id: u.id, dashboards: u.dashboards ?? [], setorId: u.setorId ?? "", mustChangePassword: u.mustChangePassword ?? false });
     setErros({});
     setSenhaEdicao("");
     setShowSenhaEdicao(false);
@@ -268,6 +268,7 @@ export default function UsuariosPage() {
           filiais: form.acesso === "Usuário Total" ? [] : form.filiais,
           dashboards: form.acesso === "Usuário Total" ? [] : form.dashboards,
           setorId: form.acesso === "Usuário Total" ? "" : form.setorId,
+          must_change_password: Boolean(form.mustChangePassword),
         });
         setFeedback({ type: "success", msg: "Usuário atualizado com sucesso!" });
       } else {
@@ -281,6 +282,7 @@ export default function UsuariosPage() {
           dashboards: form.dashboards,
           setorId: form.setorId,
           senha: senhaEdicao || "1234",
+          must_change_password: Boolean(form.mustChangePassword),
         });
         setFeedback({ type: "success", msg: "Usuário criado com sucesso!" });
       }
@@ -737,9 +739,34 @@ export default function UsuariosPage() {
                     </button>
                   </div>
                   {erros.senhaEdicao && <p className="text-red-500 text-xs mt-1 ml-3">{erros.senhaEdicao}</p>}
-                  <p className="text-xs text-[var(--text-muted)] mt-1 ml-3">O usuário deverá trocar esta senha no primeiro login</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1 ml-3">
+                    {form.mustChangePassword
+                      ? "O usuário deverá trocar esta senha no primeiro login."
+                      : "O usuário poderá usar esta senha sem troca obrigatória no primeiro login."}
+                  </p>
                 </div>
               )}
+
+              <div className="bg-[var(--bg-panel-soft)] border border-[var(--border-soft)] rounded-2xl px-4 py-3">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form.mustChangePassword)}
+                    onChange={(e) => setForm({ ...form, mustChangePassword: e.target.checked })}
+                    className="mt-0.5 w-4 h-4 rounded border-[#cbd5e1] text-[var(--brand-primary)] focus:ring-[#4B5FBF] cursor-pointer flex-shrink-0"
+                  />
+                  <div>
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">
+                      Exigir troca de senha no primeiro login
+                    </span>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                      {isEdit
+                        ? "Se ativado, no próximo login o usuário será redirecionado para definir uma nova senha."
+                        : "Se ativado, no primeiro login o usuário será redirecionado para definir uma nova senha."}
+                    </p>
+                  </div>
+                </label>
+              </div>
 
               {/* Filiais (apenas para Usuário comum) */}
               {form.acesso !== "Administrador do Locatário" && form.acesso !== "Matriz" && form.acesso !== "Usuário Total" && (

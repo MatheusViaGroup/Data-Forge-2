@@ -31,6 +31,7 @@ export interface Usuario {
   filiais: string[];
   dashboards: string[];
   setorId?: string;
+  mustChangePassword?: boolean;
   dashboardsManualAdd?: string[];
   dashboardsManualRemove?: string[];
 }
@@ -148,7 +149,7 @@ export function useDataStore() {
     [dashboards]
   );
 
-  const addUsuario = useCallback(async (usuario: Omit<Usuario, "id"> & { senha?: string }) => {
+  const addUsuario = useCallback(async (usuario: Omit<Usuario, "id"> & { senha?: string; must_change_password?: boolean }) => {
     const res = await fetch("/api/usuarios", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
