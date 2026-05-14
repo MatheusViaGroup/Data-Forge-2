@@ -18,6 +18,7 @@ interface SessionRefreshRow extends Record<string, unknown> {
   status: string;
   dashboards: string[] | null;
   acesso: string;
+  must_change_password: boolean;
 }
 
 export const ADMIN_TENANT_ACCESS = "Administrador do Locat\u00e1rio";
@@ -115,7 +116,7 @@ export const authOptions: NextAuthOptions = {
       // Revalida status e acessos a cada request de JWT
       if (token.id) {
         const data = await queryOne<SessionRefreshRow>(
-          `SELECT id, status, dashboards, acesso
+          `SELECT id, status, dashboards, acesso, must_change_password
            FROM via_core.usuarios
            WHERE id = $1 AND status = 'Ativo'
            LIMIT 1`,
@@ -137,6 +138,7 @@ export const authOptions: NextAuthOptions = {
           (data.acesso === ADMIN_TENANT_ACCESS || data.acesso === "Usuário Total")
             ? []
             : (data.dashboards ?? []);
+        token.mustChangePassword = data.must_change_password ?? false;
       }
 
       return token;
