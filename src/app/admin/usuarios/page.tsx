@@ -337,10 +337,21 @@ export default function UsuariosPage() {
     
     setResettingPassword(true);
     try {
-      await updateUsuario(resettingUser.id, { 
-        senha: novaSenha, 
-        must_change_password: true 
+      const res = await fetch("/api/admin/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: resettingUser.id,
+          novaSenha,
+        }),
       });
+
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        throw new Error(json.error ?? "Erro ao redefinir senha.");
+      }
+
+      await loadAdminData();
       setFeedback({ type: "success", msg: `Senha de "${resettingUser.nome}" redefinida com sucesso!` });
       setResetPasswordModalOpen(false);
     } catch (err: unknown) {
