@@ -6,6 +6,7 @@ export default withAuth(
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
     const isApiRoute = path.startsWith("/api/");
+    const isChangePasswordApi = path === "/api/change-password";
 
     if (!token) {
       if (isApiRoute) {
@@ -14,7 +15,7 @@ export default withAuth(
       return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    if (token.mustChangePassword && path !== "/trocar-senha") {
+    if (token.mustChangePassword && path !== "/trocar-senha" && !isChangePasswordApi) {
       if (isApiRoute) {
         return NextResponse.json({ error: "Senha provisória pendente" }, { status: 403 });
       }

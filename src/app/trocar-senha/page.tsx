@@ -16,13 +16,14 @@ export default function TrocarSenhaPage() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState(false);
+  const senhaForteRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro("");
 
-    if (novaSenha.length < 6) {
-      setErro("A senha deve ter pelo menos 6 caracteres.");
+    if (!senhaForteRegex.test(novaSenha)) {
+      setErro("Use no minimo 8 caracteres, com letra maiuscula, minuscula e numero.");
       return;
     }
     if (novaSenha !== confirmarSenha) {
@@ -118,7 +119,7 @@ export default function TrocarSenhaPage() {
                       type={showNova ? "text" : "password"}
                       value={novaSenha}
                       onChange={(e) => setNovaSenha(e.target.value)}
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder="Minimo 8 caracteres com maiuscula, minuscula e numero"
                       required
                       className="w-full px-6 py-3.5 bg-[var(--bg-input)] border-0 rounded-full text-[var(--text-primary)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all pr-12"
                     />
