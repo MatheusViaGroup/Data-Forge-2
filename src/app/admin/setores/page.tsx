@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { useDataStoreContext, Setor } from "@/contexts/DataStoreContext";
 import { CustomMultiSelect } from "@/components/ui/CustomMultiSelect";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
@@ -49,6 +51,8 @@ export default function AdminSetoresPage() {
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
   const [form, setForm] = useState<SetorForm>({ id: "", nome: "", dashboardIds: [] });
+
+  const { confirm, dialogProps } = useConfirmDialog();
 
   const dashboardMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -110,7 +114,7 @@ export default function AdminSetoresPage() {
 
   const handleSave = async () => {
     if (!form.nome.trim()) {
-      setFeedback({ type: "error", msg: "Nome do setor ÃƒÂ© obrigatÃƒÂ³rio." });
+      setFeedback({ type: "error", msg: "Nome do setor é obrigatório." });
       return;
     }
 
@@ -142,13 +146,13 @@ export default function AdminSetoresPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Excluir este setor? Os usuÃƒÂ¡rios vinculados perderÃƒÂ£o o vÃƒÂ­nculo de setor.")) return;
+    if (!await confirm({ title: "Excluir Setor", message: "Excluir este setor? Os usuários vinculados perderão o vínculo de setor.", confirmLabel: "Excluir", variant: "danger" })) return;
 
     setDeleting(id);
     try {
       await deleteSetor(id);
       await loadAdminData();
-      setFeedback({ type: "success", msg: "Setor excluÃƒÂ­do com sucesso!" });
+      setFeedback({ type: "success", msg: "Setor excluído com sucesso!" });
     } catch {
       setFeedback({ type: "error", msg: "Erro ao excluir setor." });
     } finally {
@@ -166,8 +170,8 @@ export default function AdminSetoresPage() {
 
     setMenuPosition({
       top: openAbove
-        ? rect.top + window.scrollY - dropdownHeight - 4
-        : rect.bottom + window.scrollY + 4,
+        ? rect.top - dropdownHeight - 4
+        : rect.bottom + 4,
       right: window.innerWidth - rect.right,
     });
     setMenuOpenId(menuOpenId === id ? null : id);
@@ -194,7 +198,7 @@ export default function AdminSetoresPage() {
   }
 
   return (
-    <AppShell title="Setores" subtitle="Gerencie setores e vÃƒÂ­nculos de dashboards">
+    <AppShell title="Setores" subtitle="Gerencie setores e vínculos de dashboards">
       <div className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
@@ -242,8 +246,8 @@ export default function AdminSetoresPage() {
                 <tr className="bg-[var(--bg-input)]">
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Nome</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Dashboards</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">VÃƒÂ­nculos</th>
-                  <th className="px-5 py-3 text-right text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">AÃƒÂ§ÃƒÂµes</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Vínculos</th>
+                  <th className="px-5 py-3 text-right text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-soft)]">
@@ -352,7 +356,7 @@ export default function AdminSetoresPage() {
                   value={form.nome}
                   onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))}
                   className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
-                  placeholder="ex: OperaÃƒÂ§ÃƒÂµes"
+                  placeholder="ex: Operações"
                 />
               </div>
 
@@ -365,7 +369,7 @@ export default function AdminSetoresPage() {
                   placeholder="Selecione os dashboards deste setor"
                 />
                 <p className="text-xs text-[var(--text-muted)] mt-1.5 ml-1">
-                  VocÃƒÂª pode vincular dashboards sem setor nesta tela, a qualquer momento.
+                  Você pode vincular dashboards sem setor nesta tela, a qualquer momento.
                 </p>
               </div>
             </div>
@@ -398,6 +402,7 @@ export default function AdminSetoresPage() {
           </div>
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </AppShell>
   );
 }

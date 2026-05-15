@@ -13,6 +13,7 @@ type UsuarioRow = {
   departamento: string | null;
   acesso: string;
   status: string;
+  must_change_password: boolean;
   filiais: string[] | null;
   dashboards: unknown;
   setor_id: string | null;
@@ -88,6 +89,7 @@ function mapRow(row: UsuarioRow) {
     departamento: row.departamento ?? "",
     acesso: row.acesso,
     status: row.status,
+    mustChangePassword: row.must_change_password ?? false,
     filiais: row.filiais ?? [],
     dashboards: normalizeStringArray(row.dashboards),
     setorId: row.setor_id ?? "",
@@ -99,13 +101,13 @@ function mapRow(row: UsuarioRow) {
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "NÃƒÆ’Ã‚Â£o autorizado" }, { status: 403 });
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
   try {
     await ensureSetoresSchema();
     const { rows } = await query<UsuarioRow>(
-      `SELECT id, nome, email, departamento, acesso, status, filiais, dashboards,
+      `SELECT id, nome, email, departamento, acesso, status, must_change_password, filiais, dashboards,
               setor_id, dashboards_manual_add, dashboards_manual_remove
        FROM via_core.usuarios
        ORDER BY created_at`
@@ -113,15 +115,15 @@ export async function GET() {
     return NextResponse.json({ entries: rows.map(mapRow) });
   } catch (error: unknown) {
     const err = error as Error;
-    console.error("[usuarios][GET] Erro ao buscar usuÃƒÆ’Ã‚Â¡rios:", err.message);
-    return NextResponse.json({ error: "Erro ao buscar usuÃƒÆ’Ã‚Â¡rios" }, { status: 500 });
+    console.error("[usuarios][GET] Erro ao buscar usuarios:", err.message);
+    return NextResponse.json({ error: "Erro ao buscar usuarios" }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "NÃƒÆ’Ã‚Â£o autorizado" }, { status: 403 });
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
   await ensureSetoresSchema();
@@ -134,21 +136,23 @@ export async function POST(request: NextRequest) {
   const nome = typeof body.nome === "string" ? body.nome : "";
   const email = typeof body.email === "string" ? body.email : "";
   const departamentoRaw = typeof body.departamento === "string" ? body.departamento : "";
-  const acesso = typeof body.acesso === "string" ? body.acesso : "UsuÃƒÆ’Ã‚Â¡rio";
+  const acesso = typeof body.acesso === "string" ? body.acesso : "Usuario";
   const status = typeof body.status === "string" ? body.status : "Ativo";
   const filiais = normalizeStringArray(body.filiais);
   const dashboards = normalizeStringArray(body.dashboards);
   const setorId = normalizeSetorId(body.setorId);
+  const mustChangePassword =
+    typeof body.must_change_password === "boolean" ? body.must_change_password : true;
 
   const dashboardState = await computeDashboardState(setorId, dashboards);
 
   try {
     const data = await queryOne<UsuarioRow>(
       `INSERT INTO via_core.usuarios
-        (nome, email, senha_hash, departamento, acesso, status, filiais, dashboards, must_change_password, setor_id, dashboards_manual_add, dashboards_manual_remove)
+       (nome, email, senha_hash, departamento, acesso, status, filiais, dashboards, must_change_password, setor_id, dashboards_manual_add, dashboards_manual_remove)
        VALUES
         ($1, $2, $3, $4, $5, $6, $7::text[], $8::jsonb, $9, $10, $11::jsonb, $12::jsonb)
-       RETURNING id, nome, email, departamento, acesso, status, filiais, dashboards, setor_id, dashboards_manual_add, dashboards_manual_remove`,
+       RETURNING id, nome, email, departamento, acesso, status, must_change_password, filiais, dashboards, setor_id, dashboards_manual_add, dashboards_manual_remove`,
       [
         nome,
         email,
@@ -158,7 +162,7 @@ export async function POST(request: NextRequest) {
         status,
         filiais,
         JSON.stringify(dashboardState.finalDashboards),
-        true,
+        mustChangePassword,
         setorId,
         JSON.stringify(dashboardState.manualAdd),
         JSON.stringify(dashboardState.manualRemove),
@@ -166,26 +170,26 @@ export async function POST(request: NextRequest) {
     );
 
     if (!data) {
-      return NextResponse.json({ error: "Erro ao criar usuÃƒÆ’Ã‚Â¡rio" }, { status: 500 });
+      return NextResponse.json({ error: "Erro ao criar usuario" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, entry: mapRow(data) });
   } catch (error: unknown) {
     const err = error as PgError;
-    console.error("[usuarios][POST] Erro ao criar usuÃƒÆ’Ã‚Â¡rio:", err.message);
+    console.error("[usuarios][POST] Erro ao criar usuario:", err.message);
 
     if (err.code === "23505") {
-      return NextResponse.json({ error: "E-mail jÃƒÆ’Ã‚Â¡ cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
     }
 
-    return NextResponse.json({ error: "Erro ao criar usuÃƒÆ’Ã‚Â¡rio" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao criar usuario" }, { status: 500 });
   }
 }
 
 export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "NÃƒÆ’Ã‚Â£o autorizado" }, { status: 403 });
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
   await ensureSetoresSchema();
@@ -193,11 +197,7 @@ export async function PUT(request: NextRequest) {
   const body = (await request.json()) as Record<string, unknown>;
   const id = typeof body.id === "string" ? body.id : "";
   if (!id) {
-<<<<<<< HEAD
-    return NextResponse.json({ error: "id obrigatÃƒÆ’Ã‚Â³rio" }, { status: 400 });
-=======
-    return NextResponse.json({ error: "id obrigatÃ³rio" }, { status: 400 });
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+    return NextResponse.json({ error: "id obrigatorio" }, { status: 400 });
   }
 
   const current = await queryOne<UsuarioCurrentRow>(
@@ -209,11 +209,7 @@ export async function PUT(request: NextRequest) {
   );
 
   if (!current) {
-<<<<<<< HEAD
-    return NextResponse.json({ error: "UsuÃƒÆ’Ã‚Â¡rio nÃƒÆ’Ã‚Â£o encontrado" }, { status: 404 });
-=======
-    return NextResponse.json({ error: "UsuÃ¡rio nÃ£o encontrado" }, { status: 404 });
->>>>>>> 5d8d2ecef750b4fb47df91a876f77e076f54f8cc
+    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
   }
 
   const setClauses: string[] = [];
@@ -247,7 +243,7 @@ export async function PUT(request: NextRequest) {
   }
   if (body.must_change_password !== undefined) {
     setClauses.push(`must_change_password = $${paramIdx++}`);
-    params.push(body.must_change_password);
+    params.push(Boolean(body.must_change_password));
   }
   if (typeof body.senha === "string" && body.senha) {
     const senhaHash = await bcrypt.hash(body.senha, 10);
@@ -299,37 +295,37 @@ export async function PUT(request: NextRequest) {
   try {
     const data = await queryOne<UsuarioRow>(
       `UPDATE via_core.usuarios SET ${setClauses.join(", ")} WHERE id = $${paramIdx}
-       RETURNING id, nome, email, departamento, acesso, status, filiais, dashboards, setor_id, dashboards_manual_add, dashboards_manual_remove`,
+       RETURNING id, nome, email, departamento, acesso, status, must_change_password, filiais, dashboards, setor_id, dashboards_manual_add, dashboards_manual_remove`,
       params
     );
 
     if (!data) {
-      return NextResponse.json({ error: "UsuÃƒÆ’Ã‚Â¡rio nÃƒÆ’Ã‚Â£o encontrado" }, { status: 404 });
+      return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
     }
     return NextResponse.json({ success: true, entry: mapRow(data) });
   } catch (error: unknown) {
     const err = error as Error;
-    console.error("[usuarios][PUT] Erro ao atualizar usuÃƒÆ’Ã‚Â¡rio:", err.message);
-    return NextResponse.json({ error: "Erro ao atualizar usuÃƒÆ’Ã‚Â¡rio" }, { status: 500 });
+    console.error("[usuarios][PUT] Erro ao atualizar usuario:", err.message);
+    return NextResponse.json({ error: "Erro ao atualizar usuario" }, { status: 500 });
   }
 }
 
 export async function DELETE(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "admin") {
-    return NextResponse.json({ error: "NÃƒÆ’Ã‚Â£o autorizado" }, { status: 403 });
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 403 });
   }
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "id obrigatÃƒÆ’Ã‚Â³rio" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: "id obrigatorio" }, { status: 400 });
 
   try {
     await query("DELETE FROM via_core.usuarios WHERE id = $1", [id]);
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     const err = error as Error;
-    console.error("[usuarios][DELETE] Erro ao excluir usuÃƒÆ’Ã‚Â¡rio:", err.message);
-    return NextResponse.json({ error: "Erro ao excluir usuÃƒÆ’Ã‚Â¡rio" }, { status: 500 });
+    console.error("[usuarios][DELETE] Erro ao excluir usuario:", err.message);
+    return NextResponse.json({ error: "Erro ao excluir usuario" }, { status: 500 });
   }
 }

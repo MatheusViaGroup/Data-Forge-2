@@ -250,9 +250,22 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           name: user.nome,
           email: user.email,
+<<<<<<< HEAD
           role: accessToRole(user.acesso),
           mustChangePassword: user.must_change_password ?? false,
           allowedDashboards: resolveAllowedDashboards(user.acesso, user.dashboards),
+=======
+          role:
+            user.acesso === ADMIN_TENANT_ACCESS
+              ? "admin"
+              : user.acesso === "Usuário Total"
+                ? "total"
+                : user.acesso === "Matriz"
+                  ? "matriz"
+                  : "user",
+          mustChangePassword: user.must_change_password ?? false,
+          allowedDashboards: (user.acesso === ADMIN_TENANT_ACCESS || user.acesso === "Usuário Total") ? [] : (user.dashboards ?? []),
+>>>>>>> c38a7d18c0cd79c81ead1a4707b794e202fc675f
         };
       },
     }),
@@ -268,6 +281,7 @@ export const authOptions: NextAuthOptions = {
 
       // Revalida status e acessos a cada request de JWT
       if (token.id) {
+<<<<<<< HEAD
         try {
           const data = await queryOne<SessionRefreshRow>(
             `SELECT id, status, dashboards, acesso, must_change_password
@@ -276,12 +290,22 @@ export const authOptions: NextAuthOptions = {
              LIMIT 1`,
             [token.id as string]
           );
+=======
+        const data = await queryOne<SessionRefreshRow>(
+          `SELECT id, status, dashboards, acesso, must_change_password
+           FROM via_core.usuarios
+           WHERE id = $1 AND status = 'Ativo'
+           LIMIT 1`,
+          [token.id as string]
+        );
+>>>>>>> c38a7d18c0cd79c81ead1a4707b794e202fc675f
 
           if (!data) {
             logAuth("warn", "jwt:user-not-found-or-inactive", { userId: token.id as string });
             return null as unknown as JWT;
           }
 
+<<<<<<< HEAD
           token.role = accessToRole(data.acesso);
           token.allowedDashboards = resolveAllowedDashboards(data.acesso, data.dashboards);
           token.mustChangePassword = data.must_change_password ?? false;
@@ -293,6 +317,22 @@ export const authOptions: NextAuthOptions = {
           });
           return token;
         }
+=======
+        token.role =
+          data.acesso === ADMIN_TENANT_ACCESS
+            ? "admin"
+            : data.acesso === "Usuário Total"
+              ? "total"
+              : data.acesso === "Matriz"
+                ? "matriz"
+                : "user";
+
+        token.allowedDashboards =
+          (data.acesso === ADMIN_TENANT_ACCESS || data.acesso === "Usuário Total")
+            ? []
+            : (data.dashboards ?? []);
+        token.mustChangePassword = data.must_change_password ?? false;
+>>>>>>> c38a7d18c0cd79c81ead1a4707b794e202fc675f
       }
 
       return token;

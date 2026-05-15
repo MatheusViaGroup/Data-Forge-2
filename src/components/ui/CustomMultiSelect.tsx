@@ -191,7 +191,7 @@ export function CustomMultiSelect({
 
           {options.length === 0 && (
             <div className="px-4 py-3 text-sm text-[var(--text-muted)] text-center">
-              Nenhuma opÃƒÂ§ÃƒÂ£o disponÃƒÂ­vel
+              Nenhuma opção disponível
             </div>
           )}
         </div>,

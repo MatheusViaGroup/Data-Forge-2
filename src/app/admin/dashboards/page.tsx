@@ -20,6 +20,8 @@ import { useDataStoreContext, Dashboard } from "@/contexts/DataStoreContext";
 import { ImportExportXlsx, ImportResult } from "@/components/ImportExportXlsx";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { CustomMultiSelect } from "@/components/ui/CustomMultiSelect";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 
 type Feedback = { type: "success" | "error"; msg: string } | null;
 
@@ -28,6 +30,8 @@ type DashboardForm = Omit<Dashboard, "id"> & {
   status: "Ativo" | "Inativo";
   setorIds: string[];
 };
+
+const NO_SETOR_LABEL = "Sem setor";
 
 function unique(values: string[]): string[] {
   return Array.from(new Set(values));
@@ -95,6 +99,8 @@ export default function AdminDashboardsPage() {
     setorIds: [],
   });
 
+  const { confirm, dialogProps } = useConfirmDialog();
+
   useEffect(() => {
     if (authStatus === "authenticated" && session?.user?.role !== "admin") {
       router.push("/dashboard");
@@ -160,6 +166,14 @@ export default function AdminDashboardsPage() {
       .map((id) => setorLabelById.get(id))
       .filter((name): name is string => typeof name === "string");
 
+  const getSetorLabelForSave = (ids: string[]) => {
+    const names = getSelectedSetorNames(ids);
+    return {
+      names,
+      label: names.length > 0 ? names.join(", ") : NO_SETOR_LABEL,
+    };
+  };
+
   const parseImportedSetorIds = (rawValue: string | undefined): string[] => {
     if (!rawValue) return [];
     const names = rawValue
@@ -176,15 +190,14 @@ export default function AdminDashboardsPage() {
 
   const handleSave = async () => {
     if (!form.nome || !form.workspaceId || !form.reportId) {
-      setFeedback({ type: "error", msg: "Nome, Workspace ID e Report ID sÃƒÂ£o obrigatÃƒÂ³rios." });
+      setFeedback({ type: "error", msg: "Nome, Workspace ID e Report ID são obrigatórios." });
       return;
     }
 
     setSaving(true);
     setFeedback(null);
 
-    const setorNames = getSelectedSetorNames(form.setorIds);
-    const setorLabel = setorNames.join(", ");
+    const { names: setorNames, label: setorLabel } = getSetorLabelForSave(form.setorIds);
 
     try {
       if (isEdit) {
@@ -199,7 +212,7 @@ export default function AdminDashboardsPage() {
           rls: form.rls,
           rlsRole: form.rlsRole ?? "",
           status: form.status,
-          setor: setorLabel || undefined,
+          setor: setorLabel,
           setorIds: form.setorIds,
           urlCapa: form.urlCapa || undefined,
         });
@@ -226,7 +239,7 @@ export default function AdminDashboardsPage() {
 
       setModalOpen(false);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Erro ao salvar. Verifique sua conexÃƒÂ£o.";
+      const msg = error instanceof Error ? error.message : "Erro ao salvar. Verifique sua conexão.";
       setFeedback({ type: "error", msg });
     } finally {
       setSaving(false);
@@ -234,12 +247,12 @@ export default function AdminDashboardsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Excluir este dashboard?")) return;
+    if (!await confirm({ title: "Excluir Dashboard", message: "Excluir este dashboard?", confirmLabel: "Excluir", variant: "danger" })) return;
 
     setDeleting(id);
     try {
       await deleteDashboard(id);
-      setFeedback({ type: "success", msg: "Dashboard excluÃƒÂ­do com sucesso!" });
+      setFeedback({ type: "success", msg: "Dashboard excluído com sucesso!" });
     } catch {
       setFeedback({ type: "error", msg: "Erro ao excluir dashboard." });
     } finally {
@@ -257,8 +270,8 @@ export default function AdminDashboardsPage() {
 
     setMenuPosition({
       top: openAbove
-        ? rect.top + window.scrollY - dropdownHeight - 4
-        : rect.bottom + window.scrollY + 4,
+        ? rect.top - dropdownHeight - 4
+        : rect.bottom + 4,
       right: window.innerWidth - rect.right,
     });
     setMenuOpenId(menuOpenId === id ? null : id);
@@ -299,14 +312,14 @@ export default function AdminDashboardsPage() {
               nomeTemplate="template_dashboards"
               cols={[
                 { key: "nome", header: "nome", instrucao: "Nome do dashboard", exemplo: "Vendas Mensal" },
-                { key: "descricao", header: "descricao", instrucao: "DescriÃƒÂ§ÃƒÂ£o (opcional)", exemplo: "RelatÃƒÂ³rio de vendas por mÃƒÂªs" },
+                { key: "descricao", header: "descricao", instrucao: "Descrição (opcional)", exemplo: "Relatório de vendas por mês" },
                 { key: "workspaceId", header: "workspaceId", instrucao: "ID do Workspace Power BI", exemplo: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
-                { key: "reportId", header: "reportId", instrucao: "ID do RelatÃƒÂ³rio Power BI", exemplo: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
+                { key: "reportId", header: "reportId", instrucao: "ID do Relatório Power BI", exemplo: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
                 { key: "datasetId", header: "datasetId", instrucao: "ID do Dataset Power BI (opcional)", exemplo: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
-                { key: "setor", header: "setor", instrucao: "Nomes de setores separados por vÃƒÂ­rgula (opcional)", exemplo: "Comercial, OperaÃƒÂ§ÃƒÂµes" },
+                { key: "setor", header: "setor", instrucao: "Nomes de setores separados por vírgula (opcional)", exemplo: "Comercial, Operações" },
                 { key: "ativo", header: "ativo", instrucao: "TRUE ou FALSE", exemplo: "TRUE" },
-                { key: "rls", header: "rls", instrucao: "TRUE se usa RLS, FALSE caso contrÃƒÂ¡rio", exemplo: "FALSE" },
-                { key: "rlsRole", header: "rlsRole", instrucao: "Role do RLS (deixar vazio se nÃƒÂ£o usa)", exemplo: "" },
+                { key: "rls", header: "rls", instrucao: "TRUE se usa RLS, FALSE caso contrário", exemplo: "FALSE" },
+                { key: "rlsRole", header: "rlsRole", instrucao: "Role do RLS (deixar vazio se não usa)", exemplo: "" },
                 { key: "urlCapa", header: "urlCapa", instrucao: "URL da capa (SharePoint, opcional)", exemplo: "" },
               ]}
               onImport={async (rows): Promise<ImportResult> => {
@@ -315,7 +328,7 @@ export default function AdminDashboardsPage() {
 
                 for (const row of rows) {
                   if (!row.nome || !row.workspaceId || !row.reportId) {
-                    errors.push(`Linha ignorada: nome, workspaceId e reportId sÃƒÂ£o obrigatÃƒÂ³rios (nome: ${row.nome || "?"}).`);
+                    errors.push(`Linha ignorada: nome, workspaceId e reportId são obrigatórios (nome: ${row.nome || "?"}).`);
                     continue;
                   }
 
@@ -327,7 +340,7 @@ export default function AdminDashboardsPage() {
                       workspaceId: row.workspaceId,
                       reportId: row.reportId,
                       datasetId: row.datasetId || "",
-                      setor: row.setor || "",
+                      setor: row.setor || NO_SETOR_LABEL,
                       setorIds,
                       ativo: row.ativo?.toUpperCase() !== "FALSE",
                       rls: row.rls?.toUpperCase() === "TRUE",
@@ -390,11 +403,11 @@ export default function AdminDashboardsPage() {
               <thead>
                 <tr className="bg-[var(--bg-input)]">
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Nome</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">DescriÃƒÂ§ÃƒÂ£o</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Descrição</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Setores</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">RLS</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Status</th>
-                  <th className="px-5 py-3 text-right text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">AÃƒÂ§ÃƒÂµes</th>
+                  <th className="px-5 py-3 text-right text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider whitespace-nowrap">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-soft)]">
@@ -416,11 +429,11 @@ export default function AdminDashboardsPage() {
                       <td className="px-5 py-4 text-sm font-medium text-[var(--text-primary)] max-w-[200px] truncate">{dashboard.nome}</td>
                       <td className="px-5 py-4 text-sm text-[var(--text-secondary)] max-w-[250px] truncate">{dashboard.descricao}</td>
                       <td className="px-5 py-4 text-sm text-[var(--text-secondary)] max-w-[260px] truncate">
-                        {dashboard.setores && dashboard.setores.length > 0 ? dashboard.setores.join(", ") : "Ã¢â‚¬â€"}
+                        {dashboard.setores && dashboard.setores.length > 0 ? dashboard.setores.join(", ") : NO_SETOR_LABEL}
                       </td>
                       <td className="px-5 py-4 text-sm">
                         <span className={dashboard.rls ? "text-[var(--brand-primary)] font-medium" : "text-[var(--text-secondary)]"}>
-                          {dashboard.rls ? "Sim" : "NÃƒÂ£o"}
+                          {dashboard.rls ? "Sim" : "Não"}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-sm">
@@ -514,13 +527,13 @@ export default function AdminDashboardsPage() {
                 </div>
 
                 <div className="col-span-2">
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">DescriÃƒÂ§ÃƒÂ£o</label>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Descrição</label>
                   <input
                     type="text"
                     value={form.descricao}
                     onChange={(e) => setForm({ ...form, descricao: e.target.value })}
                     className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
-                    placeholder="DescriÃƒÂ§ÃƒÂ£o do dashboard"
+                    placeholder="Descrição do dashboard"
                   />
                 </div>
 
@@ -548,7 +561,7 @@ export default function AdminDashboardsPage() {
               </div>
 
               <div className="border-t border-[var(--border-soft)] pt-4">
-                <p className="text-xs font-semibold text-[var(--text-secondary)] mb-3">Dados de SeguranÃƒÂ§a</p>
+                <p className="text-xs font-semibold text-[var(--text-secondary)] mb-3">Dados de Segurança</p>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Workspace ID *</label>
@@ -648,10 +661,10 @@ export default function AdminDashboardsPage() {
                       value={form.rlsRole ?? ""}
                       onChange={(e) => setForm({ ...form, rlsRole: e.target.value })}
                       className="w-full px-5 py-2.5 bg-[var(--bg-input)] border border-transparent rounded-full text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] transition-all"
-                      placeholder="Nome do ParÃƒÂ¢metro"
+                      placeholder="Nome do Parâmetro"
                     />
                     <p className="text-xs text-[var(--text-muted)] mt-1 pl-2">
-                      O parÃƒÂ¢metro deve ser igual ao BI: <code className="bg-[#f1f5f9] px-1 rounded">CONTAINSSTRING(CUSTOMDATA(), [NOME_EXIBICAO])()</code>
+                      O parâmetro deve ser igual ao BI: <code className="bg-[#f1f5f9] px-1 rounded">CONTAINSSTRING(CUSTOMDATA(), [NOME_EXIBICAO])()</code>
                     </p>
                   </div>
                 )}
@@ -686,6 +699,7 @@ export default function AdminDashboardsPage() {
           </div>
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </AppShell>
   );
 }
