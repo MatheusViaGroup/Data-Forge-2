@@ -8,6 +8,7 @@ import { Turnstile } from "@marsidev/react-turnstile";
 
 const SAVED_EMAIL_KEY = "via-core-saved-email";
 const SAVED_PASSWORD_KEY = "via-core-saved-password";
+const AUTH_DEBUG = process.env.NEXT_PUBLIC_AUTH_DEBUG === "true";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -51,6 +52,15 @@ export default function LoginPage() {
       turnstileToken,
       redirect: false,
     });
+
+    if (AUTH_DEBUG) {
+      console.log("[login][signIn:result]", {
+        ok: result?.ok,
+        status: result?.status,
+        error: result?.error,
+        url: result?.url,
+      });
+    }
 
     if (result?.error) {
       setError("E-mail ou senha incorretos. Tente novamente.");
