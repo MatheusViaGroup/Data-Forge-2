@@ -7,15 +7,24 @@ import { useEffect } from "react";
 const PUBLIC_PATHS = ["/login", "/trocar-senha"];
 
 export default function SessionGuard({ children }: { children: React.ReactNode }) {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     if (status === "unauthenticated" && !PUBLIC_PATHS.includes(pathname)) {
       router.replace("/login");
+      return;
     }
-  }, [status, pathname, router]);
+
+    if (
+      status === "authenticated" &&
+      session?.user?.mustChangePassword &&
+      pathname !== "/trocar-senha"
+    ) {
+      router.replace("/trocar-senha");
+    }
+  }, [status, pathname, router, session?.user?.mustChangePassword]);
 
   // Enquanto verifica, não renderiza nada em rotas protegidas
   if (status === "loading" && !PUBLIC_PATHS.includes(pathname)) {

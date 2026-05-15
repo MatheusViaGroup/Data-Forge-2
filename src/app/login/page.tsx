@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signIn, useSession } from "next-auth/react";
+import { getSession, signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, AlertCircle, LogIn } from "lucide-react";
 import { Turnstile } from "@marsidev/react-turnstile";
@@ -11,7 +11,7 @@ const SAVED_PASSWORD_KEY = "via-core-saved-password";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -23,9 +23,13 @@ export default function LoginPage() {
   // Se já está autenticado, redireciona direto para o dashboard
   useEffect(() => {
     if (status === "authenticated") {
+      if (session?.user?.mustChangePassword) {
+        router.replace("/trocar-senha");
+        return;
+      }
       router.replace("/dashboard");
     }
-  }, [status, router]);
+  }, [status, session?.user?.mustChangePassword, router]);
 
   // Carrega e-mail e senha salvos no localStorage
   useEffect(() => {
@@ -59,7 +63,9 @@ export default function LoginPage() {
       // Salva e-mail e senha para preencher automaticamente no próximo login
       localStorage.setItem(SAVED_EMAIL_KEY, email);
       localStorage.setItem(SAVED_PASSWORD_KEY, password);
-      router.push("/dashboard");
+      const freshSession = await getSession();
+      const nextPath = freshSession?.user?.mustChangePassword ? "/trocar-senha" : "/dashboard";
+      router.push(nextPath);
       router.refresh();
     }
   };

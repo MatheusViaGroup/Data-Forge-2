@@ -13,6 +13,7 @@ type UsuarioRow = {
   departamento: string | null;
   acesso: string;
   status: string;
+  must_change_password: boolean;
   filiais: string[] | null;
   dashboards: unknown;
   setor_id: string | null;
@@ -88,6 +89,7 @@ function mapRow(row: UsuarioRow) {
     departamento: row.departamento ?? "",
     acesso: row.acesso,
     status: row.status,
+    mustChangePassword: row.must_change_password ?? false,
     filiais: row.filiais ?? [],
     dashboards: normalizeStringArray(row.dashboards),
     setorId: row.setor_id ?? "",
@@ -105,7 +107,7 @@ export async function GET() {
   try {
     await ensureSetoresSchema();
     const { rows } = await query<UsuarioRow>(
-      `SELECT id, nome, email, departamento, acesso, status, filiais, dashboards,
+      `SELECT id, nome, email, departamento, acesso, status, must_change_password, filiais, dashboards,
               setor_id, dashboards_manual_add, dashboards_manual_remove
        FROM via_core.usuarios
        ORDER BY created_at`
@@ -139,16 +141,18 @@ export async function POST(request: NextRequest) {
   const filiais = normalizeStringArray(body.filiais);
   const dashboards = normalizeStringArray(body.dashboards);
   const setorId = normalizeSetorId(body.setorId);
+  const mustChangePassword =
+    typeof body.must_change_password === "boolean" ? body.must_change_password : true;
 
   const dashboardState = await computeDashboardState(setorId, dashboards);
 
   try {
     const data = await queryOne<UsuarioRow>(
       `INSERT INTO via_core.usuarios
-        (nome, email, senha_hash, departamento, acesso, status, filiais, dashboards, must_change_password, setor_id, dashboards_manual_add, dashboards_manual_remove)
+       (nome, email, senha_hash, departamento, acesso, status, filiais, dashboards, must_change_password, setor_id, dashboards_manual_add, dashboards_manual_remove)
        VALUES
         ($1, $2, $3, $4, $5, $6, $7::text[], $8::jsonb, $9, $10, $11::jsonb, $12::jsonb)
-       RETURNING id, nome, email, departamento, acesso, status, filiais, dashboards, setor_id, dashboards_manual_add, dashboards_manual_remove`,
+       RETURNING id, nome, email, departamento, acesso, status, must_change_password, filiais, dashboards, setor_id, dashboards_manual_add, dashboards_manual_remove`,
       [
         nome,
         email,
@@ -158,7 +162,7 @@ export async function POST(request: NextRequest) {
         status,
         filiais,
         JSON.stringify(dashboardState.finalDashboards),
-        true,
+        mustChangePassword,
         setorId,
         JSON.stringify(dashboardState.manualAdd),
         JSON.stringify(dashboardState.manualRemove),
@@ -239,7 +243,7 @@ export async function PUT(request: NextRequest) {
   }
   if (body.must_change_password !== undefined) {
     setClauses.push(`must_change_password = $${paramIdx++}`);
-    params.push(body.must_change_password);
+    params.push(Boolean(body.must_change_password));
   }
   if (typeof body.senha === "string" && body.senha) {
     const senhaHash = await bcrypt.hash(body.senha, 10);
@@ -291,7 +295,7 @@ export async function PUT(request: NextRequest) {
   try {
     const data = await queryOne<UsuarioRow>(
       `UPDATE via_core.usuarios SET ${setClauses.join(", ")} WHERE id = $${paramIdx}
-       RETURNING id, nome, email, departamento, acesso, status, filiais, dashboards, setor_id, dashboards_manual_add, dashboards_manual_remove`,
+       RETURNING id, nome, email, departamento, acesso, status, must_change_password, filiais, dashboards, setor_id, dashboards_manual_add, dashboards_manual_remove`,
       params
     );
 
