@@ -515,11 +515,6 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const setoresEnabled = await tryEnsureSetoresSchema("DELETE");
-<<<<<<< HEAD
-    const affectedSetores = setoresEnabled ? await removeDashboardSectorLinksByDashboardId(id) : [];
-    await query("DELETE FROM via_core.parametros_rls WHERE dashboard_id = $1", [id]);
-    await query("DELETE FROM via_core.dashboards WHERE id = $1", [id]);
-=======
     const client = await pool.connect();
     let affectedSetores: string[] = [];
 
@@ -560,7 +555,6 @@ export async function DELETE(request: NextRequest) {
     } finally {
       client.release();
     }
->>>>>>> c38a7d18c0cd79c81ead1a4707b794e202fc675f
 
     if (setoresEnabled) {
       for (const setorId of affectedSetores) {
